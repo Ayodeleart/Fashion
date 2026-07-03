@@ -5,12 +5,11 @@ export const dynamic = "force-dynamic";
 export default function AdminHeroPage() {
   return (
     <div>
-      <h1 className="font-display text-3xl mb-2">Hero Videos</h1>
+      <h1 className="font-display text-3xl mb-2">Hero Looks</h1>
       <p className="text-sm text-muted mb-8 max-w-lg">
-        Upload a desktop clip. The tool generates a center-cropped portrait
-        version for mobile, samples the dominant color, then publishes both
-        to Supabase Storage and inserts a row in <code>hero_videos</code>.
-        No masking or segmentation — just crop and color sampling, as scoped.
+        Upload up to 3 images (middle is required — it's the only one shown
+        on mobile). Backgrounds are removed automatically in your browser,
+        then the cutouts publish over your chosen hero color.
       </p>
       <HeroUploadWorkflow />
     </div>

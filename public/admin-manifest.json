@@ -1,7 +1,7 @@
 {
-  "name": "Ariana Admin",
-  "short_name": "Ariana Admin",
-  "description": "Manage products, hero videos, and orders for Ariana.",
+  "name": "AyodeleGold Admin",
+  "short_name": "AyodeleGold Admin",
+  "description": "Manage products, hero looks, and orders for AyodeleGold.",
   "start_url": "/admin",
   "scope": "/admin",
   "display": "standalone",
@@ -12,13 +12,13 @@
       "src": "/admin-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/admin-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }

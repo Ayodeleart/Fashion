@@ -3,7 +3,7 @@ export default function Footer({ brandName }: { brandName: string }) {
     <footer className="bg-ink text-paper px-6 md:px-10 py-14 md:py-16">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-10">
         <div>
-          <p className="font-display text-2xl mb-2">{brandName}</p>
+          <img src="/tag-shadow.png" alt={brandName} className="h-20 md:h-24 w-auto mb-3 -ml-3" />
           <p className="text-sm text-paper/60 max-w-xs">
             Cut for movement, made to be seen from every angle.
           </p>

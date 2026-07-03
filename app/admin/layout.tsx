@@ -3,7 +3,7 @@ import AdminNav from "@/components/admin/AdminNav";
 import RegisterSW from "@/components/admin/RegisterSW";
 
 export const metadata: Metadata = {
-  title: "Ariana Admin",
+  title: "AyodeleGold Admin",
   manifest: "/admin-manifest.json",
 };
 

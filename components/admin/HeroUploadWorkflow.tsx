@@ -1,312 +1,229 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { getSupabase } from "@/lib/supabase";
 
-type Step = "upload" | "crop" | "color" | "publish" | "done";
+const COLOR_PRESETS = [
+  { label: "Emerald", value: "22, 48, 42" },
+  { label: "Coffee Brown", value: "74, 47, 31" },
+  { label: "Ink Navy", value: "18, 26, 40" },
+  { label: "Burnt Amber", value: "120, 66, 30" },
+];
 
-const STEP_LABELS: Record<Step, string> = {
-  upload: "1. Upload",
-  crop: "2. Generate mobile crop",
-  color: "3. Extract dominant color",
-  publish: "4. Publish",
-  done: "Published",
+type Slot = "left" | "middle" | "right";
+
+type SlotState = {
+  file: File | null;
+  processedBlob: Blob | null;
+  previewUrl: string | null;
+  processing: boolean;
 };
 
-const STEP_ORDER: Step[] = ["upload", "crop", "color", "publish", "done"];
+const emptySlot: SlotState = { file: null, processedBlob: null, previewUrl: null, processing: false };
 
 export default function HeroUploadWorkflow() {
-  const [step, setStep] = useState<Step>("upload");
   const [label, setLabel] = useState("");
-  const [desktopFile, setDesktopFile] = useState<File | null>(null);
-  const [desktopPreviewUrl, setDesktopPreviewUrl] = useState<string | null>(null);
-  const [mobileBlob, setMobileBlob] = useState<Blob | null>(null);
-  const [mobilePreviewUrl, setMobilePreviewUrl] = useState<string | null>(null);
-  const [dominantColor, setDominantColor] = useState<string | null>(null);
+  const [slots, setSlots] = useState<Record<Slot, SlotState>>({
+    left: { ...emptySlot },
+    middle: { ...emptySlot },
+    right: { ...emptySlot },
+  });
+  const [bgColor, setBgColor] = useState(COLOR_PRESETS[0].value);
+  const [customColor, setCustomColor] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [done, setDone] = useState(false);
 
-  const sourceVideoRef = useRef<HTMLVideoElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setDesktopFile(file);
-    setDesktopPreviewUrl(URL.createObjectURL(file));
+  async function handleFile(slot: Slot, file: File) {
     setError(null);
-  }
-
-  // Step 2: center-crop the desktop video to a 9:16 portrait clip entirely
-  // client-side via canvas + MediaRecorder. No AI segmentation involved —
-  // it's a straight center crop, matching the "no masking" requirement.
-  async function generateMobileCrop() {
-    const video = sourceVideoRef.current;
-    if (!video || !desktopFile) return;
-    setBusy(true);
-    setError(null);
+    setSlots((s) => ({ ...s, [slot]: { file, processedBlob: null, previewUrl: URL.createObjectURL(file), processing: true } }));
 
     try {
-      await video.play().catch(() => {});
-      video.pause();
-      video.currentTime = 0;
-      await new Promise((resolve) => (video.onloadeddata = resolve));
-
-      const targetW = 720;
-      const targetH = 1280; // 9:16
-      const canvas = canvasRef.current ?? document.createElement("canvas");
-      canvasRef.current = canvas;
-      canvas.width = targetW;
-      canvas.height = targetH;
-      const ctx = canvas.getContext("2d")!;
-
-      // Center-crop math: scale video so it fills the portrait frame's
-      // height, then crop equally from left/right.
-      const videoRatio = video.videoWidth / video.videoHeight;
-      const targetRatio = targetW / targetH;
-      let drawW: number, drawH: number, offsetX: number, offsetY: number;
-
-      if (videoRatio > targetRatio) {
-        drawH = targetH;
-        drawW = targetH * videoRatio;
-        offsetX = (targetW - drawW) / 2;
-        offsetY = 0;
-      } else {
-        drawW = targetW;
-        drawH = targetW / videoRatio;
-        offsetX = 0;
-        offsetY = (targetH - drawH) / 2;
-      }
-
-      const stream = canvas.captureStream(30);
-      const recorder = new MediaRecorder(stream, {
-        mimeType: "video/webm;codecs=vp9",
-      });
-      const chunks: BlobPart[] = [];
-      recorder.ondataavailable = (e) => chunks.push(e.data);
-
-      const recordingDone = new Promise<Blob>((resolve) => {
-        recorder.onstop = () => resolve(new Blob(chunks, { type: "video/webm" }));
-      });
-
-      recorder.start();
-      await video.play();
-
-      const drawFrame = () => {
-        if (video.paused || video.ended) return;
-        ctx.clearRect(0, 0, targetW, targetH);
-        ctx.drawImage(video, offsetX, offsetY, drawW, drawH);
-        requestAnimationFrame(drawFrame);
-      };
-      drawFrame();
-
-      await new Promise((resolve) => {
-        video.onended = resolve;
-      });
-      recorder.stop();
-
-      const blob = await recordingDone;
-      setMobileBlob(blob);
-      setMobilePreviewUrl(URL.createObjectURL(blob));
-      setStep("color");
+      // Background removal runs entirely client-side (WASM/ONNX model
+      // fetched from a CDN on first use) — no API key, no per-image cost.
+      const { removeBackground } = await import("@imgly/background-removal");
+      const resultBlob = await removeBackground(file);
+      const url = URL.createObjectURL(resultBlob);
+      setSlots((s) => ({ ...s, [slot]: { file, processedBlob: resultBlob, previewUrl: url, processing: false } }));
     } catch (err) {
       console.error(err);
       setError(
-        "Couldn't generate the mobile crop in-browser (MediaRecorder support varies by browser). You can also upload a pre-cropped portrait file manually — ask Claude to add that fallback if you hit this."
+        `Background removal failed for the ${slot} image (first run downloads a ~40MB model — check your connection). You can still publish; that slot will keep its original background.`
       );
-    } finally {
-      setBusy(false);
+      setSlots((s) => ({
+        ...s,
+        [slot]: { ...s[slot], processedBlob: null, processing: false },
+      }));
     }
   }
 
-  // Step 3: sample the dominant color from the source video's first frame.
-  function extractDominantColor() {
-    const video = sourceVideoRef.current;
-    if (!video) return;
-    const canvas = document.createElement("canvas");
-    canvas.width = 32;
-    canvas.height = 32;
-    const ctx = canvas.getContext("2d")!;
-    ctx.drawImage(video, 0, 0, 32, 32);
-    const { data } = ctx.getImageData(0, 0, 32, 32);
-
-    let r = 0, g = 0, b = 0, count = 0;
-    for (let i = 0; i < data.length; i += 4) {
-      r += data[i];
-      g += data[i + 1];
-      b += data[i + 2];
-      count++;
-    }
-    r = Math.round(r / count);
-    g = Math.round(g / count);
-    b = Math.round(b / count);
-
-    setDominantColor(`${r}, ${g}, ${b}`);
-    setStep("publish");
+  function activeColor() {
+    return customColor.trim() || bgColor;
   }
 
-  // Step 4: upload both files to Supabase Storage, insert the hero_videos row.
   async function publish() {
-    if (!desktopFile || !mobileBlob || !dominantColor || !label) {
-      setError("Fill in a label and complete steps 2-3 first.");
+    if (!slots.middle.file) {
+      setError("The middle image is required — it's the only one that shows on mobile.");
       return;
     }
-    setBusy(true);
+    if (!label.trim()) {
+      setError("Give this look a label.");
+      return;
+    }
+
+    setPublishing(true);
     setError(null);
 
     try {
       const supabase = getSupabase();
       const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
-      const { error: deskErr } = await supabase.storage
-        .from("hero-videos")
-        .upload(`${slug}-desktop.mp4`, desktopFile, { upsert: true });
-      if (deskErr) throw deskErr;
+      async function uploadSlot(slot: Slot): Promise<string | null> {
+        const s = slots[slot];
+        if (!s.file) return null;
+        const blob = s.processedBlob ?? s.file;
+        const ext = s.processedBlob ? "png" : s.file.name.split(".").pop();
+        const path = `${slug}-${slot}.${ext}`;
+        const { error: upErr } = await supabase.storage.from("hero-looks").upload(path, blob, { upsert: true });
+        if (upErr) throw upErr;
+        const { data } = supabase.storage.from("hero-looks").getPublicUrl(path);
+        return data.publicUrl;
+      }
 
-      const { error: mobErr } = await supabase.storage
-        .from("hero-videos")
-        .upload(`${slug}-mobile.webm`, mobileBlob, { upsert: true });
-      if (mobErr) throw mobErr;
+      const [leftUrl, middleUrl, rightUrl] = await Promise.all([
+        uploadSlot("left"),
+        uploadSlot("middle"),
+        uploadSlot("right"),
+      ]);
 
-      const { data: deskUrl } = supabase.storage.from("hero-videos").getPublicUrl(`${slug}-desktop.mp4`);
-      const { data: mobUrl } = supabase.storage.from("hero-videos").getPublicUrl(`${slug}-mobile.webm`);
-
-      const { error: insertErr } = await supabase.from("ariana_hero_videos").insert({
+      const { error: insertErr } = await supabase.from("ariana_hero_looks").insert({
         label,
-        desktop_url: deskUrl.publicUrl,
-        mobile_url: mobUrl.publicUrl,
-        dominant_color: dominantColor,
+        image_left_url: leftUrl,
+        image_middle_url: middleUrl,
+        image_right_url: rightUrl,
+        bg_color: activeColor(),
         status: "published",
       });
       if (insertErr) throw insertErr;
 
-      setStep("done");
+      setDone(true);
     } catch (err) {
       console.error(err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Publish failed — check Supabase Storage bucket 'hero-videos' exists and RLS allows this insert."
-      );
+      setError(err instanceof Error ? err.message : "Publish failed.");
     } finally {
-      setBusy(false);
+      setPublishing(false);
     }
   }
 
   return (
-    <div className="max-w-2xl">
-      {/* Stepper */}
-      <div className="flex gap-2 mb-8 text-xs">
-        {STEP_ORDER.map((s) => (
-          <span
-            key={s}
-            className={`px-2.5 py-1 rounded-full border ${
-              step === s
-                ? "bg-ink text-paper border-ink"
-                : "border-ink/20 text-muted"
-            }`}
-          >
-            {STEP_LABELS[s]}
-          </span>
-        ))}
-      </div>
-
+    <div className="max-w-3xl">
       {error && (
-        <div className="mb-6 text-sm text-red-700 bg-red-50 border border-red-200 rounded p-3">
-          {error}
-        </div>
+        <div className="mb-6 text-sm text-red-700 bg-red-50 border border-red-200 rounded p-3">{error}</div>
       )}
 
-      <div className="space-y-6">
-        <div>
-          <label className="block text-sm mb-1">Label</label>
-          <input
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            placeholder="e.g. Emerald Look — Orbit"
-            className="w-full border border-ink/20 rounded px-3 py-2 text-sm bg-white"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm mb-1">Desktop video file</label>
-          <input type="file" accept="video/*" onChange={handleFileChange} className="text-sm" />
-        </div>
-
-        {desktopPreviewUrl && (
-          <video
-            ref={sourceVideoRef}
-            src={desktopPreviewUrl}
-            muted
-            playsInline
-            className="w-full max-w-sm rounded border border-ink/10"
-          />
-        )}
-
-        {desktopFile && step === "upload" && (
-          <button
-            onClick={() => setStep("crop")}
-            className="text-sm px-4 py-2 bg-ink text-paper rounded hover:bg-ink/90 transition-colors"
-          >
-            Continue to mobile crop
-          </button>
-        )}
-
-        {step === "crop" && (
-          <button
-            disabled={busy}
-            onClick={generateMobileCrop}
-            className="text-sm px-4 py-2 bg-ink text-paper rounded hover:bg-ink/90 transition-colors disabled:opacity-50"
-          >
-            {busy ? "Rendering crop…" : "Generate mobile crop"}
-          </button>
-        )}
-
-        {mobilePreviewUrl && (
-          <video
-            src={mobilePreviewUrl}
-            muted
-            playsInline
-            controls
-            className="w-40 rounded border border-ink/10"
-          />
-        )}
-
-        {step === "color" && (
-          <button
-            onClick={extractDominantColor}
-            className="text-sm px-4 py-2 bg-ink text-paper rounded hover:bg-ink/90 transition-colors"
-          >
-            Extract dominant color
-          </button>
-        )}
-
-        {dominantColor && (
-          <div className="flex items-center gap-3">
-            <span
-              className="w-8 h-8 rounded border border-ink/10"
-              style={{ backgroundColor: `rgb(${dominantColor})` }}
-            />
-            <span className="text-sm text-muted">rgb({dominantColor})</span>
-          </div>
-        )}
-
-        {step === "publish" && (
-          <button
-            disabled={busy}
-            onClick={publish}
-            className="text-sm px-4 py-2 bg-brass text-ink rounded hover:opacity-90 transition-opacity disabled:opacity-50"
-          >
-            {busy ? "Publishing…" : "Publish to storefront"}
-          </button>
-        )}
-
-        {step === "done" && (
-          <p className="text-sm text-green-700">
-            Published. It'll appear in the hero rotation on next page load.
-          </p>
-        )}
+      <div className="mb-6">
+        <label className="block text-sm mb-1">Label</label>
+        <input
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          placeholder="e.g. Coffee Brown — Autumn"
+          className="w-full max-w-sm border border-ink/20 rounded px-3 py-2 text-sm bg-white"
+        />
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <SlotUpload title="Left (desktop only)" slot="left" state={slots.left} onFile={handleFile} />
+        <SlotUpload title="Middle (required, shows on mobile)" slot="middle" state={slots.middle} onFile={handleFile} required />
+        <SlotUpload title="Right (desktop only)" slot="right" state={slots.right} onFile={handleFile} />
+      </div>
+
+      <div className="mb-8">
+        <label className="block text-sm mb-2">Hero background color</label>
+        <div className="flex flex-wrap gap-2 mb-3">
+          {COLOR_PRESETS.map((preset) => (
+            <button
+              key={preset.label}
+              type="button"
+              onClick={() => {
+                setBgColor(preset.value);
+                setCustomColor("");
+              }}
+              className={`flex items-center gap-2 text-sm px-3 py-2 rounded border transition-colors ${
+                !customColor && bgColor === preset.value ? "border-ink" : "border-ink/15 hover:border-ink/40"
+              }`}
+            >
+              <span
+                className="w-4 h-4 rounded-full border border-black/10"
+                style={{ backgroundColor: `rgb(${preset.value})` }}
+              />
+              {preset.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted">Custom RGB:</span>
+          <input
+            value={customColor}
+            onChange={(e) => setCustomColor(e.target.value)}
+            placeholder="e.g. 40, 30, 60"
+            className="border border-ink/20 rounded px-2 py-1 text-xs bg-white w-40"
+          />
+          <span className="w-5 h-5 rounded-full border border-black/10" style={{ backgroundColor: `rgb(${activeColor()})` }} />
+        </div>
+      </div>
+
+      {!done ? (
+        <button
+          disabled={publishing}
+          onClick={publish}
+          className="text-sm px-4 py-2 bg-brass text-ink rounded hover:opacity-90 transition-opacity disabled:opacity-50"
+        >
+          {publishing ? "Publishing…" : "Publish look"}
+        </button>
+      ) : (
+        <p className="text-sm text-green-700">Published — it'll appear in the hero rotation on next page load.</p>
+      )}
+    </div>
+  );
+}
+
+function SlotUpload({
+  title,
+  slot,
+  state,
+  onFile,
+  required,
+}: {
+  title: string;
+  slot: Slot;
+  state: SlotState;
+  onFile: (slot: Slot, file: File) => void;
+  required?: boolean;
+}) {
+  return (
+    <div>
+      <p className="text-sm mb-2">
+        {title} {required && <span className="text-brass">*</span>}
+      </p>
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) onFile(slot, file);
+        }}
+        className="text-xs mb-3"
+      />
+      {state.previewUrl && (
+        <div className="relative w-full aspect-[3/4] bg-[repeating-conic-gradient(#ddd_0_25%,#fff_0_50%)] bg-[length:16px_16px] rounded overflow-hidden border border-ink/10">
+          <img src={state.previewUrl} alt="" className="w-full h-full object-contain" />
+          {state.processing && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white/70 text-xs">
+              Removing background…
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,29 +1,25 @@
-import Hero, { HeroClip } from "@/components/Hero";
+import Hero, { HeroLook } from "@/components/Hero";
 import Lookbook, { LookbookPanel } from "@/components/Lookbook";
 import ProductGrid, { Product } from "@/components/ProductGrid";
 import CraftSection from "@/components/CraftSection";
 import Footer from "@/components/Footer";
 
-// PLACEHOLDER DATA — swap for real hero clips, look photography, and
-// Supabase-fetched products once assets and DB access are in place.
-// Hero videos intentionally point to nothing yet; the Hero component
-// falls back to its poster/background color if a src 404s, so the page
-// still demonstrates the crossfade + reveal mechanics without breaking.
-const heroClips: HeroClip[] = [
+// PLACEHOLDER DATA — swap for real background-removed cutouts (via
+// /admin/hero) and Supabase-fetched products once assets exist.
+const heroLooks: HeroLook[] = [
   {
-    id: "clip-1",
-    desktopSrc: "/videos/hero-1-desktop.mp4",
-    mobileSrc: "/videos/hero-1-mobile.mp4",
+    id: "look-1",
+    imageLeft: "/images/hero-1-left.png",
+    imageMiddle: "/images/hero-1-middle.png",
+    imageRight: "/images/hero-1-right.png",
+    bgColor: "22, 48, 42", // Emerald
   },
   {
-    id: "clip-2",
-    desktopSrc: "/videos/hero-2-desktop.mp4",
-    mobileSrc: "/videos/hero-2-mobile.mp4",
-  },
-  {
-    id: "clip-3",
-    desktopSrc: "/videos/hero-3-desktop.mp4",
-    mobileSrc: "/videos/hero-3-mobile.mp4",
+    id: "look-2",
+    imageLeft: "/images/hero-2-left.png",
+    imageMiddle: "/images/hero-2-middle.png",
+    imageRight: "/images/hero-2-right.png",
+    bgColor: "74, 47, 31", // Coffee Brown
   },
 ];
 
@@ -43,7 +39,7 @@ const newArrivals: Product[] = [
 export default function Home() {
   return (
     <main>
-      <Hero clips={heroClips} brandName="ARIANA" />
+      <Hero looks={heroLooks} brandPrefix="AYODELE" brandSuffix="GOLD" tagline="fashionista" />
 
       <Lookbook panels={lookbookPanels} />
 
@@ -58,7 +54,7 @@ export default function Home() {
           move the way you do. Fabric first, decoration last."
       />
 
-      <Footer brandName="ARIANA" />
+      <Footer brandName="AyodeleGold" />
     </main>
   );
 }
