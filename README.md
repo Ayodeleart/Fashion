@@ -3,7 +3,7 @@
 Landing page + storefront + admin PWA.
 
 ## Stack
-- Next.js (App Router) + TypeScript + Tailwind v4
+- Next.js (App Router) + TypeScript + Tailwind v3
 - Supabase (Postgres + Storage) — project "Petty petty project"
 - Fonts: Clash Display (display/logo) + General Sans (UI/body) via Fontshare
 

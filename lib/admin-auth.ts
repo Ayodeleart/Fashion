@@ -12,14 +12,17 @@ function sessionSecret(): string {
 }
 
 export function verifyCredentials(username: string, password: string): boolean {
-  const expectedUser = process.env.ADMIN_USERNAME;
-  const expectedPass = process.env.ADMIN_PASSWORD;
+  const expectedUser = process.env.ADMIN_USERNAME?.trim();
+  const expectedPass = process.env.ADMIN_PASSWORD?.trim();
   if (!expectedUser || !expectedPass) {
     throw new Error("ADMIN_USERNAME / ADMIN_PASSWORD are not set in the environment.");
   }
   // Timing-safe comparison so response time can't be used to guess characters.
-  const userMatch = timingSafeEqual(username, expectedUser);
-  const passMatch = timingSafeEqual(password, expectedPass);
+  // Both sides trimmed — a stray trailing space/newline from pasting a value
+  // into Vercel's env var UI (very common) would otherwise cause a silent,
+  // confusing "incorrect password" even when the visible text matches.
+  const userMatch = timingSafeEqual(username.trim(), expectedUser);
+  const passMatch = timingSafeEqual(password.trim(), expectedPass);
   return userMatch && passMatch;
 }
 

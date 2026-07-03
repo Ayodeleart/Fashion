@@ -33,6 +33,9 @@ export default async function AdminLoginPage({
             name="username"
             required
             autoComplete="username"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
             className="w-full border border-paper/20 bg-transparent text-paper rounded px-3 py-2 text-sm"
           />
         </div>

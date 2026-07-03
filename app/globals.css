@@ -1,31 +1,25 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  /* ---- Color tokens ---- */
-  --ink: #101010;              /* primary text, nav, footer bg */
-  --paper: #f3f1ec;            /* warm bone-white section bg */
-  --paper-raised: #ebe8e1;     /* slightly deeper panel bg */
-  --brass: #a9834f;            /* accent: dividers, hover states, small marks */
-  --muted: #6b6862;            /* secondary text */
-  --hero-fallback: #16302a;    /* deep emerald, used before a video's dominant color is read */
-  --hero-live: var(--hero-fallback); /* updated at runtime from video dominant color */
+  /* ---- Color tokens ----
+     Stored as space-separated RGB triplets (not hex) so Tailwind v3's
+     opacity modifiers (bg-ink/10, text-paper/60, etc.) work — see
+     tailwind.config.ts's withOpacity() helper. */
+  --ink: 16 16 16;              /* primary text, nav, footer bg */
+  --paper: 243 241 236;         /* warm bone-white section bg */
+  --paper-raised: 235 232 225;  /* slightly deeper panel bg */
+  --brass: 169 131 79;          /* accent: dividers, hover states, small marks */
+  --muted: 107 104 98;          /* secondary text */
 
-  --background: var(--paper);
-  --foreground: var(--ink);
-}
+  /* Hero background — NOT part of the Tailwind opacity system (set via
+     inline style in Hero.tsx as a plain "r, g, b" string), independent
+     of the RGB-triplet convention above. */
+  --hero-fallback: 22, 48, 42; /* deep emerald */
 
-@theme inline {
-  --color-ink: var(--ink);
-  --color-paper: var(--paper);
-  --color-paper-raised: var(--paper-raised);
-  --color-brass: var(--brass);
-  --color-muted: var(--muted);
-  --color-hero-live: var(--hero-live);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-
-  --font-display: var(--font-clash);
-  --font-body: var(--font-general);
+  --background: rgb(var(--paper));
+  --foreground: rgb(var(--ink));
 
   --ease-signature: cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -77,7 +71,7 @@ h1, h2, h3, .font-display {
 
 /* Visible keyboard focus, kept consistent site-wide */
 :focus-visible {
-  outline: 2px solid var(--brass);
+  outline: 2px solid rgb(var(--brass));
   outline-offset: 3px;
 }
 
@@ -88,5 +82,5 @@ h1, h2, h3, .font-display {
   font-size: 0.75rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: rgb(var(--muted));
 }
