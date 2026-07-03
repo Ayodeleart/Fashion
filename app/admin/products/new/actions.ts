@@ -17,7 +17,7 @@ export async function createProduct(formData: FormData) {
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
   const admin = createAdminClient();
-  const { error } = await admin.from("products").insert({
+  const { error } = await admin.from("ariana_products").insert({
     name,
     slug,
     price,

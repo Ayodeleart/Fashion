@@ -1,5 +1,7 @@
 import HeroUploadWorkflow from "@/components/admin/HeroUploadWorkflow";
 
+export const dynamic = "force-dynamic";
+
 export default function AdminHeroPage() {
   return (
     <div>

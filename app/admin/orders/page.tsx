@@ -1,5 +1,7 @@
 import { createAdminClient } from "@/lib/supabase-admin";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminOrdersPage() {
   let orders: { id: string; customer_email: string; total: number; currency: string; status: string; created_at: string }[] = [];
   let loadError: string | null = null;
@@ -7,7 +9,7 @@ export default async function AdminOrdersPage() {
   try {
     const admin = createAdminClient();
     const { data, error } = await admin
-      .from("orders")
+      .from("ariana_orders")
       .select("id, customer_email, total, currency, status, created_at")
       .order("created_at", { ascending: false });
     if (error) throw error;

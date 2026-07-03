@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase-admin";
 
+// Forced dynamic: this page reads live data on every request, so it
+// should never be statically prerendered at build time (which would
+// require real Supabase env vars to exist in the build environment).
+export const dynamic = "force-dynamic";
+
 export default async function AdminProductsPage() {
   let products: { id: string; name: string; price: number; currency: string; is_published: boolean }[] = [];
   let loadError: string | null = null;
@@ -8,7 +13,7 @@ export default async function AdminProductsPage() {
   try {
     const admin = createAdminClient();
     const { data, error } = await admin
-      .from("products")
+      .from("ariana_products")
       .select("id, name, price, currency, is_published")
       .order("created_at", { ascending: false });
     if (error) throw error;

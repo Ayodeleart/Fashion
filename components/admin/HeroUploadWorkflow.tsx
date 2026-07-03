@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 
 type Step = "upload" | "crop" | "color" | "publish" | "done";
 
@@ -155,6 +155,7 @@ export default function HeroUploadWorkflow() {
     setError(null);
 
     try {
+      const supabase = getSupabase();
       const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
       const { error: deskErr } = await supabase.storage
@@ -170,7 +171,7 @@ export default function HeroUploadWorkflow() {
       const { data: deskUrl } = supabase.storage.from("hero-videos").getPublicUrl(`${slug}-desktop.mp4`);
       const { data: mobUrl } = supabase.storage.from("hero-videos").getPublicUrl(`${slug}-mobile.webm`);
 
-      const { error: insertErr } = await supabase.from("hero_videos").insert({
+      const { error: insertErr } = await supabase.from("ariana_hero_videos").insert({
         label,
         desktop_url: deskUrl.publicUrl,
         mobile_url: mobUrl.publicUrl,
