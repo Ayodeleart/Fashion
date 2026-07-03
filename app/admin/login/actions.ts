@@ -9,15 +9,7 @@ export async function login(formData: FormData) {
   const password = String(formData.get("password") ?? "");
   const from = String(formData.get("from") ?? "/admin");
 
-  let valid: boolean;
-  try {
-    valid = verifyCredentials(username, password);
-  } catch {
-    // ADMIN_USERNAME/ADMIN_PASSWORD not set in this environment yet.
-    redirect(`/admin/login?error=config&from=${encodeURIComponent(from)}`);
-  }
-
-  if (!valid) {
+  if (!verifyCredentials(username, password)) {
     redirect(`/admin/login?error=invalid&from=${encodeURIComponent(from)}`);
   }
 

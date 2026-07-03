@@ -35,30 +35,35 @@ h1, h2, h3, .font-display {
 }
 
 /* ---- Scroll reveal system ----
-   Elements start hidden via [data-reveal], and get .is-visible added by
-   the useScrollReveal hook once ~15-25% is in view. Only fires once. */
-[data-reveal] {
-  opacity: 0;
-  transition: opacity 600ms var(--ease-signature), transform 600ms var(--ease-signature);
-}
+   Mobile only (per request — also fixes a real bug: this TV's 2021
+   browser doesn't reliably support IntersectionObserver, so on desktop
+   the reveal was never firing and content stayed invisible forever).
+   Above 767px, elements render fully visible immediately with no JS
+   dependency at all. */
+@media (max-width: 767px) {
+  [data-reveal] {
+    opacity: 0;
+    transition: opacity 600ms var(--ease-signature), transform 600ms var(--ease-signature);
+  }
 
-[data-reveal="heading"],
-[data-reveal="paragraph"],
-[data-reveal="stat"] {
-  transform: translateY(24px);
-}
+  [data-reveal="heading"],
+  [data-reveal="paragraph"],
+  [data-reveal="stat"] {
+    transform: translateY(24px);
+  }
 
-[data-reveal="image"] {
-  transform: translateY(30px) scale(0.98);
-}
+  [data-reveal="image"] {
+    transform: translateY(30px) scale(0.98);
+  }
 
-[data-reveal="card"] {
-  transform: translateY(20px);
-}
+  [data-reveal="card"] {
+    transform: translateY(20px);
+  }
 
-[data-reveal].is-visible {
-  opacity: 1;
-  transform: translateY(0) scale(1);
+  [data-reveal].is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

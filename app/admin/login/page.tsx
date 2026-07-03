@@ -20,12 +20,6 @@ export default async function AdminLoginPage({
             Incorrect username or password.
           </p>
         )}
-        {error === "config" && (
-          <p className="text-sm text-amber-300 bg-amber-950/40 border border-amber-900 rounded p-3 mb-5">
-            Admin credentials aren&apos;t configured yet — set ADMIN_USERNAME, ADMIN_PASSWORD, and
-            ADMIN_SESSION_SECRET in your environment.
-          </p>
-        )}
 
         <div className="mb-4">
           <label className="block text-sm text-paper/70 mb-1">Username</label>

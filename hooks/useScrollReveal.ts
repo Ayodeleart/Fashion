@@ -17,6 +17,17 @@ export function useScrollReveal<T extends HTMLElement = HTMLDivElement>(
     const container = containerRef.current;
     if (!container) return;
 
+    // Reveal animation is mobile-only (see globals.css) — desktop/TV
+    // content is already visible by default via CSS, so skip attaching
+    // an observer there entirely. Also guards against old browsers
+    // (e.g. a 2021 Smart TV browser) where IntersectionObserver may not
+    // exist at all — calling an undefined constructor would throw and
+    // could break other scripts on the page.
+    const isMobileWidth = window.innerWidth < 768;
+    if (!isMobileWidth || typeof IntersectionObserver === "undefined") {
+      return;
+    }
+
     const targets = Array.from(
       container.querySelectorAll<HTMLElement>("[data-reveal]")
     );
