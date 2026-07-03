@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+:root {
+  /* ---- Color tokens ---- */
+  --ink: #101010;              /* primary text, nav, footer bg */
+  --paper: #f3f1ec;            /* warm bone-white section bg */
+  --paper-raised: #ebe8e1;     /* slightly deeper panel bg */
+  --brass: #a9834f;            /* accent: dividers, hover states, small marks */
+  --muted: #6b6862;            /* secondary text */
+  --hero-fallback: #16302a;    /* deep emerald, used before a video's dominant color is read */
+  --hero-live: var(--hero-fallback); /* updated at runtime from video dominant color */
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-paper-raised: var(--paper-raised);
+  --color-brass: var(--brass);
+  --color-muted: var(--muted);
+  --color-hero-live: var(--hero-live);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --font-display: var(--font-clash);
+  --font-body: var(--font-general);
+
+  --ease-signature: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ---- Scroll reveal system ----
+   Elements start hidden via [data-reveal], and get .is-visible added by
+   the useScrollReveal hook once ~15-25% is in view. Only fires once. */
+[data-reveal] {
+  opacity: 0;
+  transition: opacity 600ms var(--ease-signature), transform 600ms var(--ease-signature);
+}
+
+[data-reveal="heading"],
+[data-reveal="paragraph"],
+[data-reveal="stat"] {
+  transform: translateY(24px);
+}
+
+[data-reveal="image"] {
+  transform: translateY(30px) scale(0.98);
+}
+
+[data-reveal="card"] {
+  transform: translateY(20px);
+}
+
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Visible keyboard focus, kept consistent site-wide */
+:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 3px;
+}
+
+/* Eyebrow / label utility — used for structural labels that carry real
+   meaning (e.g. section kickers), not decorative numbering */
+.eyebrow {
+  font-family: var(--font-body), sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
