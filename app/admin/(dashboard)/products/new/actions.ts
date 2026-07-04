@@ -17,16 +17,20 @@ export async function createProduct(formData: FormData) {
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
   const admin = createAdminClient();
-  const { error } = await admin.from("ariana_products").insert({
-    name,
-    slug,
-    price,
-    description: description || null,
-    category: category || null,
-    is_published: isPublished,
-  });
+  const { data, error } = await admin
+    .from("ariana_products")
+    .insert({
+      name,
+      slug,
+      price,
+      description: description || null,
+      category: category || null,
+      is_published: isPublished,
+    })
+    .select("id")
+    .single();
 
   if (error) throw new Error(error.message);
 
-  redirect("/admin/products");
+  redirect(`/admin/products/${data.id}`);
 }

@@ -93,6 +93,11 @@ create policy "Public can read lookbook panels"
   on ariana_lookbook_panels for select
   using (true);
 
+-- ---------- Product images bucket ----------
+insert into storage.buckets (id, name, public)
+values ('product-images', 'product-images', true)
+on conflict (id) do nothing;
+
 -- ---------- Orders / cart ----------
 create table if not exists ariana_orders (
   id uuid primary key default gen_random_uuid(),
