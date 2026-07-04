@@ -1,46 +1,31 @@
-import Hero, { HeroLook } from "@/components/Hero";
+import Hero, { HeroBanner } from "@/components/Hero";
 import Lookbook, { LookbookPanel } from "@/components/Lookbook";
 import ProductGrid, { Product } from "@/components/ProductGrid";
 import CraftSection from "@/components/CraftSection";
 import Footer from "@/components/Footer";
 import { getSupabase } from "@/lib/supabase";
 
-// FALLBACK DATA — only used if no hero look has been published yet from
-// /admin/hero (or if the Supabase fetch fails). Once looks exist in
-// ariana_hero_looks, those take over automatically.
-const fallbackHeroLooks: HeroLook[] = [
-  {
-    id: "look-1",
-    imageLeft: "/images/hero-1-left.png",
-    imageMiddle: "/images/hero-1-middle.png",
-    imageRight: "/images/hero-1-right.png",
-    bgColor: "22, 48, 42", // Emerald
-  },
-  {
-    id: "look-2",
-    imageLeft: "/images/hero-2-left.png",
-    imageMiddle: "/images/hero-2-middle.png",
-    imageRight: "/images/hero-2-right.png",
-    bgColor: "74, 47, 31", // Coffee Brown
-  },
+// FALLBACK — only used until a banner is published from /admin/hero, or
+// if the Supabase fetch fails.
+const fallbackHeroBanners: HeroBanner[] = [
+  { id: "fallback", imageDesktop: "/images/hero-desktop.jpg", imageMobile: "/images/hero-mobile.jpg" },
 ];
 
-async function getHeroLooks(): Promise<HeroLook[]> {
+async function getHeroBanners(): Promise<HeroBanner[]> {
   const supabase = getSupabase();
   const { data, error } = await supabase
-    .from("ariana_hero_looks")
-    .select("id, image_left_url, image_middle_url, image_right_url, bg_color")
+    .from("ariana_hero_banners")
+    .select("id, image_desktop_url, image_mobile_url, href")
     .eq("status", "published")
     .order("created_at", { ascending: false });
 
-  if (error || !data || data.length === 0) return fallbackHeroLooks;
+  if (error || !data || data.length === 0) return fallbackHeroBanners;
 
   return data.map((row) => ({
     id: row.id,
-    imageLeft: row.image_left_url,
-    imageMiddle: row.image_middle_url,
-    imageRight: row.image_right_url,
-    bgColor: row.bg_color,
+    imageDesktop: row.image_desktop_url,
+    imageMobile: row.image_mobile_url,
+    href: row.href,
   }));
 }
 
@@ -76,11 +61,11 @@ const newArrivals: Product[] = [
 ];
 
 export default async function Home() {
-  const [heroLooks, lookbookPanels] = await Promise.all([getHeroLooks(), getLookbookPanels()]);
+  const [heroBanners, lookbookPanels] = await Promise.all([getHeroBanners(), getLookbookPanels()]);
 
   return (
     <main>
-      <Hero looks={heroLooks} brandPrefix="AYODELE" brandSuffix="GOLD" tagline="fashionista" />
+      <Hero banners={heroBanners} />
 
       <Lookbook panels={lookbookPanels} />
 

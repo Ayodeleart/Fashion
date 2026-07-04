@@ -51,26 +51,30 @@ create table if not exists ariana_hero_videos (
   created_at timestamptz not null default now()
 );
 
--- ---------- Hero looks (image) workflow ----------
+-- ---------- Hero banners (full designed image, brand baked in) ----------
+-- Superseded the old cutout+wordmark "hero looks" system, which is no
+-- longer referenced anywhere in the app. That table/bucket
+-- (ariana_hero_looks / hero-looks) are safe to drop if you want to
+-- tidy up later:
+--   drop table if exists ariana_hero_looks;
 insert into storage.buckets (id, name, public)
-values ('hero-looks', 'hero-looks', true)
+values ('hero-banners', 'hero-banners', true)
 on conflict (id) do nothing;
 
-create table if not exists ariana_hero_looks (
+create table if not exists ariana_hero_banners (
   id uuid primary key default gen_random_uuid(),
   label text not null,
-  image_left_url text,
-  image_middle_url text not null,
-  image_right_url text,
-  bg_color text not null,
+  image_desktop_url text not null,
+  image_mobile_url text not null,
+  href text,
   status text not null default 'draft' check (status in ('draft', 'published')),
   created_at timestamptz not null default now()
 );
 
-alter table ariana_hero_looks enable row level security;
+alter table ariana_hero_banners enable row level security;
 
-create policy "Public can read published hero looks"
-  on ariana_hero_looks for select
+create policy "Public can read published hero banners"
+  on ariana_hero_banners for select
   using (status = 'published');
 
 -- ---------- Lookbook panels ----------

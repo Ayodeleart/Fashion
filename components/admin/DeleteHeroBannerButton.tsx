@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function DeleteHeroLookButton({ id }: { id: string }) {
+export default function DeleteHeroBannerButton({ id }: { id: string }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
 
   async function handleDelete() {
-    if (!confirm("Delete this hero look? This can't be undone.")) return;
+    if (!confirm("Delete this hero banner? This can't be undone.")) return;
     setPending(true);
     try {
       const res = await fetch(`/api/admin/hero?id=${id}`, { method: "DELETE" });
