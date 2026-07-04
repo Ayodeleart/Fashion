@@ -6,18 +6,28 @@ import { createAdminClient } from "@/lib/supabase-admin";
 // require real Supabase env vars to exist in the build environment).
 export const dynamic = "force-dynamic";
 
+type ProductRow = {
+  id: string;
+  name: string;
+  price: number;
+  currency: string;
+  is_published: boolean;
+  category: string | null;
+  ariana_product_images: { url: string }[];
+};
+
 export default async function AdminProductsPage() {
-  let products: { id: string; name: string; price: number; currency: string; is_published: boolean }[] = [];
+  let products: ProductRow[] = [];
   let loadError: string | null = null;
 
   try {
     const admin = createAdminClient();
     const { data, error } = await admin
       .from("ariana_products")
-      .select("id, name, price, currency, is_published")
+      .select("id, name, price, currency, is_published, category, ariana_product_images(url)")
       .order("created_at", { ascending: false });
     if (error) throw error;
-    products = data ?? [];
+    products = (data as unknown as ProductRow[]) ?? [];
   } catch (err) {
     loadError = err instanceof Error ? err.message : "Could not load products.";
   }
@@ -45,28 +55,47 @@ export default async function AdminProductsPage() {
       )}
 
       {products.length > 0 && (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-muted border-b border-ink/10">
-              <th className="py-2 font-normal">Name</th>
-              <th className="py-2 font-normal">Price</th>
-              <th className="py-2 font-normal">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((p) => (
-              <tr key={p.id} className="border-b border-ink/5">
-                <td className="py-3">
-                  <Link href={`/admin/products/${p.id}`} className="hover:text-brass">
+        <div className="space-y-2">
+          {products.map((p) => {
+            const thumb = p.ariana_product_images?.[0]?.url;
+            return (
+              <div
+                key={p.id}
+                className="flex items-center gap-4 border border-ink/10 rounded-lg p-3"
+              >
+                <div className="w-14 h-18 shrink-0 rounded overflow-hidden bg-paper-raised border border-ink/10">
+                  {thumb ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={thumb} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[10px] text-muted text-center px-1">
+                      No image
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <Link href={`/admin/products/${p.id}`} className="font-medium hover:text-brass block truncate">
                     {p.name}
                   </Link>
-                </td>
-                <td className="py-3">{p.currency} {p.price}</td>
-                <td className="py-3">{p.is_published ? "Published" : "Draft"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  <p className="text-sm text-muted">
+                    {p.currency} {p.price}
+                    {p.category && <> · {p.category}</>}
+                    {" · "}
+                    {p.is_published ? "Published" : "Draft"}
+                  </p>
+                </div>
+
+                <Link
+                  href={`/admin/products/${p.id}`}
+                  className="shrink-0 text-sm px-3 py-1.5 border border-ink/20 rounded hover:bg-ink/5 transition-colors"
+                >
+                  {thumb ? "Manage images" : "Upload images"}
+                </Link>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );

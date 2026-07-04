@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase-admin";
 import { updateProduct, deleteProduct } from "./actions";
 import ProductImageManager from "@/components/admin/ProductImageManager";
 import DeleteProductForm from "@/components/admin/DeleteProductForm";
+import { PRODUCT_CATEGORIES } from "@/lib/product-categories";
 
 export const dynamic = "force-dynamic";
 
@@ -66,11 +67,17 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
 
         <div>
           <label className="block text-sm mb-1">Category</label>
-          <input
+          <select
             name="category"
             defaultValue={product.category ?? ""}
+            required
             className="w-full border border-ink/20 rounded px-3 py-2 text-sm bg-white"
-          />
+          >
+            <option value="">Select a category</option>
+            {PRODUCT_CATEGORIES.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
         </div>
 
         <div>

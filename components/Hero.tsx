@@ -48,7 +48,7 @@ export default function Hero({ banners }: Props) {
   );
 
   return (
-    <section className="relative w-full h-[100svh] overflow-hidden">
+    <section className="relative w-full h-screen overflow-hidden">
       <nav className="absolute top-0 left-0 right-0 flex items-center justify-between px-6 md:px-12 py-6 md:py-8 text-paper z-20">
         <div className="flex gap-8 text-sm tracking-wide">
           <button className="hover:text-brass transition-colors">Catalog</button>

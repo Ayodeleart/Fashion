@@ -1,4 +1,5 @@
 import { createProduct } from "./actions";
+import { PRODUCT_CATEGORIES } from "@/lib/product-categories";
 
 export default function NewProductPage() {
   return (
@@ -18,7 +19,12 @@ export default function NewProductPage() {
 
         <div>
           <label className="block text-sm mb-1">Category</label>
-          <input name="category" className="w-full border border-ink/20 rounded px-3 py-2 text-sm bg-white" />
+          <select name="category" required className="w-full border border-ink/20 rounded px-3 py-2 text-sm bg-white">
+            <option value="">Select a category</option>
+            {PRODUCT_CATEGORIES.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
         </div>
 
         <div>
