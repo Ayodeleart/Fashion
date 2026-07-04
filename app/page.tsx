@@ -1,9 +1,15 @@
 import Hero, { HeroBanner } from "@/components/Hero";
 import Lookbook, { LookbookPanel } from "@/components/Lookbook";
 import ProductGrid, { Product } from "@/components/ProductGrid";
-import CraftSection from "@/components/CraftSection";
 import Footer from "@/components/Footer";
 import { getSupabase } from "@/lib/supabase";
+
+// Forced dynamic: without this, Next.js can prerender this page as static
+// HTML at build time and cache it — meaning new hero banners, lookbook
+// panels, or products published afterward via /admin wouldn't show up
+// until the next deployment, regardless of revalidatePath calls. Always
+// fetch live on every request instead.
+export const dynamic = "force-dynamic";
 
 // FALLBACK — only used until a banner is published from /admin/hero, or
 // if the Supabase fetch fails.
@@ -53,15 +59,44 @@ async function getLookbookPanels(): Promise<LookbookPanel[]> {
   }));
 }
 
-const newArrivals: Product[] = [
+const fallbackProducts: Product[] = [
   { id: "p1", name: "Structured Wool Blazer", price: 890, currency: "USD", image: "/images/product-1.jpg", href: "/product/structured-wool-blazer" },
   { id: "p2", name: "Silk Slip Dress", price: 620, currency: "USD", image: "/images/product-2.jpg", href: "/product/silk-slip-dress" },
   { id: "p3", name: "Tailored Wide-Leg Trouser", price: 410, currency: "USD", image: "/images/product-3.jpg", href: "/product/tailored-wide-leg-trouser" },
   { id: "p4", name: "Cashmere Knit Top", price: 340, currency: "USD", image: "/images/product-4.jpg", href: "/product/cashmere-knit-top" },
 ];
 
+async function getNewArrivals(): Promise<Product[]> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("ariana_products")
+    .select("id, name, price, currency, slug, ariana_product_images(url, position)")
+    .eq("is_published", true)
+    .order("created_at", { ascending: false })
+    .limit(8);
+
+  if (error || !data || data.length === 0) return fallbackProducts;
+
+  return data.map((row) => {
+    const images = (row.ariana_product_images as { url: string; position: number }[]) ?? [];
+    const firstImage = [...images].sort((a, b) => a.position - b.position)[0];
+    return {
+      id: row.id,
+      name: row.name,
+      price: row.price,
+      currency: row.currency,
+      image: firstImage?.url ?? "/images/product-placeholder.jpg",
+      href: `/product/${row.slug}`,
+    };
+  });
+}
+
 export default async function Home() {
-  const [heroBanners, lookbookPanels] = await Promise.all([getHeroBanners(), getLookbookPanels()]);
+  const [heroBanners, lookbookPanels, newArrivals] = await Promise.all([
+    getHeroBanners(),
+    getLookbookPanels(),
+    getNewArrivals(),
+  ]);
 
   return (
     <main>
@@ -70,15 +105,6 @@ export default async function Home() {
       <Lookbook panels={lookbookPanels} />
 
       <ProductGrid title="New Arrivals" products={newArrivals} />
-
-      <CraftSection
-        image="/images/craft.jpg"
-        eyebrow="Craft"
-        heading="Every seam considered"
-        body="Each piece moves through pattern, fit, and finish with the same
-          attention — cut close enough to hold its shape, loose enough to
-          move the way you do. Fabric first, decoration last."
-      />
 
       <Footer brandName="AyodeleGold" />
     </main>

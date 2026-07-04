@@ -25,15 +25,16 @@ export async function POST(request: NextRequest) {
     const mobileUrl = String(body.mobileUrl ?? "").trim();
 
     if (!label) return NextResponse.json({ error: "Give this banner a label." });
-    if (!desktopUrl) return NextResponse.json({ error: "The desktop image is required." });
-    if (!mobileUrl) return NextResponse.json({ error: "The mobile image is required." });
+    if (!desktopUrl && !mobileUrl) {
+      return NextResponse.json({ error: "Upload at least one image (desktop or mobile)." });
+    }
 
     const admin = createAdminClient();
 
     const { error: insertErr } = await admin.from("ariana_hero_banners").insert({
       label,
-      image_desktop_url: desktopUrl,
-      image_mobile_url: mobileUrl,
+      image_desktop_url: desktopUrl || null,
+      image_mobile_url: mobileUrl || null,
       href: href || null,
       status: "published",
     });

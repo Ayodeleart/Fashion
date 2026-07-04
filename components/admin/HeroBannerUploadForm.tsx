@@ -41,19 +41,25 @@ export default function HeroBannerUploadForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!label.trim() || !desktopFile || !mobileFile) {
-      setError("Label, a desktop image, and a mobile image are all required.");
+    if (!label.trim() || (!desktopFile && !mobileFile)) {
+      setError("Label and at least one image (desktop or mobile) are required.");
       return;
     }
     setPending(true);
     setError(null);
 
     try {
-      setStatus("Uploading desktop image…");
-      const desktopUrl = await uploadDirect(desktopFile, "desktop");
+      let desktopUrl = "";
+      let mobileUrl = "";
 
-      setStatus("Uploading mobile image…");
-      const mobileUrl = await uploadDirect(mobileFile, "mobile");
+      if (desktopFile) {
+        setStatus("Uploading desktop image…");
+        desktopUrl = await uploadDirect(desktopFile, "desktop");
+      }
+      if (mobileFile) {
+        setStatus("Uploading mobile image…");
+        mobileUrl = await uploadDirect(mobileFile, "mobile");
+      }
 
       setStatus("Publishing…");
       const res = await fetch("/api/admin/hero", {
@@ -86,9 +92,9 @@ export default function HeroBannerUploadForm() {
   return (
     <form onSubmit={handleSubmit} className="max-w-sm space-y-4 border border-ink/10 rounded p-5">
       <p className="text-xs text-muted">
-        Upload the fully designed banner for each screen size — brand name, tagline, and any
-        text should already be part of the image. No processing happens to these; they're
-        shown exactly as uploaded.
+        Upload the fully designed banner per screen size — desktop and mobile are independent,
+        upload one or both. Brand name, tagline, and any text should already be part of the
+        image; nothing is processed, shown exactly as uploaded.
       </p>
 
       {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-2">{error}</p>}

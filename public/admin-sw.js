@@ -1,5 +1,5 @@
-const CACHE_NAME = "ariana-admin-v1";
-const APP_SHELL = ["/admin", "/admin-manifest.json", "/admin-icon-192.png", "/admin-icon-512.png"];
+const CACHE_NAME = "ariana-admin-v2";
+const APP_SHELL = ["/admin-manifest.json", "/admin-icon-192.png", "/admin-icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -17,18 +17,21 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Network-first for admin routes so data stays fresh; falls back to
-// cache when offline (e.g. spotty connection while managing on mobile).
+// Deliberately narrow: only serve the exact static app-shell files
+// (manifest + icons) from cache-first, for offline install support.
+// Everything else — page navigations, Next.js's RSC data fetches for
+// client-side routing, all /api/admin/* calls — passes through
+// completely untouched. The previous version intercepted anything
+// with "/admin" in the URL (including POST requests and RSC payload
+// fetches) and tried to cache all of it, which risked interfering
+// with Next's fast client-side navigation between admin pages.
 self.addEventListener("fetch", (event) => {
-  if (!event.request.url.includes("/admin")) return;
+  if (event.request.method !== "GET") return;
+
+  const url = new URL(event.request.url);
+  if (!APP_SHELL.includes(url.pathname)) return;
 
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        return response;
-      })
-      .catch(() => caches.match(event.request))
+    caches.match(event.request).then((cached) => cached || fetch(event.request))
   );
 });
