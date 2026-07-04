@@ -3,10 +3,12 @@ import Lookbook, { LookbookPanel } from "@/components/Lookbook";
 import ProductGrid, { Product } from "@/components/ProductGrid";
 import CraftSection from "@/components/CraftSection";
 import Footer from "@/components/Footer";
+import { getSupabase } from "@/lib/supabase";
 
-// PLACEHOLDER DATA — swap for real background-removed cutouts (via
-// /admin/hero) and Supabase-fetched products once assets exist.
-const heroLooks: HeroLook[] = [
+// FALLBACK DATA — only used if no hero look has been published yet from
+// /admin/hero (or if the Supabase fetch fails). Once looks exist in
+// ariana_hero_looks, those take over automatically.
+const fallbackHeroLooks: HeroLook[] = [
   {
     id: "look-1",
     imageLeft: "/images/hero-1-left.png",
@@ -23,6 +25,25 @@ const heroLooks: HeroLook[] = [
   },
 ];
 
+async function getHeroLooks(): Promise<HeroLook[]> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("ariana_hero_looks")
+    .select("id, image_left_url, image_middle_url, image_right_url, bg_color")
+    .eq("status", "published")
+    .order("created_at", { ascending: false });
+
+  if (error || !data || data.length === 0) return fallbackHeroLooks;
+
+  return data.map((row) => ({
+    id: row.id,
+    imageLeft: row.image_left_url,
+    imageMiddle: row.image_middle_url,
+    imageRight: row.image_right_url,
+    bgColor: row.bg_color,
+  }));
+}
+
 const lookbookPanels: LookbookPanel[] = [
   { id: "look-1", label: "The Tailored Line", image: "/images/look-1.jpg", href: "/catalog?look=tailored" },
   { id: "look-2", label: "Evening", image: "/images/look-2.jpg", href: "/catalog?look=evening" },
@@ -36,7 +57,9 @@ const newArrivals: Product[] = [
   { id: "p4", name: "Cashmere Knit Top", price: 340, currency: "USD", image: "/images/product-4.jpg", href: "/product/cashmere-knit-top" },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const heroLooks = await getHeroLooks();
+
   return (
     <main>
       <Hero looks={heroLooks} brandPrefix="AYODELE" brandSuffix="GOLD" tagline="fashionista" />

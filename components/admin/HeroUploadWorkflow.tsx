@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { publishHeroLook } from "./hero-actions";
 
 const COLOR_PRESETS = [
   { label: "Emerald", value: "22, 48, 42" },
@@ -87,7 +86,8 @@ export default function HeroUploadWorkflow() {
         form.set(slot, new File([blob], `${slot}.${ext}`, { type: s.processedBlob ? "image/png" : s.file.type }));
       });
 
-      const result = await publishHeroLook(form);
+      const response = await fetch("/api/admin/hero", { method: "POST", body: form });
+      const result: { error?: string } = await response.json();
       if (result.error) throw new Error(result.error);
 
       setDone(true);

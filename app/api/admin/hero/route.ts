@@ -1,28 +1,35 @@
-"use server";
-
+import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase-admin";
+import { isValidSessionToken, ADMIN_COOKIE_NAME } from "@/lib/admin-auth";
 
 type Slot = "left" | "middle" | "right";
 
-export async function publishHeroLook(formData: FormData): Promise<{ error?: string }> {
+export async function POST(request: NextRequest) {
+  // Route handlers aren't behind the admin middleware the way pages are,
+  // so check the session cookie explicitly here.
+  const session = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
+  if (!isValidSessionToken(session)) {
+    return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+  }
+
+  const formData = await request.formData();
   const label = String(formData.get("label") ?? "").trim();
   const bgColor = String(formData.get("bgColor") ?? "").trim();
 
-  if (!label) return { error: "Give this look a label." };
-  if (!bgColor) return { error: "Missing background color." };
+  if (!label) return NextResponse.json({ error: "Give this look a label." });
+  if (!bgColor) return NextResponse.json({ error: "Missing background color." });
 
   const middleFile = formData.get("middle") as File | null;
   if (!middleFile || middleFile.size === 0) {
-    return { error: "The middle image is required — it's the only one that shows on mobile." };
+    return NextResponse.json({
+      error: "The middle image is required — it's the only one that shows on mobile.",
+    });
   }
 
   const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
   try {
-    // Inside the try block on purpose: if SUPABASE_SERVICE_ROLE_KEY is
-    // missing/misconfigured on Vercel, this throws immediately, and we
-    // want that surfaced as a real message instead of a generic
-    // "error in Server Components render" digest.
     const admin = createAdminClient();
 
     async function uploadSlot(slot: Slot): Promise<string | null> {
@@ -57,8 +64,11 @@ export async function publishHeroLook(formData: FormData): Promise<{ error?: str
     });
     if (insertErr) throw new Error(`Insert: ${insertErr.message}`);
 
-    return {};
+    revalidatePath("/");
+    revalidatePath("/admin/hero");
+
+    return NextResponse.json({});
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Publish failed." };
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Publish failed." });
   }
 }
