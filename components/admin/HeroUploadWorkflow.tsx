@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getSupabase } from "@/lib/supabase";
+import { publishHeroLook } from "./hero-actions";
 
 const COLOR_PRESETS = [
   { label: "Emerald", value: "22, 48, 42" },
@@ -75,36 +75,20 @@ export default function HeroUploadWorkflow() {
     setError(null);
 
     try {
-      const supabase = getSupabase();
-      const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      const form = new FormData();
+      form.set("label", label);
+      form.set("bgColor", activeColor());
 
-      async function uploadSlot(slot: Slot): Promise<string | null> {
+      (["left", "middle", "right"] as Slot[]).forEach((slot) => {
         const s = slots[slot];
-        if (!s.file) return null;
+        if (!s.file) return;
         const blob = s.processedBlob ?? s.file;
-        const ext = s.processedBlob ? "png" : s.file.name.split(".").pop();
-        const path = `${slug}-${slot}.${ext}`;
-        const { error: upErr } = await supabase.storage.from("hero-looks").upload(path, blob, { upsert: true });
-        if (upErr) throw upErr;
-        const { data } = supabase.storage.from("hero-looks").getPublicUrl(path);
-        return data.publicUrl;
-      }
-
-      const [leftUrl, middleUrl, rightUrl] = await Promise.all([
-        uploadSlot("left"),
-        uploadSlot("middle"),
-        uploadSlot("right"),
-      ]);
-
-      const { error: insertErr } = await supabase.from("ariana_hero_looks").insert({
-        label,
-        image_left_url: leftUrl,
-        image_middle_url: middleUrl,
-        image_right_url: rightUrl,
-        bg_color: activeColor(),
-        status: "published",
+        const ext = s.processedBlob ? "png" : s.file.name.split(".").pop() || "png";
+        form.set(slot, new File([blob], `${slot}.${ext}`, { type: s.processedBlob ? "image/png" : s.file.type }));
       });
-      if (insertErr) throw insertErr;
+
+      const result = await publishHeroLook(form);
+      if (result.error) throw new Error(result.error);
 
       setDone(true);
     } catch (err) {

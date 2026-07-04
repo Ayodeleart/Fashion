@@ -51,6 +51,28 @@ create table if not exists ariana_hero_videos (
   created_at timestamptz not null default now()
 );
 
+-- ---------- Hero looks (image) workflow ----------
+insert into storage.buckets (id, name, public)
+values ('hero-looks', 'hero-looks', true)
+on conflict (id) do nothing;
+
+create table if not exists ariana_hero_looks (
+  id uuid primary key default gen_random_uuid(),
+  label text not null,
+  image_left_url text,
+  image_middle_url text not null,
+  image_right_url text,
+  bg_color text not null,
+  status text not null default 'draft' check (status in ('draft', 'published')),
+  created_at timestamptz not null default now()
+);
+
+alter table ariana_hero_looks enable row level security;
+
+create policy "Public can read published hero looks"
+  on ariana_hero_looks for select
+  using (status = 'published');
+
 -- ---------- Orders / cart ----------
 create table if not exists ariana_orders (
   id uuid primary key default gen_random_uuid(),
