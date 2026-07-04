@@ -14,29 +14,22 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const formData = await request.formData();
-    const label = String(formData.get("label") ?? "").trim();
-    const href = String(formData.get("href") ?? "").trim() || "#";
-    const file = formData.get("image") as File | null;
+    // JSON body — the client already uploaded the image directly to
+    // Supabase Storage via a signed URL (see sign-upload/route.ts).
+    const body = await request.json();
+    const label = String(body.label ?? "").trim();
+    const href = String(body.href ?? "").trim() || "#";
+    const imageUrl = String(body.imageUrl ?? "").trim();
 
     if (!label) return NextResponse.json({ error: "Give this panel a label." });
-    if (!file || file.size === 0) return NextResponse.json({ error: "An image is required." });
+    if (!imageUrl) return NextResponse.json({ error: "An image is required." });
 
     const admin = createAdminClient();
-    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-    const path = `${crypto.randomUUID()}.${ext}`;
-
-    const { error: upErr } = await admin.storage.from("lookbook").upload(path, file, {
-      contentType: file.type || "image/jpeg",
-    });
-    if (upErr) throw new Error(upErr.message);
-
-    const { data: pub } = admin.storage.from("lookbook").getPublicUrl(path);
 
     const { error: insertErr } = await admin.from("ariana_lookbook_panels").insert({
       label,
       href,
-      image_url: pub.publicUrl,
+      image_url: imageUrl,
     });
     if (insertErr) throw new Error(insertErr.message);
 

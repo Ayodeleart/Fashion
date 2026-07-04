@@ -2,6 +2,28 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { getSupabase } from "@/lib/supabase";
+
+async function uploadDirect(file: File): Promise<string> {
+  const ext = file.name.split(".").pop() || "jpg";
+
+  const signRes = await fetch("/api/admin/lookbook/sign-upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ext }),
+  });
+  const signed = await signRes.json();
+  if (signed.error) throw new Error(signed.error);
+
+  const supabase = getSupabase();
+  const { error: uploadErr } = await supabase.storage
+    .from("lookbook")
+    .uploadToSignedUrl(signed.path, signed.token, file);
+  if (uploadErr) throw new Error(uploadErr.message);
+
+  const { data } = supabase.storage.from("lookbook").getPublicUrl(signed.path);
+  return data.publicUrl;
+}
 
 export default function LookbookUploadForm() {
   const router = useRouter();
@@ -21,12 +43,13 @@ export default function LookbookUploadForm() {
     setError(null);
 
     try {
-      const form = new FormData();
-      form.set("label", label);
-      form.set("href", href || "#");
-      form.set("image", file);
+      const imageUrl = await uploadDirect(file);
 
-      const res = await fetch("/api/admin/lookbook", { method: "POST", body: form });
+      const res = await fetch("/api/admin/lookbook", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label, href: href || "#", imageUrl }),
+      });
       const result: { error?: string } = await res.json();
       if (result.error) throw new Error(result.error);
 

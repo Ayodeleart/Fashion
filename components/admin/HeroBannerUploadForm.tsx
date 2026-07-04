@@ -2,6 +2,32 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { getSupabase } from "@/lib/supabase";
+
+async function uploadDirect(file: File, variant: "desktop" | "mobile"): Promise<string> {
+  const ext = file.name.split(".").pop() || "jpg";
+
+  // 1. Ask our (tiny, JSON-only) server route for a signed upload slot.
+  const signRes = await fetch("/api/admin/hero/sign-upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ variant, ext }),
+  });
+  const signed = await signRes.json();
+  if (signed.error) throw new Error(signed.error);
+
+  // 2. Upload the actual file bytes straight to Supabase — this never
+  //    touches Vercel, so there's no ~4.5MB function body limit here.
+  //    Full-resolution images go through untouched.
+  const supabase = getSupabase();
+  const { error: uploadErr } = await supabase.storage
+    .from("hero-banners")
+    .uploadToSignedUrl(signed.path, signed.token, file);
+  if (uploadErr) throw new Error(uploadErr.message);
+
+  const { data } = supabase.storage.from("hero-banners").getPublicUrl(signed.path);
+  return data.publicUrl;
+}
 
 export default function HeroBannerUploadForm() {
   const router = useRouter();
@@ -10,6 +36,7 @@ export default function HeroBannerUploadForm() {
   const [desktopFile, setDesktopFile] = useState<File | null>(null);
   const [mobileFile, setMobileFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -22,13 +49,18 @@ export default function HeroBannerUploadForm() {
     setError(null);
 
     try {
-      const form = new FormData();
-      form.set("label", label);
-      form.set("href", href);
-      form.set("desktop", desktopFile);
-      form.set("mobile", mobileFile);
+      setStatus("Uploading desktop image…");
+      const desktopUrl = await uploadDirect(desktopFile, "desktop");
 
-      const res = await fetch("/api/admin/hero", { method: "POST", body: form });
+      setStatus("Uploading mobile image…");
+      const mobileUrl = await uploadDirect(mobileFile, "mobile");
+
+      setStatus("Publishing…");
+      const res = await fetch("/api/admin/hero", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label, href, desktopUrl, mobileUrl }),
+      });
 
       let result: { error?: string } = {};
       try {
@@ -47,6 +79,7 @@ export default function HeroBannerUploadForm() {
       setError(err instanceof Error ? err.message : "Publish failed.");
     } finally {
       setPending(false);
+      setStatus(null);
     }
   }
 
@@ -107,7 +140,7 @@ export default function HeroBannerUploadForm() {
         disabled={pending}
         className="text-sm px-4 py-2 bg-brass text-ink rounded hover:opacity-90 transition-opacity disabled:opacity-50"
       >
-        {pending ? "Uploading…" : "Publish banner"}
+        {pending ? status ?? "Working…" : "Publish banner"}
       </button>
     </form>
   );

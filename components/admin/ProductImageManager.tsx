@@ -2,8 +2,30 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { getSupabase } from "@/lib/supabase";
 
 type ProductImage = { id: string; url: string; alt: string | null };
+
+async function uploadDirect(productId: string, file: File): Promise<string> {
+  const ext = file.name.split(".").pop() || "jpg";
+
+  const signRes = await fetch(`/api/admin/products/${productId}/images/sign-upload`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ext }),
+  });
+  const signed = await signRes.json();
+  if (signed.error) throw new Error(signed.error);
+
+  const supabase = getSupabase();
+  const { error: uploadErr } = await supabase.storage
+    .from("product-images")
+    .uploadToSignedUrl(signed.path, signed.token, file);
+  if (uploadErr) throw new Error(uploadErr.message);
+
+  const { data } = supabase.storage.from("product-images").getPublicUrl(signed.path);
+  return data.publicUrl;
+}
 
 export default function ProductImageManager({
   productId,
@@ -27,10 +49,13 @@ export default function ProductImageManager({
     setError(null);
 
     try {
-      const form = new FormData();
-      form.set("image", file);
+      const imageUrl = await uploadDirect(productId, file);
 
-      const res = await fetch(`/api/admin/products/${productId}/images`, { method: "POST", body: form });
+      const res = await fetch(`/api/admin/products/${productId}/images`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl }),
+      });
       const result: { error?: string } = await res.json();
       if (result.error) throw new Error(result.error);
 

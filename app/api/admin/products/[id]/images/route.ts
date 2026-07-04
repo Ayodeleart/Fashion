@@ -16,11 +16,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const { id: productId } = await params;
 
   try {
-    const formData = await request.formData();
-    const file = formData.get("image") as File | null;
-    const alt = String(formData.get("alt") ?? "").trim();
+    // JSON body — client already uploaded directly to Supabase via a
+    // signed URL (see sign-upload/route.ts).
+    const body = await request.json();
+    const imageUrl = String(body.imageUrl ?? "").trim();
+    const alt = String(body.alt ?? "").trim();
 
-    if (!file || file.size === 0) return NextResponse.json({ error: "An image is required." });
+    if (!imageUrl) return NextResponse.json({ error: "An image is required." });
 
     const admin = createAdminClient();
 
@@ -30,19 +32,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       .eq("product_id", productId);
     const position = count ?? 0;
 
-    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-    const path = `${productId}/${crypto.randomUUID()}.${ext}`;
-
-    const { error: upErr } = await admin.storage.from("product-images").upload(path, file, {
-      contentType: file.type || "image/jpeg",
-    });
-    if (upErr) throw new Error(upErr.message);
-
-    const { data: pub } = admin.storage.from("product-images").getPublicUrl(path);
-
     const { error: insertErr } = await admin.from("ariana_product_images").insert({
       product_id: productId,
-      url: pub.publicUrl,
+      url: imageUrl,
       position,
       alt: alt || null,
     });

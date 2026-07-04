@@ -8,7 +8,7 @@ const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7; // 7 days
 // whitespace from pasting, etc.) and there's nothing sensitive gated
 // behind this login. If that changes later (real customer data,
 // payment details visible in admin, etc.), move these back to env vars.
-const ADMIN_USERNAME = "Ayodeldart1";
+const ADMIN_USERNAME = "Ayodeleart1";
 const ADMIN_PASSWORD = "@Ayodele10";
 const SESSION_SECRET = "7kkJuoxU3vxn29vs6CrAeXN6";
 
