@@ -14,27 +14,25 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // JSON body now — the client already uploaded both images directly
-    // to Supabase Storage via a signed URL (see sign-upload/route.ts)
-    // before calling this. This endpoint only ever handles small JSON,
-    // so it can never hit Vercel's function body-size limit.
+    // JSON body — the client already uploaded the image directly to
+    // Supabase Storage via a signed URL (see sign-upload/route.ts).
+    // Desktop and mobile are now separate rows entirely (device column)
+    // — no shared banner object, no fallback substitution between them.
     const body = await request.json();
     const label = String(body.label ?? "").trim();
     const href = String(body.href ?? "").trim();
-    const desktopUrl = String(body.desktopUrl ?? "").trim();
-    const mobileUrl = String(body.mobileUrl ?? "").trim();
+    const imageUrl = String(body.imageUrl ?? "").trim();
+    const device = body.device === "mobile" ? "mobile" : "desktop";
 
     if (!label) return NextResponse.json({ error: "Give this banner a label." });
-    if (!desktopUrl && !mobileUrl) {
-      return NextResponse.json({ error: "Upload at least one image (desktop or mobile)." });
-    }
+    if (!imageUrl) return NextResponse.json({ error: "An image is required." });
 
     const admin = createAdminClient();
 
     const { error: insertErr } = await admin.from("ariana_hero_banners").insert({
       label,
-      image_desktop_url: desktopUrl || null,
-      image_mobile_url: mobileUrl || null,
+      device,
+      image_url: imageUrl,
       href: href || null,
       status: "published",
     });
@@ -62,18 +60,14 @@ export async function DELETE(request: NextRequest) {
 
     const { data: row, error: fetchErr } = await admin
       .from("ariana_hero_banners")
-      .select("image_desktop_url, image_mobile_url")
+      .select("image_url")
       .eq("id", id)
       .single();
     if (fetchErr) throw new Error(fetchErr.message);
 
-    const paths = [row.image_desktop_url, row.image_mobile_url]
-      .filter((url): url is string => Boolean(url))
-      .map((url) => url.split("/hero-banners/").pop())
-      .filter((p): p is string => Boolean(p));
-
-    if (paths.length > 0) {
-      await admin.storage.from("hero-banners").remove(paths);
+    const path = row.image_url?.split("/hero-banners/").pop();
+    if (path) {
+      await admin.storage.from("hero-banners").remove([path]);
     }
 
     const { error: deleteErr } = await admin.from("ariana_hero_banners").delete().eq("id", id);

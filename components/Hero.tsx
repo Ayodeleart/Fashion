@@ -4,31 +4,48 @@ import { useState } from "react";
 
 export type HeroBanner = {
   id: string;
-  imageDesktop: string | null;
-  imageMobile: string | null;
+  imageUrl: string;
   href?: string | null;
 };
 
 type Props = {
-  banners: HeroBanner[];
+  desktopBanners: HeroBanner[];
+  mobileBanners: HeroBanner[];
 };
 
 /**
- * Full-bleed designed hero image(s) — brand name, tagline, and any other
- * text is baked into the artwork itself (uploaded via /admin/hero), so
- * this component just displays it responsively. Desktop and mobile
- * images are independent (either can be uploaded alone) — if one is
- * missing for a given banner, the other is used for both breakpoints
- * rather than showing nothing.
+ * Desktop and mobile hero banners are completely independent lists —
+ * uploaded separately in /admin/hero, stored as separate rows tagged by
+ * device. There is NO fallback substitution between them: if only a
+ * mobile banner exists, desktop shows nothing (not the mobile image
+ * stretched), and vice versa. Which one renders is controlled by CSS
+ * media queries (hidden md:block / block md:hidden) rather than a JS
+ * viewport check, so there's no flash-of-wrong-image on load.
  *
- * No auto-slide: multiple banners are navigated manually via the dots,
- * with a crossfade transition between them. Only the top nav is
- * overlaid at runtime — everything else is part of the uploaded image.
+ * No auto-slide — multiple banners in either list navigate via manual
+ * dots with a crossfade transition.
  */
-export default function Hero({ banners }: Props) {
-  const [activeIndex, setActiveIndex] = useState(0);
+export default function Hero({ desktopBanners, mobileBanners }: Props) {
+  if (desktopBanners.length === 0 && mobileBanners.length === 0) return null;
 
-  if (banners.length === 0) return null;
+  return (
+    <>
+      {desktopBanners.length > 0 && (
+        <div className="hidden md:block">
+          <BannerCarousel banners={desktopBanners} />
+        </div>
+      )}
+      {mobileBanners.length > 0 && (
+        <div className="block md:hidden">
+          <BannerCarousel banners={mobileBanners} />
+        </div>
+      )}
+    </>
+  );
+}
+
+function BannerCarousel({ banners }: { banners: HeroBanner[] }) {
+  const [activeIndex, setActiveIndex] = useState(0);
 
   return (
     <section className="relative w-full h-screen overflow-hidden">
@@ -40,17 +57,10 @@ export default function Hero({ banners }: Props) {
         <a href="/cart" className="text-sm tracking-wide hover:text-brass transition-colors">Cart</a>
       </nav>
 
-      {/* Crossfade: each banner is its own layer, only the active one is
-          opaque. Transition is CSS-only (no JS animation loop), and
-          switching only happens on manual dot click — never automatic. */}
       {banners.map((b, i) => {
-        const d = b.imageDesktop ?? b.imageMobile!;
-        const m = b.imageMobile ?? b.imageDesktop!;
         const content = (
-          <picture>
-            <source media="(min-width: 768px)" srcSet={d} />
-            <img src={m} alt="" className="w-full h-full object-cover" />
-          </picture>
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={b.imageUrl} alt="" className="w-full h-full object-cover" />
         );
         return (
           <div
@@ -58,13 +68,7 @@ export default function Hero({ banners }: Props) {
             className="absolute inset-0 z-0 transition-opacity duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
             style={{ opacity: i === activeIndex ? 1 : 0, pointerEvents: i === activeIndex ? "auto" : "none" }}
           >
-            {b.href ? (
-              <a href={b.href} className="block w-full h-full">
-                {content}
-              </a>
-            ) : (
-              content
-            )}
+            {b.href ? <a href={b.href} className="block w-full h-full">{content}</a> : content}
           </div>
         );
       })}

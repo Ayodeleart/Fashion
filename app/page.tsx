@@ -12,27 +12,29 @@ import { getSupabase } from "@/lib/supabase";
 export const dynamic = "force-dynamic";
 
 // FALLBACK — only used until a banner is published from /admin/hero, or
-// if the Supabase fetch fails.
-const fallbackHeroBanners: HeroBanner[] = [
-  { id: "fallback", imageDesktop: "/images/hero-desktop.jpg", imageMobile: "/images/hero-mobile.jpg" },
+// if the Supabase fetch fails. Kept separate per device, no substitution.
+const fallbackDesktopBanners: HeroBanner[] = [
+  { id: "fallback-desktop", imageUrl: "/images/hero-desktop.jpg" },
+];
+const fallbackMobileBanners: HeroBanner[] = [
+  { id: "fallback-mobile", imageUrl: "/images/hero-mobile.jpg" },
 ];
 
-async function getHeroBanners(): Promise<HeroBanner[]> {
+async function getHeroBanners(device: "desktop" | "mobile"): Promise<HeroBanner[]> {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("ariana_hero_banners")
-    .select("id, image_desktop_url, image_mobile_url, href")
+    .select("id, image_url, href")
     .eq("status", "published")
+    .eq("device", device)
+    .order("position", { ascending: true })
     .order("created_at", { ascending: false });
 
-  if (error || !data || data.length === 0) return fallbackHeroBanners;
+  if (error || !data || data.length === 0) {
+    return device === "desktop" ? fallbackDesktopBanners : fallbackMobileBanners;
+  }
 
-  return data.map((row) => ({
-    id: row.id,
-    imageDesktop: row.image_desktop_url,
-    imageMobile: row.image_mobile_url,
-    href: row.href,
-  }));
+  return data.map((row) => ({ id: row.id, imageUrl: row.image_url, href: row.href }));
 }
 
 const fallbackLookbookPanels: LookbookPanel[] = [
@@ -92,15 +94,16 @@ async function getNewArrivals(): Promise<Product[]> {
 }
 
 export default async function Home() {
-  const [heroBanners, lookbookPanels, newArrivals] = await Promise.all([
-    getHeroBanners(),
+  const [desktopBanners, mobileBanners, lookbookPanels, newArrivals] = await Promise.all([
+    getHeroBanners("desktop"),
+    getHeroBanners("mobile"),
     getLookbookPanels(),
     getNewArrivals(),
   ]);
 
   return (
     <main>
-      <Hero banners={heroBanners} />
+      <Hero desktopBanners={desktopBanners} mobileBanners={mobileBanners} />
 
       <Lookbook panels={lookbookPanels} />
 

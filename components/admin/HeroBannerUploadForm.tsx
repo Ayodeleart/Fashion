@@ -4,21 +4,17 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
 
-async function uploadDirect(file: File, variant: "desktop" | "mobile"): Promise<string> {
+async function uploadDirect(file: File, device: "desktop" | "mobile"): Promise<string> {
   const ext = file.name.split(".").pop() || "jpg";
 
-  // 1. Ask our (tiny, JSON-only) server route for a signed upload slot.
   const signRes = await fetch("/api/admin/hero/sign-upload", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ variant, ext }),
+    body: JSON.stringify({ variant: device, ext }),
   });
   const signed = await signRes.json();
   if (signed.error) throw new Error(signed.error);
 
-  // 2. Upload the actual file bytes straight to Supabase — this never
-  //    touches Vercel, so there's no ~4.5MB function body limit here.
-  //    Full-resolution images go through untouched.
   const supabase = getSupabase();
   const { error: uploadErr } = await supabase.storage
     .from("hero-banners")
@@ -29,43 +25,33 @@ async function uploadDirect(file: File, variant: "desktop" | "mobile"): Promise<
   return data.publicUrl;
 }
 
-export default function HeroBannerUploadForm() {
+export default function HeroBannerUploadForm({ device }: { device: "desktop" | "mobile" }) {
   const router = useRouter();
   const [label, setLabel] = useState("");
   const [href, setHref] = useState("");
-  const [desktopFile, setDesktopFile] = useState<File | null>(null);
-  const [mobileFile, setMobileFile] = useState<File | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!label.trim() || (!desktopFile && !mobileFile)) {
-      setError("Label and at least one image (desktop or mobile) are required.");
+    if (!label.trim() || !file) {
+      setError("Label and an image are both required.");
       return;
     }
     setPending(true);
     setError(null);
 
     try {
-      let desktopUrl = "";
-      let mobileUrl = "";
-
-      if (desktopFile) {
-        setStatus("Uploading desktop image…");
-        desktopUrl = await uploadDirect(desktopFile, "desktop");
-      }
-      if (mobileFile) {
-        setStatus("Uploading mobile image…");
-        mobileUrl = await uploadDirect(mobileFile, "mobile");
-      }
+      setStatus("Uploading…");
+      const imageUrl = await uploadDirect(file, device);
 
       setStatus("Publishing…");
       const res = await fetch("/api/admin/hero", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label, href, desktopUrl, mobileUrl }),
+        body: JSON.stringify({ label, href, imageUrl, device }),
       });
 
       let result: { error?: string } = {};
@@ -78,8 +64,7 @@ export default function HeroBannerUploadForm() {
 
       setLabel("");
       setHref("");
-      setDesktopFile(null);
-      setMobileFile(null);
+      setFile(null);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Publish failed.");
@@ -90,22 +75,18 @@ export default function HeroBannerUploadForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-sm space-y-4 border border-ink/10 rounded p-5">
-      <p className="text-xs text-muted">
-        Upload the fully designed banner per screen size — desktop and mobile are independent,
-        upload one or both. Brand name, tagline, and any text should already be part of the
-        image; nothing is processed, shown exactly as uploaded.
-      </p>
-
-      {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-2">{error}</p>}
+    <form onSubmit={handleSubmit} className="border border-ink/10 rounded-lg p-4 max-w-md space-y-4">
+      {error && (
+        <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-3">{error}</p>
+      )}
 
       <div>
         <label className="block text-sm mb-1">Label</label>
         <input
           value={label}
           onChange={(e) => setLabel(e.target.value)}
-          placeholder="e.g. Autumn/Winter drop"
-          className="w-full border border-ink/20 rounded px-3 py-2 bg-white"
+          placeholder={device === "desktop" ? "e.g. Coffee Brown — wide shot" : "e.g. Coffee Brown — portrait"}
+          className="w-full border border-ink/20 rounded px-3 py-2 text-sm bg-white"
         />
       </div>
 
@@ -115,30 +96,23 @@ export default function HeroBannerUploadForm() {
           value={href}
           onChange={(e) => setHref(e.target.value)}
           placeholder="/catalog"
-          className="w-full border border-ink/20 rounded px-3 py-2 bg-white"
+          className="w-full border border-ink/20 rounded px-3 py-2 text-sm bg-white"
         />
       </div>
 
       <div>
-        <label className="block text-sm mb-1">Desktop image</label>
+        <label className="block text-sm mb-1">
+          {device === "desktop" ? "Desktop image" : "Mobile image"}
+        </label>
         <input
           type="file"
           accept="image/*"
-          onChange={(e) => setDesktopFile(e.target.files?.[0] ?? null)}
+          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           className="text-sm"
         />
-        <p className="text-xs text-muted mt-1">Wide/landscape — this is what shows on desktop browsers.</p>
-      </div>
-
-      <div>
-        <label className="block text-sm mb-1">Mobile image</label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setMobileFile(e.target.files?.[0] ?? null)}
-          className="text-sm"
-        />
-        <p className="text-xs text-muted mt-1">Tall/portrait — this is what shows on phones.</p>
+        <p className="text-xs text-muted mt-1">
+          {device === "desktop" ? "Wide/landscape — shown on desktop browsers only." : "Tall/portrait — shown on phones only."}
+        </p>
       </div>
 
       <button
@@ -146,7 +120,7 @@ export default function HeroBannerUploadForm() {
         disabled={pending}
         className="text-sm px-4 py-2 bg-brass text-ink rounded hover:opacity-90 transition-opacity disabled:opacity-50"
       >
-        {pending ? status ?? "Working…" : "Publish banner"}
+        {pending ? status ?? "Working…" : `Publish ${device} banner`}
       </button>
     </form>
   );
