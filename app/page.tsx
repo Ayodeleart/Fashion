@@ -44,11 +44,29 @@ async function getHeroLooks(): Promise<HeroLook[]> {
   }));
 }
 
-const lookbookPanels: LookbookPanel[] = [
+const fallbackLookbookPanels: LookbookPanel[] = [
   { id: "look-1", label: "The Tailored Line", image: "/images/look-1.jpg", href: "/catalog?look=tailored" },
   { id: "look-2", label: "Evening", image: "/images/look-2.jpg", href: "/catalog?look=evening" },
   { id: "look-3", label: "Off-Duty", image: "/images/look-3.jpg", href: "/catalog?look=off-duty" },
 ];
+
+async function getLookbookPanels(): Promise<LookbookPanel[]> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("ariana_lookbook_panels")
+    .select("id, label, image_url, href")
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error || !data || data.length === 0) return fallbackLookbookPanels;
+
+  return data.map((row) => ({
+    id: row.id,
+    label: row.label,
+    image: row.image_url,
+    href: row.href,
+  }));
+}
 
 const newArrivals: Product[] = [
   { id: "p1", name: "Structured Wool Blazer", price: 890, currency: "USD", image: "/images/product-1.jpg", href: "/product/structured-wool-blazer" },
@@ -58,7 +76,7 @@ const newArrivals: Product[] = [
 ];
 
 export default async function Home() {
-  const heroLooks = await getHeroLooks();
+  const [heroLooks, lookbookPanels] = await Promise.all([getHeroLooks(), getLookbookPanels()]);
 
   return (
     <main>

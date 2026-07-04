@@ -72,3 +72,43 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Publish failed." });
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  const session = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
+  if (!isValidSessionToken(session)) {
+    return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+  }
+
+  const id = request.nextUrl.searchParams.get("id");
+  if (!id) return NextResponse.json({ error: "Missing id." }, { status: 400 });
+
+  try {
+    const admin = createAdminClient();
+
+    const { data: row, error: fetchErr } = await admin
+      .from("ariana_hero_looks")
+      .select("image_left_url, image_middle_url, image_right_url")
+      .eq("id", id)
+      .single();
+    if (fetchErr) throw new Error(fetchErr.message);
+
+    const paths = [row.image_left_url, row.image_middle_url, row.image_right_url]
+      .filter((url): url is string => Boolean(url))
+      .map((url) => url.split("/hero-looks/").pop())
+      .filter((p): p is string => Boolean(p));
+
+    if (paths.length > 0) {
+      await admin.storage.from("hero-looks").remove(paths);
+    }
+
+    const { error: deleteErr } = await admin.from("ariana_hero_looks").delete().eq("id", id);
+    if (deleteErr) throw new Error(deleteErr.message);
+
+    revalidatePath("/");
+    revalidatePath("/admin/hero");
+
+    return NextResponse.json({});
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Delete failed." });
+  }
+}

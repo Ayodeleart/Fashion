@@ -20,6 +20,44 @@ type SlotState = {
 
 const emptySlot: SlotState = { file: null, processedBlob: null, previewUrl: null, processing: false };
 
+/**
+ * Background-removal leaves a thin ring of semi-transparent edge pixels
+ * that still carry a blend of the original background color (the
+ * "white halo" around cutouts, since most source photos have light
+ * backgrounds). Hardening the alpha channel — collapsing every pixel to
+ * either fully opaque or fully transparent — removes that contaminated
+ * fringe. Costs a small amount of edge anti-aliasing; worth it to kill
+ * the halo.
+ */
+async function decontaminateEdges(blob: Blob): Promise<Blob> {
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = URL.createObjectURL(blob);
+  });
+
+  const canvas = document.createElement("canvas");
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return blob;
+
+  ctx.drawImage(img, 0, 0);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const { data } = imageData;
+
+  for (let i = 3; i < data.length; i += 4) {
+    data[i] = data[i] < 140 ? 0 : 255;
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+
+  return new Promise<Blob>((resolve) => {
+    canvas.toBlob((result) => resolve(result ?? blob), "image/png");
+  });
+}
+
 export default function HeroUploadWorkflow() {
   const [label, setLabel] = useState("");
   const [slots, setSlots] = useState<Record<Slot, SlotState>>({
@@ -41,7 +79,8 @@ export default function HeroUploadWorkflow() {
       // Background removal runs entirely client-side (WASM/ONNX model
       // fetched from a CDN on first use) — no API key, no per-image cost.
       const { removeBackground } = await import("@imgly/background-removal");
-      const resultBlob = await removeBackground(file);
+      const rawResult = await removeBackground(file);
+      const resultBlob = await decontaminateEdges(rawResult);
       const url = URL.createObjectURL(resultBlob);
       setSlots((s) => ({ ...s, [slot]: { file, processedBlob: resultBlob, previewUrl: url, processing: false } }));
     } catch (err) {

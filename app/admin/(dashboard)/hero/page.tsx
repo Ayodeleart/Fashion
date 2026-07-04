@@ -1,4 +1,5 @@
 import HeroUploadWorkflow from "@/components/admin/HeroUploadWorkflow";
+import DeleteHeroLookButton from "@/components/admin/DeleteHeroLookButton";
 import { createAdminClient } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
@@ -41,6 +42,7 @@ export default async function AdminHeroPage() {
                   )}
                 </div>
                 <p className="text-xs mt-1 truncate">{look.label}</p>
+                <DeleteHeroLookButton id={look.id} />
               </div>
             ))}
           </div>

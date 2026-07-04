@@ -61,15 +61,18 @@ export default function Hero({ looks, brandPrefix, brandSuffix, tagline }: Props
           always fits the viewport width on one line — shrinks fluidly on
           narrow screens instead of wrapping or overflowing. */}
       <h1
-        className="font-display absolute top-[16%] left-1/2 -translate-x-1/2 text-white leading-none tracking-tight select-none whitespace-nowrap z-0"
-        style={{ fontSize: "clamp(2.5rem, 13vw, 9rem)" }}
+        className="font-display absolute top-[9%] md:top-[16%] left-1/2 -translate-x-1/2 text-white leading-none tracking-tight select-none whitespace-nowrap z-0"
+        style={{ fontSize: "clamp(2.2rem, 15vw, 9rem)" }}
       >
         {brandPrefix}
         <span style={{ color: "#c9a253" }}>{brandSuffix}</span>
       </h1>
 
       {/* Image cutouts — z-10, above the wordmark. Desktop: up to 3 side
-          by side. Mobile: middle image only, centered. */}
+          by side. Mobile: middle image only, zoomed in tighter so it
+          crosses over the wordmark the same way the desktop layout does
+          (legs/torso breaking up the letters), instead of floating in
+          a gap above it. */}
       <div className="absolute inset-0 z-10 flex items-end justify-center">
         {look?.imageLeft && (
           <img
@@ -81,7 +84,7 @@ export default function Hero({ looks, brandPrefix, brandSuffix, tagline }: Props
         <img
           src={look?.imageMiddle}
           alt=""
-          className="h-[92%] w-auto object-contain object-bottom"
+          className="h-[108%] md:h-[92%] w-auto object-contain object-bottom"
         />
         {look?.imageRight && (
           <img
