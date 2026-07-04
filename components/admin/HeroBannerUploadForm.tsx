@@ -29,7 +29,13 @@ export default function HeroBannerUploadForm() {
       form.set("mobile", mobileFile);
 
       const res = await fetch("/api/admin/hero", { method: "POST", body: form });
-      const result: { error?: string } = await res.json();
+
+      let result: { error?: string } = {};
+      try {
+        result = await res.json();
+      } catch {
+        throw new Error(`Server returned an unexpected response (status ${res.status}).`);
+      }
       if (result.error) throw new Error(result.error);
 
       setLabel("");

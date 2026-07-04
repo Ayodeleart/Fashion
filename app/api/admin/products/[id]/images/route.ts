@@ -14,13 +14,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const { id: productId } = await params;
-  const formData = await request.formData();
-  const file = formData.get("image") as File | null;
-  const alt = String(formData.get("alt") ?? "").trim();
-
-  if (!file || file.size === 0) return NextResponse.json({ error: "An image is required." });
 
   try {
+    const formData = await request.formData();
+    const file = formData.get("image") as File | null;
+    const alt = String(formData.get("alt") ?? "").trim();
+
+    if (!file || file.size === 0) return NextResponse.json({ error: "An image is required." });
+
     const admin = createAdminClient();
 
     const { count } = await admin
@@ -29,8 +30,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       .eq("product_id", productId);
     const position = count ?? 0;
 
-    const ext = file.name.split(".").pop() || "jpg";
-    const path = `${productId}/${Date.now()}.${ext}`;
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+    const path = `${productId}/${crypto.randomUUID()}.${ext}`;
 
     const { error: upErr } = await admin.storage.from("product-images").upload(path, file, {
       contentType: file.type || "image/jpeg",

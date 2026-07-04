@@ -13,19 +13,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
 
-  const formData = await request.formData();
-  const label = String(formData.get("label") ?? "").trim();
-  const href = String(formData.get("href") ?? "").trim() || "#";
-  const file = formData.get("image") as File | null;
-
-  if (!label) return NextResponse.json({ error: "Give this panel a label." });
-  if (!file || file.size === 0) return NextResponse.json({ error: "An image is required." });
-
   try {
+    const formData = await request.formData();
+    const label = String(formData.get("label") ?? "").trim();
+    const href = String(formData.get("href") ?? "").trim() || "#";
+    const file = formData.get("image") as File | null;
+
+    if (!label) return NextResponse.json({ error: "Give this panel a label." });
+    if (!file || file.size === 0) return NextResponse.json({ error: "An image is required." });
+
     const admin = createAdminClient();
-    const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    const ext = file.name.split(".").pop() || "jpg";
-    const path = `${slug}-${Date.now()}.${ext}`;
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+    const path = `${crypto.randomUUID()}.${ext}`;
 
     const { error: upErr } = await admin.storage.from("lookbook").upload(path, file, {
       contentType: file.type || "image/jpeg",

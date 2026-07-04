@@ -13,28 +13,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
 
-  const formData = await request.formData();
-  const label = String(formData.get("label") ?? "").trim();
-  const href = String(formData.get("href") ?? "").trim();
-  const desktopFile = formData.get("desktop") as File | null;
-  const mobileFile = formData.get("mobile") as File | null;
-
-  if (!label) return NextResponse.json({ error: "Give this banner a label." });
-  if (!desktopFile || desktopFile.size === 0) {
-    return NextResponse.json({ error: "The desktop image is required." });
-  }
-  if (!mobileFile || mobileFile.size === 0) {
-    return NextResponse.json({ error: "The mobile image is required." });
-  }
-
-  const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-
   try {
+    const formData = await request.formData();
+    const label = String(formData.get("label") ?? "").trim();
+    const href = String(formData.get("href") ?? "").trim();
+    const desktopFile = formData.get("desktop") as File | null;
+    const mobileFile = formData.get("mobile") as File | null;
+
+    if (!label) return NextResponse.json({ error: "Give this banner a label." });
+    if (!desktopFile || desktopFile.size === 0) {
+      return NextResponse.json({ error: "The desktop image is required." });
+    }
+    if (!mobileFile || mobileFile.size === 0) {
+      return NextResponse.json({ error: "The mobile image is required." });
+    }
+
     const admin = createAdminClient();
 
     async function uploadImage(file: File, variant: "desktop" | "mobile"): Promise<string> {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${slug}-${variant}-${Date.now()}.${ext}`;
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+      const path = `${crypto.randomUUID()}-${variant}.${ext}`;
       const { error } = await admin.storage.from("hero-banners").upload(path, file, {
         contentType: file.type || "image/jpeg",
       });
