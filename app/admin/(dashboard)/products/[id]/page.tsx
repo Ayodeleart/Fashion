@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { updateProduct, deleteProduct } from "./actions";
 import ProductImageManager from "@/components/admin/ProductImageManager";
@@ -32,8 +33,17 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
 
   return (
     <div className="max-w-lg">
+      <div className="flex items-center justify-between mb-2 text-sm">
+        <Link href="/admin/products" className="text-muted hover:text-ink transition-colors">
+          ← All products
+        </Link>
+        <Link href="/admin/products/new" className="text-brass hover:underline">
+          + Add another product
+        </Link>
+      </div>
+
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-display text-3xl">{product.name}</h1>
+        <h1 className="font-display text-3xl">Editing: {product.name}</h1>
         <DeleteProductForm action={boundDelete} />
       </div>
 

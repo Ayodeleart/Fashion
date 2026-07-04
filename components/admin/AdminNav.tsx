@@ -17,11 +17,11 @@ export default function AdminNav() {
 
   return (
     <nav className="w-full md:w-56 shrink-0 border-b md:border-b-0 md:border-r border-ink/10 bg-paper flex md:flex-col md:justify-between">
-      <div>
+      <div className="min-w-0">
         <div className="px-5 py-6">
           <p className="font-display text-lg">AYODELE<span className="text-brass">GOLD</span></p>
         </div>
-        <ul className="flex md:flex-col px-2 md:px-3 pb-4 gap-1 overflow-x-auto">
+        <ul className="flex md:flex-col px-2 md:px-3 pb-4 gap-1 overflow-x-auto w-full min-w-0">
           {links.map((link) => {
             const active = pathname === link.href;
             return (
