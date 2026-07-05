@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Image from "next/image";
 import { useCart } from "@/components/CartProvider";
 import { getSupabase } from "@/lib/supabase";
@@ -11,26 +10,17 @@ function formatPrice(price: number, currency: string) {
 }
 
 export default function CartPage() {
-  const router = useRouter();
-  const { items, setQuantity, removeItem, total } = useCart();
-  const [email, setEmail] = useState<string | null>(null);
+  const { items, loading, signedIn, setQuantity, removeItem, total } = useCart();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    getSupabase()
-      .auth.getUser()
-      .then(({ data }) => setEmail(data.user?.email ?? null));
-  }, []);
-
   async function handleCheckout() {
-    if (!email) {
-      router.push("/account/login?next=/cart");
-      return;
-    }
     setPending(true);
     setError(null);
     try {
+      const { data: userData } = await getSupabase().auth.getUser();
+      const email = userData.user?.email ?? null;
+
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -44,13 +34,36 @@ export default function CartPage() {
           })),
         }),
       });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      window.location.href = data.authorization_url;
+      const result = await res.json();
+      if (result.error) throw new Error(result.error);
+      window.location.href = result.authorization_url;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Checkout failed.");
       setPending(false);
     }
+  }
+
+  if (loading) {
+    return (
+      <main className="px-5 py-16 text-center">
+        <p className="text-sm text-muted">Loading your cart…</p>
+      </main>
+    );
+  }
+
+  if (!signedIn) {
+    return (
+      <main className="px-5 py-16 text-center">
+        <h1 className="font-display text-2xl mb-2">Sign in to see your cart</h1>
+        <p className="text-sm text-muted mb-6">Your cart is tied to your account, not this device.</p>
+        <a
+          href={`/account/login?next=${encodeURIComponent("/cart")}`}
+          className="inline-block bg-ink text-paper text-sm rounded-full px-5 py-2.5"
+        >
+          Sign in
+        </a>
+      </main>
+    );
   }
 
   if (items.length === 0) {
@@ -118,7 +131,7 @@ export default function CartPage() {
         disabled={pending}
         className="w-full bg-ink text-paper rounded-full px-4 py-3 text-sm font-medium hover:bg-ink/90 transition-colors disabled:opacity-50"
       >
-        {pending ? "Redirecting to Paystack…" : email ? "Checkout with Paystack" : "Sign in to checkout"}
+        {pending ? "Redirecting to Paystack…" : "Checkout with Paystack"}
       </button>
     </main>
   );

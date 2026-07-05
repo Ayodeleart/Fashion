@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import { getSupabase } from "@/lib/supabase";
 
 export type SavedItem = {
   productId: string;
@@ -11,49 +12,108 @@ export type SavedItem = {
   href: string;
 };
 
+type ToggleResult = { requiresAuth: boolean };
+
 type SavedContextValue = {
   items: SavedItem[];
+  loading: boolean;
+  signedIn: boolean;
   isSaved: (productId: string) => boolean;
-  toggle: (item: SavedItem) => void;
+  toggle: (item: SavedItem) => Promise<ToggleResult>;
 };
 
 const SavedContext = createContext<SavedContextValue | null>(null);
-const STORAGE_KEY = "ariana_saved_v1";
 
-function readStoredSaved(): SavedItem[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+type SavedRow = {
+  product_id: string;
+  name: string;
+  price: number;
+  currency: string;
+  image: string | null;
+  href: string | null;
+};
+
+function rowToItem(row: SavedRow): SavedItem {
+  return {
+    productId: row.product_id,
+    name: row.name,
+    price: row.price,
+    currency: row.currency,
+    image: row.image ?? "",
+    href: row.href ?? "",
+  };
 }
 
 export function SavedProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<SavedItem[]>(() => readStoredSaved());
-  const [loaded, setLoaded] = useState(false);
+  const [items, setItems] = useState<SavedItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [signedIn, setSignedIn] = useState(false);
+  const userIdRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    setLoaded(true);
+  const loadSaved = useCallback(async (userId: string | null) => {
+    userIdRef.current = userId;
+    if (!userId) {
+      setItems([]);
+      setSignedIn(false);
+      setLoading(false);
+      return;
+    }
+    setSignedIn(true);
+    const supabase = getSupabase();
+    const { data } = await supabase
+      .from("ariana_saved_items")
+      .select("product_id, name, price, currency, image, href")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+    setItems(((data as SavedRow[]) ?? []).map(rowToItem));
+    setLoading(false);
   }, []);
 
   useEffect(() => {
-    if (!loaded) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }, [items, loaded]);
+    const supabase = getSupabase();
+
+    supabase.auth.getUser().then(({ data }) => loadSaved(data.user?.id ?? null));
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      loadSaved(session?.user?.id ?? null);
+    });
+
+    return () => listener.subscription.unsubscribe();
+  }, [loadSaved]);
 
   const isSaved = useCallback((productId: string) => items.some((i) => i.productId === productId), [items]);
 
-  const toggle = useCallback((item: SavedItem) => {
-    setItems((prev) =>
-      prev.some((i) => i.productId === item.productId)
-        ? prev.filter((i) => i.productId !== item.productId)
-        : [...prev, item]
-    );
-  }, []);
+  const toggle = useCallback(async (item: SavedItem): Promise<ToggleResult> => {
+    const userId = userIdRef.current;
+    if (!userId) return { requiresAuth: true };
 
-  return <SavedContext.Provider value={{ items, isSaved, toggle }}>{children}</SavedContext.Provider>;
+    const supabase = getSupabase();
+    const alreadySaved = items.some((i) => i.productId === item.productId);
+
+    if (alreadySaved) {
+      await supabase.from("ariana_saved_items").delete().eq("user_id", userId).eq("product_id", item.productId);
+      setItems((prev) => prev.filter((i) => i.productId !== item.productId));
+    } else {
+      await supabase.from("ariana_saved_items").insert({
+        user_id: userId,
+        product_id: item.productId,
+        name: item.name,
+        price: item.price,
+        currency: item.currency,
+        image: item.image,
+        href: item.href,
+      });
+      setItems((prev) => [...prev, item]);
+    }
+
+    return { requiresAuth: false };
+  }, [items]);
+
+  return (
+    <SavedContext.Provider value={{ items, loading, signedIn, isSaved, toggle }}>
+      {children}
+    </SavedContext.Provider>
+  );
 }
 
 export function useSaved() {

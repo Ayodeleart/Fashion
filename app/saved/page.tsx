@@ -9,7 +9,30 @@ function formatPrice(price: number, currency: string) {
 }
 
 export default function SavedPage() {
-  const { items, toggle } = useSaved();
+  const { items, loading, signedIn, toggle } = useSaved();
+
+  if (loading) {
+    return (
+      <main className="px-5 py-16 text-center">
+        <p className="text-sm text-muted">Loading…</p>
+      </main>
+    );
+  }
+
+  if (!signedIn) {
+    return (
+      <main className="px-5 py-16 text-center">
+        <h1 className="font-display text-2xl mb-2">Sign in to see saved items</h1>
+        <p className="text-sm text-muted mb-6">Saved items are tied to your account, not this device.</p>
+        <a
+          href={`/account/login?next=${encodeURIComponent("/saved")}`}
+          className="inline-block bg-ink text-paper text-sm rounded-full px-5 py-2.5"
+        >
+          Sign in
+        </a>
+      </main>
+    );
+  }
 
   if (items.length === 0) {
     return (

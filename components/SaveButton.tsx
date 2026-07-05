@@ -1,19 +1,25 @@
 "use client";
 
+import { useRouter, usePathname } from "next/navigation";
 import { useSaved, type SavedItem } from "@/components/SavedProvider";
 
 export default function SaveButton({ item, className }: { item: SavedItem; className?: string }) {
   const { isSaved, toggle } = useSaved();
+  const router = useRouter();
+  const pathname = usePathname();
   const saved = isSaved(item.productId);
 
   return (
     <button
       type="button"
       aria-label={saved ? "Remove from saved" : "Save"}
-      onClick={(e) => {
+      onClick={async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        toggle(item);
+        const result = await toggle(item);
+        if (result.requiresAuth) {
+          router.push(`/account/login?next=${encodeURIComponent(pathname)}`);
+        }
       }}
       className={className ?? "w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shrink-0"}
     >
