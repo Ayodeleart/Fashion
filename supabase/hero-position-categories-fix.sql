@@ -12,11 +12,8 @@ alter table ariana_hero_banners add column if not exists subtitle text;
 alter table ariana_hero_banners add column if not exists cta_text text;
 alter table ariana_hero_banners add column if not exists cta_href text;
 
--- Backfill image_url from the old single-image columns if this is an
--- older row that predates the device split (harmless no-op otherwise).
-update ariana_hero_banners
-set image_url = coalesce(image_url, image_desktop_url)
-where image_url is null and image_desktop_url is not null;
+-- (No backfill needed — image_desktop_url/image_mobile_url never
+-- existed on the live table; this table was already device-based.)
 
 create index if not exists idx_ariana_hero_banners_position on ariana_hero_banners(position);
 
