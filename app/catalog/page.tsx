@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
-import { PRODUCT_CATEGORIES } from "@/lib/product-categories";
+import { getCategories } from "@/lib/categories";
+import AddToCartButton from "@/components/AddToCartButton";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,7 @@ export default async function CatalogPage({
   searchParams: Promise<{ category?: string }>;
 }) {
   const { category } = await searchParams;
-  const products = await getProducts(category);
+  const [products, categories] = await Promise.all([getProducts(category), getCategories()]);
 
   return (
     <main className="px-6 md:px-10 py-16 md:py-20 max-w-7xl mx-auto">
@@ -53,15 +54,15 @@ export default async function CatalogPage({
         >
           All
         </Link>
-        {PRODUCT_CATEGORIES.map((c) => (
+        {categories.map((c) => (
           <Link
-            key={c}
-            href={`/catalog?category=${encodeURIComponent(c)}`}
+            key={c.id}
+            href={`/catalog?category=${encodeURIComponent(c.name)}`}
             className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
-              category === c ? "bg-ink text-paper border-ink" : "border-ink/20 hover:border-ink/40"
+              category === c.name ? "bg-ink text-paper border-ink" : "border-ink/20 hover:border-ink/40"
             }`}
           >
-            {c}
+            {c.name}
           </Link>
         ))}
       </div>
@@ -69,7 +70,7 @@ export default async function CatalogPage({
       {products.length === 0 ? (
         <p className="text-muted">No products {category ? `in ${category} ` : ""}yet.</p>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-14">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-10">
           {products.map((p) => {
             const image = [...(p.ariana_product_images ?? [])].sort((a, b) => a.position - b.position)[0];
             return (
@@ -89,7 +90,16 @@ export default async function CatalogPage({
                   )}
                 </div>
                 <p className="text-sm text-ink">{p.name}</p>
-                <p className="text-sm text-muted">{formatPrice(p.price, p.currency)}</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted">{formatPrice(p.price, p.currency)}</p>
+                  <AddToCartButton
+                    productId={p.id}
+                    name={p.name}
+                    price={p.price}
+                    currency={p.currency}
+                    image={image?.url ?? ""}
+                  />
+                </div>
               </Link>
             );
           })}
