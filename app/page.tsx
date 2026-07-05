@@ -1,13 +1,8 @@
+import Hero, { HeroBanner } from "@/components/Hero";
 import Lookbook, { LookbookPanel } from "@/components/Lookbook";
 import ProductGrid, { Product } from "@/components/ProductGrid";
 import Footer from "@/components/Footer";
-import TopBar from "@/components/TopBar";
-import SearchBar from "@/components/SearchBar";
-import CategoryRow from "@/components/CategoryRow";
-import HeroCard from "@/components/HeroCard";
 import { getSupabase } from "@/lib/supabase";
-import { getCategories } from "@/lib/categories";
-import type { HeroBanner } from "@/components/Hero";
 
 // Forced dynamic: without this, Next.js can prerender this page as static
 // HTML at build time and cache it — meaning new hero banners, lookbook
@@ -16,22 +11,30 @@ import type { HeroBanner } from "@/components/Hero";
 // fetch live on every request instead.
 export const dynamic = "force-dynamic";
 
-const fallbackHeroBanner: HeroBanner = { id: "fallback", imageUrl: "/images/hero-mobile.jpg", href: "/catalog" };
+// FALLBACK — only used until a banner is published from /admin/hero, or
+// if the Supabase fetch fails. Kept separate per device, no substitution.
+const fallbackDesktopBanners: HeroBanner[] = [
+  { id: "fallback-desktop", imageUrl: "/images/hero-desktop.jpg" },
+];
+const fallbackMobileBanners: HeroBanner[] = [
+  { id: "fallback-mobile", imageUrl: "/images/hero-mobile.jpg" },
+];
 
-async function getHomeHeroBanner(): Promise<HeroBanner> {
+async function getHeroBanners(device: "desktop" | "mobile"): Promise<HeroBanner[]> {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("ariana_hero_banners")
-    .select("id, label, image_url, href")
+    .select("id, image_url, href")
     .eq("status", "published")
-    .eq("device", "mobile")
+    .eq("device", device)
     .order("position", { ascending: true })
-    .order("created_at", { ascending: false })
-    .limit(1);
+    .order("created_at", { ascending: false });
 
-  if (error || !data || data.length === 0) return fallbackHeroBanner;
-  const row = data[0];
-  return { id: row.id, label: row.label, imageUrl: row.image_url, href: row.href };
+  if (error || !data || data.length === 0) {
+    return device === "desktop" ? fallbackDesktopBanners : fallbackMobileBanners;
+  }
+
+  return data.map((row) => ({ id: row.id, imageUrl: row.image_url, href: row.href }));
 }
 
 const fallbackLookbookPanels: LookbookPanel[] = [
@@ -91,23 +94,20 @@ async function getNewArrivals(): Promise<Product[]> {
 }
 
 export default async function Home() {
-  const [categories, heroBanner, lookbookPanels, newArrivals] = await Promise.all([
-    getCategories(),
-    getHomeHeroBanner(),
+  const [desktopBanners, mobileBanners, lookbookPanels, newArrivals] = await Promise.all([
+    getHeroBanners("desktop"),
+    getHeroBanners("mobile"),
     getLookbookPanels(),
     getNewArrivals(),
   ]);
 
   return (
     <main>
-      <TopBar />
-      <SearchBar />
-      <CategoryRow categories={categories} />
-      <HeroCard banner={heroBanner} />
-
-      <ProductGrid title="latest arrivals" products={newArrivals} />
+      <Hero desktopBanners={desktopBanners} mobileBanners={mobileBanners} />
 
       <Lookbook panels={lookbookPanels} />
+
+      <ProductGrid title="New Arrivals" products={newArrivals} />
 
       <Footer brandName="AyodeleGold" />
     </main>

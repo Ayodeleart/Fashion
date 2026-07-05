@@ -18,7 +18,7 @@ export default function AuthCallbackPage() {
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
         sessionStorage.setItem("ariana_just_signed_in", "1");
-        router.replace("/");
+        router.replace("/catalog");
       }
       if (event === "SIGNED_OUT") {
         setError("Sign-in did not complete. Please try again.");
@@ -29,7 +29,7 @@ export default function AuthCallbackPage() {
       if (error) setError(error.message);
       if (data.session) {
         sessionStorage.setItem("ariana_just_signed_in", "1");
-        router.replace("/");
+        router.replace("/catalog");
       }
     });
 

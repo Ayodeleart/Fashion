@@ -7,8 +7,13 @@ import { useCart } from "@/components/CartProvider";
 function HomeIcon({ active }: { active: boolean }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path d="M4 11.5 12 4l8 7.5" stroke="currentColor" strokeWidth={active ? 2.2 : 1.6} strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9" stroke="currentColor" strokeWidth={active ? 2.2 : 1.6} strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274"
+        stroke="currentColor"
+        strokeWidth={active ? 2 : 1.5}
+        strokeLinecap="round"
+      />
+      <path d="M15 18H9" stroke="currentColor" strokeWidth={active ? 2 : 1.5} strokeLinecap="round" />
     </svg>
   );
 }
@@ -40,18 +45,21 @@ function ProfileIcon({ active }: { active: boolean }) {
     </svg>
   );
 }
-function BagIcon() {
+function CartIcon() {
+  // Exact path data from the provided shopping-cart SVG (originally nested
+  // in two <g transform="translate(...)"> — combined here into one, so the
+  // coordinates map directly onto this 0 0 20 20 viewBox), recolored white.
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path d="M7 8V6a5 5 0 0 1 10 0v2" stroke="white" strokeWidth={1.8} strokeLinecap="round" />
-      <rect x="4" y="8" width="16" height="12" rx="2" fill="white" />
-      <rect x="4" y="8" width="16" height="12" rx="2" stroke="white" strokeWidth={1.6} />
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="white">
+      <g transform="translate(-164, -2959)">
+        <path d="M180.846448,2977 L167.153448,2977 C166.544448,2977 166.077448,2976.461 166.163448,2975.859 L167.306448,2967.859 C167.376448,2967.366 167.798448,2967 168.296448,2967 L168.999448,2967 L168.999448,2969 C168.999448,2969.552 169.447448,2970 169.999448,2970 C170.552448,2970 170.999448,2969.552 170.999448,2969 L170.999448,2967 L176.999448,2967 L176.999448,2969 C176.999448,2969.552 177.447448,2970 177.999448,2970 C178.552448,2970 178.999448,2969.552 178.999448,2969 L178.999448,2967 L179.703448,2967 C180.201448,2967 180.623448,2967.366 180.693448,2967.859 L181.836448,2975.859 C181.922448,2976.461 181.455448,2977 180.846448,2977 L180.846448,2977 Z M170.999448,2964 C170.999448,2962.346 172.345448,2961 173.999448,2961 C175.654448,2961 176.999448,2962 176.999448,2964 L176.999448,2965 L170.999448,2965 L170.999448,2964 Z M183.979448,2976.717 L182.550448,2966.717 C182.410448,2965.732 181.566448,2965 180.570448,2965 L178.999448,2965 L178.999448,2964 C178.999448,2961 176.756448,2959 173.999448,2959 C171.243448,2959 168.999448,2961.243 168.999448,2964 L168.999448,2965 L167.734448,2965 C166.739448,2965 165.589448,2965.732 165.448448,2966.717 L164.020448,2976.717 C163.848448,2977.922 164.783448,2979 166.000448,2979 L181.999448,2979 C183.216448,2979 184.151448,2977.922 183.979448,2976.717 L183.979448,2976.717 Z" />
+      </g>
     </svg>
   );
 }
 
-const items = [
-  { href: "/", label: "Home", Icon: HomeIcon },
+const leftItems = [
+  { href: "/catalog", label: "Home", Icon: HomeIcon },
   { href: "/search", label: "Search", Icon: SearchIcon },
 ];
 const rightItems = [
@@ -65,11 +73,11 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-30 bg-paper/95 backdrop-blur border-t border-ink/10 pb-[env(safe-area-inset-bottom)]">
-      <div className="max-w-md mx-auto flex items-center justify-between px-6 py-2 relative">
-        {items.map(({ href, label, Icon }) => {
+      <div className="max-w-md mx-auto flex items-center justify-between px-6 h-16">
+        {leftItems.map(({ href, label, Icon }) => {
           const active = pathname === href;
           return (
-            <Link key={href} href={href} className="flex flex-col items-center gap-1 py-1 px-2 text-ink">
+            <Link key={href} href={href} className="flex flex-col items-center justify-center gap-1 text-ink w-12">
               <Icon active={active} />
               <span className={`text-[11px] ${active ? "text-ink" : "text-muted"}`}>{label}</span>
             </Link>
@@ -78,10 +86,10 @@ export default function BottomNav() {
 
         <Link
           href="/cart"
-          className="relative -mt-6 w-14 h-14 rounded-full bg-ink flex items-center justify-center shadow-lg shrink-0"
+          className="relative -mt-8 w-14 h-14 rounded-full bg-ink flex items-center justify-center shadow-lg shrink-0 border-4 border-paper"
           aria-label="Cart"
         >
-          <BagIcon />
+          <CartIcon />
           {count > 0 && (
             <span className="absolute -top-1 -right-1 bg-brass text-ink text-[10px] font-medium rounded-full w-5 h-5 flex items-center justify-center">
               {count > 9 ? "9+" : count}
@@ -92,7 +100,7 @@ export default function BottomNav() {
         {rightItems.map(({ href, label, Icon }) => {
           const active = pathname === href;
           return (
-            <Link key={href} href={href} className="flex flex-col items-center gap-1 py-1 px-2 text-ink">
+            <Link key={href} href={href} className="flex flex-col items-center justify-center gap-1 text-ink w-12">
               <Icon active={active} />
               <span className={`text-[11px] ${active ? "text-ink" : "text-muted"}`}>{label}</span>
             </Link>
