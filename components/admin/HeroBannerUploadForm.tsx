@@ -29,6 +29,9 @@ export default function HeroBannerUploadForm({ device }: { device: "desktop" | "
   const router = useRouter();
   const [label, setLabel] = useState("");
   const [href, setHref] = useState("");
+  const [subtitle, setSubtitle] = useState("");
+  const [ctaText, setCtaText] = useState("");
+  const [ctaHref, setCtaHref] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -51,7 +54,7 @@ export default function HeroBannerUploadForm({ device }: { device: "desktop" | "
       const res = await fetch("/api/admin/hero", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label, href, imageUrl, device }),
+        body: JSON.stringify({ label, href, imageUrl, device, subtitle, ctaText, ctaHref }),
       });
 
       let result: { error?: string } = {};
@@ -64,6 +67,9 @@ export default function HeroBannerUploadForm({ device }: { device: "desktop" | "
 
       setLabel("");
       setHref("");
+      setSubtitle("");
+      setCtaText("");
+      setCtaHref("");
       setFile(null);
       router.refresh();
     } catch (err) {
@@ -113,6 +119,44 @@ export default function HeroBannerUploadForm({ device }: { device: "desktop" | "
         <p className="text-xs text-muted mt-1">
           {device === "desktop" ? "Wide/landscape — shown on desktop browsers only." : "Tall/portrait — shown on phones only."}
         </p>
+      </div>
+
+      <div className="border-t border-ink/10 pt-4">
+        <p className="text-xs text-muted mb-3">
+          Optional — a small overlay rendered on top of the image (not baked in). Leave blank for
+          none.{device === "mobile" ? " Consider skipping this on mobile — less room." : ""}
+        </p>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm mb-1">Tagline</label>
+            <input
+              value={subtitle}
+              onChange={(e) => setSubtitle(e.target.value)}
+              placeholder="Modern African tailoring. Luxury reimagined."
+              className="w-full border border-ink/20 rounded px-3 py-2 text-sm bg-white"
+            />
+          </div>
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block text-sm mb-1">Button text</label>
+              <input
+                value={ctaText}
+                onChange={(e) => setCtaText(e.target.value)}
+                placeholder="Shop Collection"
+                className="w-full border border-ink/20 rounded px-3 py-2 text-sm bg-white"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm mb-1">Button link</label>
+              <input
+                value={ctaHref}
+                onChange={(e) => setCtaHref(e.target.value)}
+                placeholder="/catalog"
+                className="w-full border border-ink/20 rounded px-3 py-2 text-sm bg-white"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       <button
