@@ -90,7 +90,7 @@ export default async function AdminProductsPage() {
                   href={`/admin/products/${p.id}`}
                   className="shrink-0 text-sm px-3 py-1.5 border border-ink/20 rounded hover:bg-ink/5 transition-colors"
                 >
-                  {thumb ? "Manage images" : "Upload images"}
+                  Edit
                 </Link>
               </div>
             );

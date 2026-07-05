@@ -2,6 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase-admin";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 export async function updateProduct(productId: string, formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
@@ -56,4 +57,5 @@ export async function deleteProduct(productId: string) {
 
   revalidatePath("/admin/products");
   revalidatePath("/");
+  redirect("/admin/products");
 }

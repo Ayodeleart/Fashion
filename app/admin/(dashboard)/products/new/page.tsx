@@ -68,6 +68,14 @@ export default function NewProductPage() {
       if (result.error) throw new Error(result.error);
 
       router.push(`/admin/products/${result.id}`);
+      setPending(false);
+      setStatus(null);
+      setName("");
+      setPrice("");
+      setCategory("");
+      setDescription("");
+      setIsPublished(false);
+      setFiles([]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create product.");
       setPending(false);
