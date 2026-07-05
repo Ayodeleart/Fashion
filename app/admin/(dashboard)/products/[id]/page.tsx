@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase-admin";
 import { updateProduct, deleteProduct } from "./actions";
 import ProductImageManager from "@/components/admin/ProductImageManager";
 import DeleteProductForm from "@/components/admin/DeleteProductForm";
-import { PRODUCT_CATEGORIES } from "@/lib/product-categories";
+import { getCategories } from "@/lib/categories";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +24,7 @@ async function getProduct(id: string) {
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const result = await getProduct(id);
+  const [result, categories] = await Promise.all([getProduct(id), getCategories()]);
   if (!result) notFound();
 
   const { product, images } = result;
@@ -84,8 +84,8 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
             className="w-full border border-ink/20 rounded px-3 py-2 text-sm bg-white"
           >
             <option value="">Select a category</option>
-            {PRODUCT_CATEGORIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.name}>{c.name}</option>
             ))}
           </select>
         </div>

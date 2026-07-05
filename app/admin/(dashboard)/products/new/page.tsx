@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
-import { PRODUCT_CATEGORIES } from "@/lib/product-categories";
+import { getCategories, type Category } from "@/lib/categories";
 
 async function uploadDirect(file: File): Promise<string> {
   const ext = file.name.split(".").pop() || "jpg";
@@ -37,6 +37,11 @@ export default function NewProductPage() {
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    getCategories().then(setCategories);
+  }, []);
 
   function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
     setFiles(Array.from(e.target.files ?? []));
@@ -123,8 +128,8 @@ export default function NewProductPage() {
             className="w-full border border-ink/20 rounded px-3 py-2 text-sm bg-white"
           >
             <option value="">Select a category</option>
-            {PRODUCT_CATEGORIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.name}>{c.name}</option>
             ))}
           </select>
         </div>

@@ -6,6 +6,7 @@ export type HeroBanner = {
   id: string;
   imageUrl: string;
   href?: string | null;
+  label?: string | null;
 };
 
 type Props = {

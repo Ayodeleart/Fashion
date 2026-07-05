@@ -1,9 +1,28 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import StorefrontChrome from "@/components/StorefrontChrome";
+import RegisterSW from "@/components/RegisterSW";
 
 export const metadata: Metadata = {
   title: "AyodeleGold",
   description: "AyodeleGold — fashionista.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "AyodeleGold",
+  },
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/icon-192.png",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#101010",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -27,7 +46,10 @@ export default function RootLayout({
           }
         `}</style>
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <RegisterSW />
+        <StorefrontChrome>{children}</StorefrontChrome>
+      </body>
     </html>
   );
 }
