@@ -58,6 +58,7 @@ function BannerCarousel({ banners }: { banners: HeroBanner[] }) {
       </nav>
 
       {banners.map((b, i) => {
+        const active = i === activeIndex;
         const content = (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={b.imageUrl} alt="" className="w-full h-full object-cover" />
@@ -65,8 +66,9 @@ function BannerCarousel({ banners }: { banners: HeroBanner[] }) {
         return (
           <div
             key={b.id}
-            className="absolute inset-0 z-0 transition-opacity duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
-            style={{ opacity: i === activeIndex ? 1 : 0, pointerEvents: i === activeIndex ? "auto" : "none" }}
+            className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+              active ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+            }`}
           >
             {b.href ? <a href={b.href} className="block w-full h-full">{content}</a> : content}
           </div>
