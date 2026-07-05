@@ -43,10 +43,9 @@ const fallbackHeroBanner: HeroBanner = { id: "fallback", imageUrl: "/images/hero
 async function getShopHeroBanner(): Promise<HeroBanner> {
   const supabase = getSupabase();
   const { data, error } = await supabase
-    .from("ariana_hero_banners")
+    .from("ariana_shop_hero")
     .select("id, label, image_url, href")
     .eq("status", "published")
-    .eq("device", "mobile")
     .order("position", { ascending: true })
     .order("created_at", { ascending: false })
     .limit(1);

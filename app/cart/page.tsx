@@ -20,12 +20,14 @@ export default function CartPage() {
     try {
       const { data: userData } = await getSupabase().auth.getUser();
       const email = userData.user?.email ?? null;
+      const userId = userData.user?.id ?? null;
 
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
+          userId,
           currency: items[0]?.currency ?? "NGN",
           items: items.map((i) => ({
             product_id: i.productId,

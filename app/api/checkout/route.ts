@@ -11,6 +11,7 @@ type CheckoutItem = {
 
 type CheckoutBody = {
   email: string;
+  userId?: string;
   items: CheckoutItem[];
   currency?: string;
 };
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const { email, items, currency = "NGN" } = body;
+  const { email, userId, items, currency = "NGN" } = body;
 
   if (!email || !items?.length) {
     return NextResponse.json({ error: "email and at least one item are required." }, { status: 400 });
@@ -43,6 +44,7 @@ export async function POST(req: NextRequest) {
     .from("ariana_orders")
     .insert({
       customer_email: email,
+      user_id: userId ?? null,
       status: "pending",
       payment_provider: "paystack",
       total,

@@ -1,5 +1,6 @@
 import { verifyTransaction } from "@/lib/paystack";
 import { createAdminClient } from "@/lib/supabase-admin";
+import ClearCartOnSuccess from "@/components/ClearCartOnSuccess";
 
 export const dynamic = "force-dynamic";
 
@@ -26,10 +27,13 @@ export default async function CheckoutCompletePage({
       await admin.from("ariana_orders").update({ status: "paid" }).eq("id", ref);
 
       return (
-        <Message
-          title="Payment received"
-          body="Thank you — your order is confirmed. A receipt has been sent to your email."
-        />
+        <>
+          <ClearCartOnSuccess />
+          <Message
+            title="Payment received"
+            body="Thank you — your order is confirmed. A receipt has been sent to your email."
+          />
+        </>
       );
     }
 
