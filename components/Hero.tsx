@@ -22,8 +22,8 @@ type Props = {
  * media queries (hidden md:block / block md:hidden) rather than a JS
  * viewport check, so there's no flash-of-wrong-image on load.
  *
- * No auto-slide — multiple banners in either list navigate via manual
- * dots with a crossfade transition.
+ * Multiple banners in either list auto-rotate on a timer with a
+ * crossfade transition — no manual dots/controls.
  */
 export default function Hero({ desktopBanners, mobileBanners }: Props) {
   if (desktopBanners.length === 0 && mobileBanners.length === 0) return null;
@@ -46,6 +46,14 @@ export default function Hero({ desktopBanners, mobileBanners }: Props) {
 
 function BannerCarousel({ banners }: { banners: HeroBanner[] }) {
   const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    if (banners.length <= 1) return;
+    const interval = setInterval(() => {
+      setActiveIndex((i) => (i + 1) % banners.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [banners.length]);
 
   return (
     <section className="relative w-full h-screen overflow-hidden">
@@ -74,20 +82,6 @@ function BannerCarousel({ banners }: { banners: HeroBanner[] }) {
           </div>
         );
       })}
-
-      {banners.length > 1 && (
-        <div className="absolute bottom-6 md:bottom-8 left-0 right-0 z-20 flex justify-center gap-2">
-          {banners.map((b, i) => (
-            <button
-              key={b.id}
-              onClick={() => setActiveIndex(i)}
-              aria-label={`Show banner ${i + 1}`}
-              className="w-2 h-2 rounded-full transition-colors"
-              style={{ backgroundColor: i === activeIndex ? "rgb(var(--brass))" : "rgba(255,255,255,0.5)" }}
-            />
-          ))}
-        </div>
-      )}
     </section>
   );
 }
