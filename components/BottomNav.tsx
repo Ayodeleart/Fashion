@@ -87,38 +87,66 @@ const rightItems = [
   { href: "/account/profile", label: "Profile", Icon: ProfileIcon },
 ];
 
-export default function BottomNav({ transparent }: { transparent?: boolean }) {
+export default function BottomNav() {
   const pathname = usePathname();
   const { count } = useCart();
 
   return (
-    <nav
-      className={`fixed bottom-0 left-0 right-0 z-30 pb-[env(safe-area-inset-bottom)] ${
-        transparent
-          ? "bg-gradient-to-t from-black/60 to-transparent border-t-0"
-          : "bg-paper/95 backdrop-blur border-t border-ink/10"
-      }`}
-    >
-      <div className="max-w-md mx-auto flex items-center justify-between px-6 h-16">
-        {leftItems.map(({ href, label, Icon }) => {
-          const active = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex flex-col items-center justify-center gap-1 w-12 ${
-                transparent ? "text-white" : "text-ink"
-              }`}
-            >
-              <Icon active={active} />
-              <span className={`text-[11px] ${active ? "" : transparent ? "text-white/70" : "text-muted"}`}>{label}</span>
-            </Link>
-          );
-        })}
+    <div className="fixed bottom-0 left-0 right-0 z-30 pb-[env(safe-area-inset-bottom)]">
+      <div className="max-w-md mx-auto relative h-[74px]">
+        {/* The bar shape itself — drawn as one SVG path so the top edge
+            genuinely curves down and wraps around the cart button,
+            instead of a flat bar with a circle floating on top of it.
+            preserveAspectRatio="none" stretches it to the container's
+            actual width; the notch curve is defined in percent-based
+            viewBox units (0-100) so it stays centered regardless of
+            width. */}
+        <svg
+          viewBox="0 0 100 34"
+          preserveAspectRatio="none"
+          className="absolute inset-0 w-full h-full drop-shadow-[0_-2px_10px_rgba(0,0,0,0.08)]"
+        >
+          <path
+            d="M0,6
+               C0,2.7 2.7,0 6,0
+               H36
+               C41,0 40,11 50,11
+               C60,11 59,0 64,0
+               H94
+               C97.3,0 100,2.7 100,6
+               V34 H0 Z"
+            className="fill-paper"
+          />
+        </svg>
+
+        <div className="relative h-full flex items-center justify-between px-6">
+          {leftItems.map(({ href, label, Icon }) => {
+            const active = pathname === href;
+            return (
+              <Link key={href} href={href} className="flex flex-col items-center justify-center gap-1 text-ink w-12">
+                <Icon active={active} />
+                <span className={`text-[11px] ${active ? "text-ink" : "text-muted"}`}>{label}</span>
+              </Link>
+            );
+          })}
+
+          {/* Spacer so the two side groups don't creep under the notch */}
+          <div className="w-14 shrink-0" />
+
+          {rightItems.map(({ href, label, Icon }) => {
+            const active = pathname === href;
+            return (
+              <Link key={href} href={href} className="flex flex-col items-center justify-center gap-1 text-ink w-12">
+                <Icon active={active} />
+                <span className={`text-[11px] ${active ? "text-ink" : "text-muted"}`}>{label}</span>
+              </Link>
+            );
+          })}
+        </div>
 
         <Link
           href="/cart"
-          className="relative -mt-8 w-14 h-14 rounded-full bg-ink flex items-center justify-center shadow-lg shrink-0 border-4 border-paper"
+          className="absolute left-1/2 -translate-x-1/2 -top-6 w-14 h-14 rounded-full bg-ink flex items-center justify-center shadow-lg"
           aria-label="Cart"
         >
           <CartIcon />
@@ -128,23 +156,7 @@ export default function BottomNav({ transparent }: { transparent?: boolean }) {
             </span>
           )}
         </Link>
-
-        {rightItems.map(({ href, label, Icon }) => {
-          const active = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex flex-col items-center justify-center gap-1 w-12 ${
-                transparent ? "text-white" : "text-ink"
-              }`}
-            >
-              <Icon active={active} />
-              <span className={`text-[11px] ${active ? "" : transparent ? "text-white/70" : "text-muted"}`}>{label}</span>
-            </Link>
-          );
-        })}
       </div>
-    </nav>
+    </div>
   );
 }

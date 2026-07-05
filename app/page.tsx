@@ -24,7 +24,7 @@ async function getHeroBanners(device: "desktop" | "mobile"): Promise<HeroBanner[
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("ariana_hero_banners")
-    .select("id, image_url, href")
+    .select("id, image_url, href, subtitle, cta_text, cta_href")
     .eq("status", "published")
     .eq("device", device)
     .order("position", { ascending: true })
@@ -34,7 +34,14 @@ async function getHeroBanners(device: "desktop" | "mobile"): Promise<HeroBanner[
     return device === "desktop" ? fallbackDesktopBanners : fallbackMobileBanners;
   }
 
-  return data.map((row) => ({ id: row.id, imageUrl: row.image_url, href: row.href }));
+  return data.map((row) => ({
+    id: row.id,
+    imageUrl: row.image_url,
+    href: row.href,
+    subtitle: row.subtitle,
+    ctaText: row.cta_text,
+    ctaHref: row.cta_href,
+  }));
 }
 
 const fallbackLookbookPanels: LookbookPanel[] = [

@@ -23,6 +23,9 @@ export async function POST(request: NextRequest) {
     const href = String(body.href ?? "").trim();
     const imageUrl = String(body.imageUrl ?? "").trim();
     const device = body.device === "mobile" ? "mobile" : "desktop";
+    const subtitle = String(body.subtitle ?? "").trim();
+    const ctaText = String(body.ctaText ?? "").trim();
+    const ctaHref = String(body.ctaHref ?? "").trim();
 
     if (!label) return NextResponse.json({ error: "Give this banner a label." });
     if (!imageUrl) return NextResponse.json({ error: "An image is required." });
@@ -34,6 +37,9 @@ export async function POST(request: NextRequest) {
       device,
       image_url: imageUrl,
       href: href || null,
+      subtitle: subtitle || null,
+      cta_text: ctaText || null,
+      cta_href: ctaHref || null,
       status: "published",
     });
     if (insertErr) throw new Error(`Insert: ${insertErr.message}`);
@@ -44,6 +50,44 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({});
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Publish failed." });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  if (!requireAuth(request)) {
+    return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const id = String(body.id ?? "");
+    if (!id) return NextResponse.json({ error: "Missing id." }, { status: 400 });
+
+    const admin = createAdminClient();
+
+    if (body.setDefault) {
+      const { data: row } = await admin.from("ariana_hero_banners").select("device").eq("id", id).single();
+      if (!row) return NextResponse.json({ error: "Banner not found." });
+
+      const { data: minRow } = await admin
+        .from("ariana_hero_banners")
+        .select("position")
+        .eq("device", row.device)
+        .order("position", { ascending: true })
+        .limit(1)
+        .single();
+
+      const newPosition = (minRow?.position ?? 0) - 1;
+      const { error } = await admin.from("ariana_hero_banners").update({ position: newPosition }).eq("id", id);
+      if (error) throw new Error(error.message);
+    }
+
+    revalidatePath("/");
+    revalidatePath("/admin/hero");
+
+    return NextResponse.json({});
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Update failed." });
   }
 }
 

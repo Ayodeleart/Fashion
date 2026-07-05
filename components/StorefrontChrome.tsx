@@ -29,7 +29,7 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
         <CartProvider>
           <SavedProvider>
             <div className={`w-full min-h-screen ${isImmersive ? "" : "pb-28"}`}>{children}</div>
-            <BottomNav transparent={isImmersive} />
+            <BottomNav />
             <InstallPrompt />
           </SavedProvider>
         </CartProvider>
