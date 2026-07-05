@@ -71,6 +71,7 @@ function BannerCarousel({ banners }: { banners: HeroBanner[] }) {
         <div className="flex gap-8 text-sm tracking-wide">
           <a href="/catalog" className="hover:text-brass transition-colors">Catalog</a>
           <a href="/about" className="hover:text-brass transition-colors">About</a>
+          <a href="/contact" className="hover:text-brass transition-colors">Contact</a>
         </div>
         <a href="/cart" className="text-sm tracking-wide hover:text-brass transition-colors">Cart</a>
       </nav>
