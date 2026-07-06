@@ -102,6 +102,16 @@ h1, h2, h3, .font-display {
   }
 }
 
+/* Desktop gets no reveal animation at all — content is just visible
+   immediately, no transition cost. */
+@media (min-width: 768px) {
+  [data-reveal] {
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 /* Visible keyboard focus, kept consistent site-wide */
 :focus-visible {
   outline: 2px solid rgb(var(--brass));

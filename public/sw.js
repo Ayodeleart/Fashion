@@ -1,4 +1,4 @@
-const CACHE_NAME = "ariana-shell-v1";
+const CACHE_NAME = "ariana-shell-v2";
 const SHELL_URLS = ["/", "/manifest.json"];
 
 self.addEventListener("install", (event) => {

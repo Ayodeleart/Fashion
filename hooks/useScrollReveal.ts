@@ -33,11 +33,13 @@ export function useScrollReveal<T extends HTMLElement = HTMLDivElement>(
       return;
     }
 
-    // Respect reduced motion: reveal everything immediately, skip observing.
+    // Respect reduced motion, and skip entirely on desktop-width viewports —
+    // reveal everything immediately instead of animating in.
     const prefersReduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
-    if (prefersReduced) {
+    const isDesktopWidth = window.matchMedia("(min-width: 768px)").matches;
+    if (prefersReduced || isDesktopWidth) {
       targets.forEach((el) => el.classList.add("is-visible"));
       return;
     }
