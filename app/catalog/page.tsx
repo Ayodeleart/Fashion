@@ -68,6 +68,9 @@ export default async function CatalogPage({
 
   return (
     <main>
+      {heroBanners[0] && (
+        <link rel="preload" as="image" href={heroBanners[0].imageUrl} fetchPriority="high" />
+      )}
       <TopBar />
       <div className="md:hidden">
         <SearchBar />

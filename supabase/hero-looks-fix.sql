@@ -22,6 +22,7 @@ create table if not exists ariana_hero_looks (
 
 alter table ariana_hero_looks enable row level security;
 
+drop policy if exists "Public can read published hero looks" on ariana_hero_looks;
 create policy "Public can read published hero looks"
   on ariana_hero_looks for select
   using (status = 'published');

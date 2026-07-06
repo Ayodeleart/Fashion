@@ -16,6 +16,7 @@ create table if not exists ariana_lookbook_panels (
 
 alter table ariana_lookbook_panels enable row level security;
 
+drop policy if exists "Public can read lookbook panels" on ariana_lookbook_panels;
 create policy "Public can read lookbook panels"
   on ariana_lookbook_panels for select
   using (true);

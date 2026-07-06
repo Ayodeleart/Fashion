@@ -105,25 +105,6 @@ async function getNewArrivals(): Promise<Product[]> {
   });
 }
 
-function MobileHeroWriteup() {
-  return (
-    <section className="block md:hidden px-6 py-10 text-center border-b border-ink/5">
-      <p className="eyebrow mb-3">Craftsmanship. Culture. Distinction.</p>
-      <h2 className="font-display text-2xl mb-3">Tailored for how you actually move.</h2>
-      <p className="text-sm text-muted leading-relaxed mb-5 max-w-sm mx-auto">
-        Every piece is fitted, not just sized — cut close where it should hold, loose where you
-        need to move. Nothing here is mass-produced filler.
-      </p>
-      <a
-        href="/catalog"
-        className="inline-block text-sm tracking-wide border border-ink px-6 py-2.5 rounded-sm hover:bg-ink hover:text-paper transition-colors"
-      >
-        Shop the Collection
-      </a>
-    </section>
-  );
-}
-
 export default async function Home() {
   const [desktopBanners, mobileBanners, lookbookPanels, newArrivals] = await Promise.all([
     getHeroBanners("desktop"),
@@ -135,8 +116,6 @@ export default async function Home() {
   return (
     <main>
       <Hero desktopBanners={desktopBanners} mobileBanners={mobileBanners} />
-
-      <MobileHeroWriteup />
 
       <Lookbook panels={lookbookPanels} />
 

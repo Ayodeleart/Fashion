@@ -33,6 +33,8 @@ export default function HeroCard({ banners }: { banners: HeroBanner[] }) {
             key={b.id}
             src={b.imageUrl}
             alt=""
+            fetchPriority={i === 0 ? "high" : "auto"}
+            loading={i === 0 ? "eager" : "lazy"}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
               i === index ? "opacity-100" : "opacity-0"
             }`}
@@ -41,13 +43,22 @@ export default function HeroCard({ banners }: { banners: HeroBanner[] }) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
         <div className="absolute top-6 left-6 right-6">
-          <h1 className="font-display text-3xl text-white leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">{title}</h1>
-          <Link
-            href={href}
-            className="inline-block mt-4 bg-white text-ink text-sm font-medium rounded-full px-5 py-2.5"
-          >
-            Shop now
-          </Link>
+          {/* Tinted glass panel — deliberately NOT backdrop-blur. A blur
+              filter here would blur whatever photo content sits behind
+              it (including a model's face, which happened before); a
+              plain tint gives the same "glass" read without touching
+              the image itself. Sized to the content, not full-width, so
+              it only covers a small area regardless of where a face
+              happens to sit in the uploaded photo. */}
+          <div className="inline-block bg-black/25 rounded-2xl px-4 py-3 max-w-full">
+            <h1 className="font-display text-3xl text-white leading-tight">{title}</h1>
+            <Link
+              href={href}
+              className="inline-block mt-3 bg-white text-ink text-sm font-medium rounded-full px-5 py-2.5"
+            >
+              Shop now
+            </Link>
+          </div>
         </div>
 
         <p

@@ -73,6 +73,7 @@ create table if not exists ariana_hero_banners (
 
 alter table ariana_hero_banners enable row level security;
 
+drop policy if exists "Public can read published hero banners" on ariana_hero_banners;
 create policy "Public can read published hero banners"
   on ariana_hero_banners for select
   using (status = 'published');
@@ -93,6 +94,7 @@ create table if not exists ariana_lookbook_panels (
 
 alter table ariana_lookbook_panels enable row level security;
 
+drop policy if exists "Public can read lookbook panels" on ariana_lookbook_panels;
 create policy "Public can read lookbook panels"
   on ariana_lookbook_panels for select
   using (true);
@@ -131,22 +133,26 @@ alter table ariana_orders enable row level security;
 alter table ariana_order_items enable row level security;
 
 -- Public (anon) read access to published storefront content only.
+drop policy if exists "Public can read published products" on ariana_products;
 create policy "Public can read published products"
   on ariana_products for select
   using (is_published = true);
 
+drop policy if exists "Public can read product images of published products" on ariana_product_images;
 create policy "Public can read product images of published products"
   on ariana_product_images for select
   using (exists (
     select 1 from ariana_products p where p.id = ariana_product_images.product_id and p.is_published = true
   ));
 
+drop policy if exists "Public can read variants of published products" on ariana_product_variants;
 create policy "Public can read variants of published products"
   on ariana_product_variants for select
   using (exists (
     select 1 from ariana_products p where p.id = ariana_product_variants.product_id and p.is_published = true
   ));
 
+drop policy if exists "Public can read published hero videos" on ariana_hero_videos;
 create policy "Public can read published hero videos"
   on ariana_hero_videos for select
   using (status = 'published');

@@ -18,6 +18,7 @@ create table if not exists ariana_hero_banners (
 
 alter table ariana_hero_banners enable row level security;
 
+drop policy if exists "Public can read published hero banners" on ariana_hero_banners;
 create policy "Public can read published hero banners"
   on ariana_hero_banners for select
   using (status = 'published');

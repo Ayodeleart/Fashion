@@ -41,7 +41,7 @@ export default function Hero({ desktopBanners, mobileBanners }: Props) {
       )}
       {mobileBanners.length > 0 && (
         <div className="block md:hidden">
-          <BannerCarousel banners={mobileBanners} showOverlay={false} />
+          <BannerCarousel banners={mobileBanners} showOverlay />
         </div>
       )}
     </>
@@ -58,8 +58,6 @@ function BannerCarousel({ banners, showOverlay }: { banners: HeroBanner[]; showO
     }, 6000);
     return () => clearInterval(interval);
   }, [banners.length]);
-
-  const active = banners[activeIndex];
 
   return (
     <section className="relative w-full h-screen overflow-hidden">
@@ -80,7 +78,13 @@ function BannerCarousel({ banners, showOverlay }: { banners: HeroBanner[]; showO
         const isActive = i === activeIndex;
         const content = (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={b.imageUrl} alt="" className="w-full h-full object-cover" />
+          <img
+            src={b.imageUrl}
+            alt=""
+            fetchPriority={i === 0 ? "high" : "auto"}
+            loading={i === 0 ? "eager" : "lazy"}
+            className="w-full h-full object-cover"
+          />
         );
         return (
           <div
@@ -94,25 +98,31 @@ function BannerCarousel({ banners, showOverlay }: { banners: HeroBanner[]; showO
         );
       })}
 
-      {/* Tagline / CTA overlay — desktop only. Mobile never covers the
-          model; the write-up lives in a real section below the hero
-          instead (see MobileHeroWriteup in page.tsx). */}
-      {showOverlay && (active?.subtitle || active?.ctaText) && (
-        <div className="absolute bottom-0 left-0 right-0 z-10 pt-24 pb-8 md:pb-10 px-6 md:px-12 bg-gradient-to-t from-black/50 to-transparent pointer-events-none">
+      {/* Tagline / CTA overlay — on the image itself for both desktop and
+          mobile now. Desktop has the room for the full copy (eyebrow +
+          heading + paragraph + CTA); mobile drops the paragraph to stay
+          readable in less space, keeping eyebrow + heading + CTA. This
+          used to live in a separate section below the hero on mobile
+          only, with nothing on desktop — now it's consistent on both. */}
+      {showOverlay && (
+        <div className="absolute bottom-0 left-0 right-0 z-10 pt-24 pb-8 md:pb-12 px-6 md:px-12 bg-gradient-to-t from-black/55 to-transparent pointer-events-none">
           <div className="max-w-md pointer-events-auto">
-            {active?.subtitle && (
-              <p className="text-paper text-xs md:text-sm tracking-[0.15em] uppercase mb-3">
-                {active.subtitle}
-              </p>
-            )}
-            {active?.ctaText && (
-              <a
-                href={active.ctaHref || active.href || "/catalog"}
-                className="inline-block text-xs md:text-sm tracking-wide text-paper border border-paper/70 px-5 py-2.5 rounded-sm hover:bg-paper hover:text-ink transition-colors"
-              >
-                {active.ctaText}
-              </a>
-            )}
+            <p className="text-paper text-xs md:text-sm tracking-[0.15em] uppercase mb-3">
+              Craftsmanship. Culture. Distinction.
+            </p>
+            <h2 className="font-display text-2xl md:text-4xl text-paper mb-3 md:mb-4 leading-tight">
+              Tailored for how you actually move.
+            </h2>
+            <p className="hidden md:block text-paper/85 text-sm leading-relaxed mb-6 max-w-sm">
+              Every piece is fitted, not just sized — cut close where it should hold, loose where
+              you need to move. Nothing here is mass-produced filler.
+            </p>
+            <a
+              href="/catalog"
+              className="inline-block text-xs md:text-sm tracking-wide text-paper border border-paper/70 px-5 py-2.5 rounded-sm hover:bg-paper hover:text-ink transition-colors"
+            >
+              Shop the Collection
+            </a>
           </div>
         </div>
       )}
