@@ -76,6 +76,22 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         </div>
 
         <div>
+          <label className="block text-sm mb-1">Price (NGN) — optional</label>
+          <input
+            name="price_ngn"
+            type="number"
+            step="0.01"
+            defaultValue={product.price_ngn ?? ""}
+            placeholder="Leave blank to show the USD price to Nigerian visitors too"
+            className="w-full border border-ink/20 rounded px-3 py-2 text-sm bg-white"
+          />
+          <p className="text-xs text-muted mt-1">
+            If set, Nigerian visitors (or anyone who picks NGN) see this instead — no automatic
+            conversion happens.
+          </p>
+        </div>
+
+        <div>
           <label className="block text-sm mb-1">Category</label>
           <select
             name="category"

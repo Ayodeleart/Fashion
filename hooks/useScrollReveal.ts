@@ -17,21 +17,21 @@ export function useScrollReveal<T extends HTMLElement = HTMLDivElement>(
     const container = containerRef.current;
     if (!container) return;
 
-    // Reveal animation is mobile-only (see globals.css) — desktop/TV
-    // content is already visible by default via CSS, so skip attaching
-    // an observer there entirely. Also guards against old browsers
-    // (e.g. a 2021 Smart TV browser) where IntersectionObserver may not
-    // exist at all — calling an undefined constructor would throw and
-    // could break other scripts on the page.
-    const isMobileWidth = window.innerWidth < 768;
-    if (!isMobileWidth || typeof IntersectionObserver === "undefined") {
-      return;
-    }
-
     const targets = Array.from(
       container.querySelectorAll<HTMLElement>("[data-reveal]")
     );
     if (targets.length === 0) return;
+
+    // If IntersectionObserver doesn't exist at all (e.g. a 2021 Smart TV
+    // browser), reveal everything immediately rather than leaving it
+    // permanently hidden — the CSS default state is opacity:0 at any
+    // viewport width now that the shop has a real desktop layout too,
+    // so silently bailing here would recreate the original blank-page
+    // bug on that browser instead of just skipping the animation.
+    if (typeof IntersectionObserver === "undefined") {
+      targets.forEach((el) => el.classList.add("is-visible"));
+      return;
+    }
 
     // Respect reduced motion: reveal everything immediately, skip observing.
     const prefersReduced = window.matchMedia(

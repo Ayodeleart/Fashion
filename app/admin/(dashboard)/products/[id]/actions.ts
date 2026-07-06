@@ -7,6 +7,8 @@ import { redirect } from "next/navigation";
 export async function updateProduct(productId: string, formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const price = Number(formData.get("price") ?? 0);
+  const priceNgnRaw = formData.get("price_ngn");
+  const priceNgn = priceNgnRaw && String(priceNgnRaw).trim() !== "" ? Number(priceNgnRaw) : null;
   const description = String(formData.get("description") ?? "").trim();
   const category = String(formData.get("category") ?? "").trim();
   const isPublished = formData.get("is_published") === "on";
@@ -21,6 +23,7 @@ export async function updateProduct(productId: string, formData: FormData) {
     .update({
       name,
       price,
+      price_ngn: priceNgn,
       description: description || null,
       category: category || null,
       is_published: isPublished,

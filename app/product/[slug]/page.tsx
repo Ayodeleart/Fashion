@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
+import { resolveCurrency, resolvePrice } from "@/lib/currency";
 import AddToCartButton from "@/components/AddToCartButton";
-import SaveButton from "@/components/SaveButton";
-import TopBar from "@/components/TopBar";
+import ProductGallery from "@/components/ProductGallery";
+import RevealContainer from "@/components/RevealContainer";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +14,7 @@ type ProductDetail = {
   slug: string;
   price: number;
   currency: string;
+  price_ngn: number | null;
   description: string | null;
   category: string | null;
   ariana_product_images: { url: string; position: number }[];
@@ -23,7 +24,7 @@ async function getProduct(slug: string): Promise<ProductDetail | null> {
   const supabase = getSupabase();
   const { data } = await supabase
     .from("ariana_products")
-    .select("id, name, slug, price, currency, description, category, ariana_product_images(url, position)")
+    .select("id, name, slug, price, currency, price_ngn, description, category, ariana_product_images(url, position)")
     .eq("slug", slug)
     .eq("is_published", true)
     .single();
@@ -37,17 +38,19 @@ function formatPrice(price: number, currency: string) {
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = await getProduct(slug);
+  const [product, currency] = await Promise.all([getProduct(slug), resolveCurrency()]);
   if (!product) notFound();
 
   const images = [...(product.ariana_product_images ?? [])].sort((a, b) => a.position - b.position);
   const primaryImage = images[0]?.url ?? "";
+  const displayPrice = resolvePrice(product, currency);
 
+  // No TopBar here by design — the product page is meant to be an
+  // immersive, uninterrupted view of the piece. Back navigation still
+  // works via the category link below and the browser/OS back gesture.
   return (
-    <main>
-      <TopBar />
-
-      <div className="px-5">
+    <RevealContainer className="md:max-w-5xl md:mx-auto md:pt-8 md:grid md:grid-cols-2 md:gap-10">
+      <div className="px-5 md:px-0">
         {product.category && (
           <Link
             href={`/catalog?category=${encodeURIComponent(product.category)}`}
@@ -58,54 +61,44 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         )}
       </div>
 
-      <section className="px-5 pt-3 pb-4">
-        <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-paper-raised mb-3">
-          {primaryImage ? (
-            <Image src={primaryImage} alt={product.name} fill className="object-cover" sizes="100vw" priority />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-xs text-muted">No image</div>
-          )}
-          <div className="absolute top-3 right-3">
-            <SaveButton
-              item={{
-                productId: product.id,
-                name: product.name,
-                price: product.price,
-                currency: product.currency,
-                image: primaryImage,
-                href: `/product/${product.slug}`,
-              }}
-              className="w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shrink-0"
-            />
-          </div>
-        </div>
+      <section className="px-5 md:px-0 pt-3 md:pt-3 pb-4 md:col-start-1 md:row-start-2">
+        <ProductGallery
+          images={images}
+          productName={product.name}
+          saveItem={{
+            productId: product.id,
+            name: product.name,
+            price: displayPrice.amount,
+            currency: displayPrice.currency,
+            image: primaryImage,
+            href: `/product/${product.slug}`,
+          }}
+        />
+      </section>
 
-        {images.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto no-scrollbar mb-6">
-            {images.map((img) => (
-              <div key={img.url} className="relative w-16 h-20 shrink-0 rounded-lg overflow-hidden bg-paper-raised">
-                <Image src={img.url} alt="" fill className="object-cover" sizes="64px" />
-              </div>
-            ))}
-          </div>
-        )}
-
-        <h1 className="font-display text-2xl mb-1">{product.name}</h1>
-        <p className="text-lg text-muted mb-5">{formatPrice(product.price, product.currency)}</p>
+      <section className="px-5 md:px-0 pb-4 md:col-start-2 md:row-start-2 md:pt-3">
+        <h1 className="font-display text-2xl md:text-3xl mb-1" data-reveal="heading">
+          {product.name}
+        </h1>
+        <p className="text-lg text-muted mb-5" data-reveal="paragraph">
+          {formatPrice(displayPrice.amount, displayPrice.currency)}
+        </p>
 
         {product.description && (
-          <p className="text-sm text-ink/80 leading-relaxed mb-8 whitespace-pre-wrap">{product.description}</p>
+          <p className="text-sm text-ink/80 leading-relaxed mb-8 whitespace-pre-wrap" data-reveal="paragraph">
+            {product.description}
+          </p>
         )}
 
         <AddToCartButton
           productId={product.id}
           name={product.name}
-          price={product.price}
-          currency={product.currency}
+          price={displayPrice.amount}
+          currency={displayPrice.currency}
           image={primaryImage}
-          className="w-full text-sm py-3.5 rounded-full bg-ink text-paper hover:bg-ink/90 transition-colors"
+          className="w-full md:w-auto md:px-10 text-sm py-3.5 rounded-full bg-ink text-paper hover:bg-ink/90 transition-colors"
         />
       </section>
-    </main>
+    </RevealContainer>
   );
 }

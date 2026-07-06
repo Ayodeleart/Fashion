@@ -3,6 +3,7 @@ import Lookbook, { LookbookPanel } from "@/components/Lookbook";
 import ProductGrid, { Product } from "@/components/ProductGrid";
 import Footer from "@/components/Footer";
 import { getSupabase } from "@/lib/supabase";
+import { resolveCurrency, resolvePrice } from "@/lib/currency";
 
 // Forced dynamic: without this, Next.js can prerender this page as static
 // HTML at build time and cache it — meaning new hero banners, lookbook
@@ -77,27 +78,50 @@ const fallbackProducts: Product[] = [
 
 async function getNewArrivals(): Promise<Product[]> {
   const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from("ariana_products")
-    .select("id, name, price, currency, slug, ariana_product_images(url, position)")
-    .eq("is_published", true)
-    .order("created_at", { ascending: false })
-    .limit(8);
+  const [{ data, error }, currency] = await Promise.all([
+    supabase
+      .from("ariana_products")
+      .select("id, name, price, currency, price_ngn, slug, ariana_product_images(url, position)")
+      .eq("is_published", true)
+      .order("created_at", { ascending: false })
+      .limit(8),
+    resolveCurrency(),
+  ]);
 
   if (error || !data || data.length === 0) return fallbackProducts;
 
   return data.map((row) => {
     const images = (row.ariana_product_images as { url: string; position: number }[]) ?? [];
     const firstImage = [...images].sort((a, b) => a.position - b.position)[0];
+    const displayPrice = resolvePrice(row, currency);
     return {
       id: row.id,
       name: row.name,
-      price: row.price,
-      currency: row.currency,
+      price: displayPrice.amount,
+      currency: displayPrice.currency,
       image: firstImage?.url ?? "/images/product-placeholder.jpg",
       href: `/product/${row.slug}`,
     };
   });
+}
+
+function MobileHeroWriteup() {
+  return (
+    <section className="block md:hidden px-6 py-10 text-center border-b border-ink/5">
+      <p className="eyebrow mb-3">Craftsmanship. Culture. Distinction.</p>
+      <h2 className="font-display text-2xl mb-3">Tailored for how you actually move.</h2>
+      <p className="text-sm text-muted leading-relaxed mb-5 max-w-sm mx-auto">
+        Every piece is fitted, not just sized — cut close where it should hold, loose where you
+        need to move. Nothing here is mass-produced filler.
+      </p>
+      <a
+        href="/catalog"
+        className="inline-block text-sm tracking-wide border border-ink px-6 py-2.5 rounded-sm hover:bg-ink hover:text-paper transition-colors"
+      >
+        Shop the Collection
+      </a>
+    </section>
+  );
 }
 
 export default async function Home() {
@@ -111,6 +135,8 @@ export default async function Home() {
   return (
     <main>
       <Hero desktopBanners={desktopBanners} mobileBanners={mobileBanners} />
+
+      <MobileHeroWriteup />
 
       <Lookbook panels={lookbookPanels} />
 

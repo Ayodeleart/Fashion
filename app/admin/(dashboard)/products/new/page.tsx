@@ -30,6 +30,7 @@ export default function NewProductPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
+  const [priceNgn, setPriceNgn] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [isPublished, setIsPublished] = useState(false);
@@ -67,7 +68,15 @@ export default function NewProductPage() {
       const res = await fetch("/api/admin/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, price: Number(price), category, description, isPublished, imageUrls }),
+        body: JSON.stringify({
+          name,
+          price: Number(price),
+          priceNgn: priceNgn ? Number(priceNgn) : null,
+          category,
+          description,
+          isPublished,
+          imageUrls,
+        }),
       });
       const result: { id?: string; error?: string } = await res.json();
       if (result.error) throw new Error(result.error);
@@ -117,6 +126,22 @@ export default function NewProductPage() {
             required
             className="w-full border border-ink/20 rounded px-3 py-2 text-sm bg-white"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm mb-1">Price (NGN) — optional</label>
+          <input
+            value={priceNgn}
+            onChange={(e) => setPriceNgn(e.target.value)}
+            type="number"
+            step="0.01"
+            placeholder="Leave blank to show the USD price to Nigerian visitors too"
+            className="w-full border border-ink/20 rounded px-3 py-2 text-sm bg-white"
+          />
+          <p className="text-xs text-muted mt-1">
+            If set, Nigerian visitors (or anyone who picks NGN) see this instead — no automatic
+            currency conversion happens, so set the actual number you want charged.
+          </p>
         </div>
 
         <div>

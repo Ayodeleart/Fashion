@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const name = String(body.name ?? "").trim();
     const price = Number(body.price ?? 0);
+    const priceNgn = body.priceNgn != null && body.priceNgn !== "" ? Number(body.priceNgn) : null;
     const category = String(body.category ?? "").trim();
     const description = String(body.description ?? "").trim();
     const isPublished = Boolean(body.isPublished);
@@ -35,6 +36,7 @@ export async function POST(request: NextRequest) {
         name,
         slug,
         price,
+        price_ngn: priceNgn,
         category,
         description: description || null,
         is_published: isPublished,

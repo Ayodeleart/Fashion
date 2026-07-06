@@ -1,13 +1,12 @@
 import Link from "next/link";
-import Image from "next/image";
 import { getSupabase } from "@/lib/supabase";
 import { getCategories } from "@/lib/categories";
-import AddToCartButton from "@/components/AddToCartButton";
-import SaveButton from "@/components/SaveButton";
+import { resolveCurrency } from "@/lib/currency";
 import TopBar from "@/components/TopBar";
 import SearchBar from "@/components/SearchBar";
 import CategoryRow from "@/components/CategoryRow";
 import HeroCard from "@/components/HeroCard";
+import CatalogGrid from "@/components/CatalogGrid";
 import type { HeroBanner } from "@/components/Hero";
 
 // This is the e-commerce shop home (the mobile app screen). "/" stays the
@@ -20,6 +19,7 @@ type ProductRow = {
   slug: string;
   price: number;
   currency: string;
+  price_ngn: number | null;
   category: string | null;
   ariana_product_images: { url: string; position: number }[];
 };
@@ -28,7 +28,7 @@ async function getProducts(category?: string) {
   const supabase = getSupabase();
   let query = supabase
     .from("ariana_products")
-    .select("id, name, slug, price, currency, category, ariana_product_images(url, position)")
+    .select("id, name, slug, price, currency, price_ngn, category, ariana_product_images(url, position)")
     .eq("is_published", true)
     .order("created_at", { ascending: false });
 
@@ -55,36 +55,59 @@ async function getShopHeroBanner(): Promise<HeroBanner> {
   return { id: row.id, label: row.label, imageUrl: row.image_url, href: row.href };
 }
 
-function formatPrice(price: number, currency: string) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(price);
-}
-
 export default async function CatalogPage({
   searchParams,
 }: {
   searchParams: Promise<{ category?: string }>;
 }) {
   const { category } = await searchParams;
-  const [products, categories, heroBanner] = await Promise.all([
+  const [products, categories, heroBanner, currency] = await Promise.all([
     getProducts(category),
     getCategories(),
     getShopHeroBanner(),
+    resolveCurrency(),
   ]);
 
   return (
     <main>
-      <TopBar />
-      <SearchBar />
-      <CategoryRow categories={categories} />
-      {!category && <HeroCard banner={heroBanner} />}
+      <TopBar currency={currency} />
+      <div className="md:hidden">
+        <SearchBar />
+        <CategoryRow categories={categories} />
+        {!category && <HeroCard banner={heroBanner} />}
+      </div>
 
-      <section className="px-5 pb-8">
-        <div className="flex items-baseline justify-between mb-4">
-          <h2 className="text-base font-semibold text-ink">
+      <section className="px-5 md:px-10 lg:px-16 pb-8 md:pt-8 max-w-[1400px] mx-auto">
+        {/* Desktop category filter — the mobile CategoryRow above is
+            hidden at md+, this is the desktop equivalent. */}
+        <div className="hidden md:flex flex-wrap gap-2 mb-8">
+          <Link
+            href="/catalog"
+            className={`text-sm px-4 py-1.5 rounded-full border transition-colors ${
+              !category ? "bg-ink text-paper border-ink" : "border-ink/20 hover:border-ink/40"
+            }`}
+          >
+            All
+          </Link>
+          {categories.map((c) => (
+            <Link
+              key={c.id}
+              href={`/catalog?category=${encodeURIComponent(c.name)}`}
+              className={`text-sm px-4 py-1.5 rounded-full border transition-colors ${
+                category === c.name ? "bg-ink text-paper border-ink" : "border-ink/20 hover:border-ink/40"
+              }`}
+            >
+              {c.name}
+            </Link>
+          ))}
+        </div>
+
+        <div className="flex items-baseline justify-between mb-4 md:mb-6">
+          <h2 className="text-base md:text-2xl font-semibold text-ink capitalize">
             {category ? category : "latest arrivals"}
           </h2>
           {category && (
-            <Link href="/catalog" className="text-xs text-muted hover:text-brass transition-colors">
+            <Link href="/catalog" className="text-xs md:text-sm text-muted hover:text-brass transition-colors">
               Clear filter
             </Link>
           )}
@@ -93,54 +116,7 @@ export default async function CatalogPage({
         {products.length === 0 ? (
           <p className="text-sm text-muted">No products {category ? `in ${category} ` : ""}yet.</p>
         ) : (
-          <div className="grid grid-cols-2 gap-x-3 gap-y-6">
-            {products.map((p) => {
-              const image = [...(p.ariana_product_images ?? [])].sort((a, b) => a.position - b.position)[0];
-              return (
-                <Link key={p.id} href={`/product/${p.slug}`} className="group block">
-                  <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-paper-raised mb-2">
-                    {image ? (
-                      <Image
-                        src={image.url}
-                        alt={p.name}
-                        fill
-                        className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-                        sizes="50vw"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xs text-muted">
-                        No image
-                      </div>
-                    )}
-                    <div className="absolute top-2 right-2">
-                      <SaveButton
-                        item={{
-                          productId: p.id,
-                          name: p.name,
-                          price: p.price,
-                          currency: p.currency,
-                          image: image?.url ?? "",
-                          href: `/product/${p.slug}`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <p className="text-sm text-ink truncate">{p.name}</p>
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="text-sm text-muted">{formatPrice(p.price, p.currency)}</p>
-                    <AddToCartButton
-                      productId={p.id}
-                      name={p.name}
-                      price={p.price}
-                      currency={p.currency}
-                      image={image?.url ?? ""}
-                      className="text-[11px] px-2.5 py-1 rounded-full bg-ink text-paper"
-                    />
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+          <CatalogGrid products={products} currency={currency} />
         )}
       </section>
     </main>
