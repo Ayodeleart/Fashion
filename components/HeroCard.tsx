@@ -42,28 +42,30 @@ export default function HeroCard({ banners }: { banners: HeroBanner[] }) {
         ))}
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
 
+        {/* Watermark restored to the bottom, where it originally was —
+            moving it to the top (a previous fix) was the actual mistake:
+            that's exactly where a model's face tends to sit in these
+            photos, so it just moved the "covering the face" problem from
+            the panel onto the watermark instead of solving it. */}
         <p
           aria-hidden
-          className="absolute top-4 left-0 right-0 text-center font-display text-[56px] leading-none text-transparent select-none"
-          style={{ WebkitTextStroke: "1.5px rgba(255,255,255,0.5)" }}
+          className="absolute bottom-1 left-0 right-0 text-center font-display text-[56px] leading-none text-transparent select-none"
+          style={{ WebkitTextStroke: "1.5px rgba(255,255,255,0.55)" }}
         >
           {watermark}
         </p>
 
-        {/* Title/CTA panel — bottom of the card, above the dot indicators.
-            Moved down from the top: the top is where a model's face
-            typically sits in these uploaded photos, so the panel kept
-            landing right over it regardless of which photo was used. */}
-        <div className="absolute bottom-12 left-6 right-6">
-          <div className="inline-block bg-black/25 rounded-2xl px-4 py-3 max-w-full">
-            <h1 className="font-display text-3xl text-white leading-tight">{title}</h1>
-            <Link
-              href={href}
-              className="inline-block mt-3 bg-white text-black text-sm font-medium rounded-full px-5 py-2.5"
-            >
-              Shop now
-            </Link>
-          </div>
+        {/* Shop now — no separate title here anymore: the watermark
+            behind it already shows the collection name, so a second
+            "Melanin" label above the button was pure duplication.
+            Positioned clear of the watermark's tall glyphs, above it. */}
+        <div className="absolute bottom-24 left-6 right-6">
+          <Link
+            href={href}
+            className="inline-block bg-white text-black text-sm font-medium rounded-full px-5 py-2.5"
+          >
+            Shop now
+          </Link>
         </div>
 
         {banners.length > 1 && (

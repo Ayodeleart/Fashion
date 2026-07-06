@@ -135,3 +135,18 @@ h1, h2, h3, .font-display {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* The thin line on the right edge during scroll — this is a rendered
+   scrollbar indicator, hidden site-wide. Note: on iOS Safari this is
+   often the OS's own native momentum-scroll indicator rather than
+   something the page draws, in which case CSS genuinely can't remove
+   it (that's Apple's system UI, not this site's) — but this covers
+   every case where it IS a page-rendered scrollbar (desktop browsers,
+   most installed-PWA/webview contexts on Android, etc). */
+html {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html::-webkit-scrollbar {
+  display: none;
+}
