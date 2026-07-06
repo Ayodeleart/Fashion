@@ -14,6 +14,7 @@ const links = [
   { href: "/admin/lookbook", label: "Lookbook" },
   { href: "/admin/orders", label: "Orders" },
   { href: "/admin/messages", label: "Messages" },
+  { href: "/admin/login-background", label: "Login Background" },
 ];
 
 export default function AdminNav() {

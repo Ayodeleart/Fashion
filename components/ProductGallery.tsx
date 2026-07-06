@@ -66,7 +66,7 @@ export default function ProductGallery({
         )}
 
         <div className="absolute top-3 right-3">
-          <SaveButton item={saveItem} className="w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shrink-0" />
+          <SaveButton item={saveItem} className="w-9 h-9 rounded-full bg-white/90 text-black flex items-center justify-center shrink-0" />
         </div>
 
         {/* Desktop arrow controls — swipe covers mobile, this covers desktop */}
@@ -75,14 +75,14 @@ export default function ProductGallery({
             <button
               onClick={() => goTo(activeIndex - 1)}
               aria-label="Previous image"
-              className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 items-center justify-center hover:bg-white transition-colors"
+              className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 text-black items-center justify-center hover:bg-white transition-colors"
             >
               ←
             </button>
             <button
               onClick={() => goTo(activeIndex + 1)}
               aria-label="Next image"
-              className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 items-center justify-center hover:bg-white transition-colors"
+              className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 text-black items-center justify-center hover:bg-white transition-colors"
             >
               →
             </button>

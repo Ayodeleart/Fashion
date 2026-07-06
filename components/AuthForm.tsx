@@ -67,7 +67,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-white"
+            className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-paper"
             placeholder="you@example.com"
           />
         </div>
@@ -80,7 +80,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
             minLength={6}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-white"
+            className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-paper"
             placeholder="••••••••"
           />
         </div>

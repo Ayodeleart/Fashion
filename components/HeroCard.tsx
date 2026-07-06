@@ -40,34 +40,31 @@ export default function HeroCard({ banners }: { banners: HeroBanner[] }) {
             }`}
           />
         ))}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
 
-        <div className="absolute top-6 left-6 right-6">
-          {/* Tinted glass panel — deliberately NOT backdrop-blur. A blur
-              filter here would blur whatever photo content sits behind
-              it (including a model's face, which happened before); a
-              plain tint gives the same "glass" read without touching
-              the image itself. Sized to the content, not full-width, so
-              it only covers a small area regardless of where a face
-              happens to sit in the uploaded photo. */}
+        <p
+          aria-hidden
+          className="absolute top-4 left-0 right-0 text-center font-display text-[56px] leading-none text-transparent select-none"
+          style={{ WebkitTextStroke: "1.5px rgba(255,255,255,0.5)" }}
+        >
+          {watermark}
+        </p>
+
+        {/* Title/CTA panel — bottom of the card, above the dot indicators.
+            Moved down from the top: the top is where a model's face
+            typically sits in these uploaded photos, so the panel kept
+            landing right over it regardless of which photo was used. */}
+        <div className="absolute bottom-12 left-6 right-6">
           <div className="inline-block bg-black/25 rounded-2xl px-4 py-3 max-w-full">
             <h1 className="font-display text-3xl text-white leading-tight">{title}</h1>
             <Link
               href={href}
-              className="inline-block mt-3 bg-white text-ink text-sm font-medium rounded-full px-5 py-2.5"
+              className="inline-block mt-3 bg-white text-black text-sm font-medium rounded-full px-5 py-2.5"
             >
               Shop now
             </Link>
           </div>
         </div>
-
-        <p
-          aria-hidden
-          className="absolute bottom-1 left-0 right-0 text-center font-display text-[64px] leading-none text-transparent select-none"
-          style={{ WebkitTextStroke: "1.5px rgba(255,255,255,0.85)" }}
-        >
-          {watermark}
-        </p>
 
         {banners.length > 1 && (
           <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">

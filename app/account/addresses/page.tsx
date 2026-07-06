@@ -77,13 +77,13 @@ export default function AddressBookPage() {
       <p className="text-sm text-muted mb-6">Used to pre-fill your delivery details at checkout.</p>
 
       <form onSubmit={handleSave} className="space-y-3">
-        <input {...field("fullName")} placeholder="Full name" className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-white" />
-        <input {...field("phone")} placeholder="Phone number" className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-white" />
-        <input {...field("line1")} placeholder="Address line 1" className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-white" />
-        <input {...field("line2")} placeholder="Address line 2 (optional)" className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-white" />
+        <input {...field("fullName")} placeholder="Full name" className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-paper" />
+        <input {...field("phone")} placeholder="Phone number" className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-paper" />
+        <input {...field("line1")} placeholder="Address line 1" className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-paper" />
+        <input {...field("line2")} placeholder="Address line 2 (optional)" className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-paper" />
         <div className="flex gap-3">
-          <input {...field("city")} placeholder="City" className="flex-1 border border-ink/20 rounded-full px-4 py-3 text-sm bg-white" />
-          <input {...field("state")} placeholder="State" className="flex-1 border border-ink/20 rounded-full px-4 py-3 text-sm bg-white" />
+          <input {...field("city")} placeholder="City" className="flex-1 border border-ink/20 rounded-full px-4 py-3 text-sm bg-paper" />
+          <input {...field("state")} placeholder="State" className="flex-1 border border-ink/20 rounded-full px-4 py-3 text-sm bg-paper" />
         </div>
         <button
           type="submit"

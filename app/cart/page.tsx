@@ -81,60 +81,66 @@ export default function CartPage() {
   }
 
   return (
-    <main className="px-5 py-8">
-      <h1 className="font-display text-2xl mb-6">Your cart</h1>
+    <main className="px-5 md:px-10 py-8 md:py-12 md:max-w-5xl md:mx-auto md:grid md:grid-cols-3 md:gap-10">
+      <div className="md:col-span-2">
+        <h1 className="font-display text-2xl md:text-3xl mb-6">Your cart</h1>
 
-      {error && (
-        <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-3 mb-4">{error}</p>
-      )}
+        {error && (
+          <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-3 mb-4">{error}</p>
+        )}
 
-      <ul className="space-y-4 mb-8">
-        {items.map((item) => (
-          <li key={item.productId} className="flex gap-3">
-            <div className="relative w-16 h-20 rounded-xl overflow-hidden bg-paper-raised shrink-0">
-              {item.image && <Image src={item.image} alt={item.name} fill className="object-cover" sizes="64px" />}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm truncate">{item.name}</p>
-              <p className="text-sm text-muted">{formatPrice(item.price, item.currency)}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <button
-                  onClick={() => setQuantity(item.productId, item.quantity - 1)}
-                  className="w-7 h-7 rounded-full border border-ink/20 text-sm"
-                >
-                  −
-                </button>
-                <span className="text-sm w-5 text-center">{item.quantity}</span>
-                <button
-                  onClick={() => setQuantity(item.productId, item.quantity + 1)}
-                  className="w-7 h-7 rounded-full border border-ink/20 text-sm"
-                >
-                  +
-                </button>
-                <button
-                  onClick={() => removeItem(item.productId)}
-                  className="text-xs text-muted ml-2 underline"
-                >
-                  Remove
-                </button>
+        <ul className="space-y-4 mb-8 md:mb-0">
+          {items.map((item) => (
+            <li key={item.productId} className="flex gap-3 md:gap-4 md:pb-4 md:border-b md:border-ink/10">
+              <div className="relative w-16 h-20 md:w-20 md:h-24 rounded-xl overflow-hidden bg-paper-raised shrink-0">
+                {item.image && <Image src={item.image} alt={item.name} fill className="object-cover" sizes="80px" />}
               </div>
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      <div className="flex items-center justify-between mb-4 text-sm">
-        <span className="text-muted">Total</span>
-        <span className="font-medium">{formatPrice(total, items[0]?.currency ?? "NGN")}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm md:text-base truncate">{item.name}</p>
+                <p className="text-sm text-muted">{formatPrice(item.price, item.currency)}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <button
+                    onClick={() => setQuantity(item.productId, item.quantity - 1)}
+                    className="w-7 h-7 rounded-full border border-ink/20 text-sm"
+                  >
+                    −
+                  </button>
+                  <span className="text-sm w-5 text-center">{item.quantity}</span>
+                  <button
+                    onClick={() => setQuantity(item.productId, item.quantity + 1)}
+                    className="w-7 h-7 rounded-full border border-ink/20 text-sm"
+                  >
+                    +
+                  </button>
+                  <button
+                    onClick={() => removeItem(item.productId)}
+                    className="text-xs text-muted ml-2 underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
 
-      <button
-        onClick={handleCheckout}
-        disabled={pending}
-        className="w-full bg-ink text-paper rounded-full px-4 py-3 text-sm font-medium hover:bg-ink/90 transition-colors disabled:opacity-50"
-      >
-        {pending ? "Redirecting to Paystack…" : "Checkout with Paystack"}
-      </button>
+      {/* Order summary — sidebar on desktop, inline block on mobile
+          (same content, just repositioned by the grid at md+). */}
+      <div className="md:sticky md:top-8 md:self-start md:bg-paper-raised md:rounded-2xl md:p-6">
+        <div className="flex items-center justify-between mb-4 text-sm">
+          <span className="text-muted">Total</span>
+          <span className="font-medium">{formatPrice(total, items[0]?.currency ?? "NGN")}</span>
+        </div>
+
+        <button
+          onClick={handleCheckout}
+          disabled={pending}
+          className="w-full bg-ink text-paper rounded-full px-4 py-3 text-sm font-medium hover:bg-ink/90 transition-colors disabled:opacity-50"
+        >
+          {pending ? "Redirecting to Paystack…" : "Checkout with Paystack"}
+        </button>
+      </div>
     </main>
   );
 }

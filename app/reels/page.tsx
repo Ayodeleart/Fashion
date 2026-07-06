@@ -60,7 +60,7 @@ function VideoCard({ reel }: { reel: Reel }) {
         {reel.product_slug && (
           <Link
             href={`/product/${reel.product_slug}`}
-            className="inline-block bg-white text-ink text-sm font-medium rounded-full px-4 py-2"
+            className="inline-block bg-white text-black text-sm font-medium rounded-full px-4 py-2"
           >
             Shop {reel.product_name}
           </Link>

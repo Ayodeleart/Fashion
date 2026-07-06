@@ -132,7 +132,7 @@ export default function EditProfilePage() {
           <input
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-white"
+            className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-paper"
           />
         </div>
         <div>
@@ -141,7 +141,7 @@ export default function EditProfilePage() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="Used for delivery updates"
-            className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-white"
+            className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-paper"
           />
         </div>
         <button

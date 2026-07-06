@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
@@ -91,17 +92,72 @@ export default function BottomNav() {
   const pathname = usePathname();
   const { count } = useCart();
 
+  const allItems = [...leftItems, ...rightItems];
+  const itemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
+
+  // Measures the active tab's actual position via the DOM (not computed
+  // from fixed offsets) since the flex row uses justify-between with
+  // variable gaps depending on viewport width — a hardcoded index-based
+  // position would drift. Re-measures on route change and on resize.
+  useLayoutEffect(() => {
+    function measure() {
+      const active = allItems.find((item) => item.href === pathname);
+      const el = active ? itemRefs.current[active.href] : null;
+      const container = containerRef.current;
+      if (!el || !container) {
+        setPill(null);
+        return;
+      }
+      const elRect = el.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      setPill({ left: elRect.left - containerRect.left, width: elRect.width });
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
   return (
     // Deliberately simple: a flat bar, and the cart button is just the
     // LAST element in the DOM so it paints on top of the bar and floats
     // above it via a negative top offset. No cutout/notch shape — that
     // was causing the bar's own fill to visually intrude on the button.
     <nav className="fixed bottom-0 left-0 right-0 z-30 bg-paper border-t border-ink/10 pb-[env(safe-area-inset-bottom)]">
-      <div className="max-w-md mx-auto relative flex items-center justify-between px-6 h-16">
+      <div ref={containerRef} className="max-w-md mx-auto relative flex items-center justify-between px-6 h-16">
+        {/* Liquid indicator — a soft pill that slides + slightly stretches
+            to the active tab. Never rendered behind the middle cart
+            button (that one isn't in allItems, so pill is null there
+            momentarily, but cart is a separate route so this nav's own
+            active-state highlighting doesn't apply to it anyway). A
+            bouncy easing curve gives the "liquid" overshoot feel; token
+            colors (brass/ink at low opacity) keep it visible in both themes. */}
+        {pill && (
+          <span
+            aria-hidden
+            className="absolute top-1/2 h-11 rounded-full bg-brass/15 pointer-events-none"
+            style={{
+              left: pill.left - 6,
+              width: pill.width + 12,
+              transform: "translateY(-50%)",
+              transition: "left 450ms cubic-bezier(0.34, 1.56, 0.64, 1), width 450ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+            }}
+          />
+        )}
+
         {leftItems.map(({ href, label, Icon }) => {
           const active = pathname === href;
           return (
-            <Link key={href} href={href} className="flex flex-col items-center justify-center gap-1 text-ink w-12">
+            <Link
+              key={href}
+              href={href}
+              ref={(el) => {
+                itemRefs.current[href] = el;
+              }}
+              className="relative flex flex-col items-center justify-center gap-1 text-ink w-12 z-10"
+            >
               <Icon active={active} />
               <span className={`text-[11px] ${active ? "text-ink" : "text-muted"}`}>{label}</span>
             </Link>
@@ -113,7 +169,14 @@ export default function BottomNav() {
         {rightItems.map(({ href, label, Icon }) => {
           const active = pathname === href;
           return (
-            <Link key={href} href={href} className="flex flex-col items-center justify-center gap-1 text-ink w-12">
+            <Link
+              key={href}
+              href={href}
+              ref={(el) => {
+                itemRefs.current[href] = el;
+              }}
+              className="relative flex flex-col items-center justify-center gap-1 text-ink w-12 z-10"
+            >
               <Icon active={active} />
               <span className={`text-[11px] ${active ? "text-ink" : "text-muted"}`}>{label}</span>
             </Link>

@@ -27,7 +27,7 @@ export default function CatalogGrid({ products, currency }: { products: ProductR
 
   return (
     <div ref={ref} className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-3 md:gap-x-5 gap-y-6 md:gap-y-10">
-      {products.map((p) => {
+      {products.map((p, index) => {
         const image = [...(p.ariana_product_images ?? [])].sort((a, b) => a.position - b.position)[0];
         const displayPrice = resolvePrice(p, currency);
         return (
@@ -38,6 +38,7 @@ export default function CatalogGrid({ products, currency }: { products: ProductR
                   src={image.url}
                   alt={p.name}
                   fill
+                  priority={index < 4}
                   className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
                   sizes="(max-width: 768px) 50vw, 20vw"
                 />

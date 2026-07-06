@@ -21,7 +21,7 @@ export default function SaveButton({ item, className }: { item: SavedItem; class
           router.push(`/account/login?next=${encodeURIComponent(pathname)}`);
         }
       }}
-      className={className ?? "w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shrink-0"}
+      className={className ?? "w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shrink-0"}
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill={saved ? "rgb(var(--brass))" : "none"}>
         <path
