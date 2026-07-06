@@ -40,19 +40,17 @@ async function getProducts(category?: string) {
 
 const fallbackHeroBanner: HeroBanner = { id: "fallback", imageUrl: "/images/hero-mobile.jpg", href: "/catalog" };
 
-async function getShopHeroBanner(): Promise<HeroBanner> {
+async function getShopHeroBanners(): Promise<HeroBanner[]> {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("ariana_shop_hero")
     .select("id, label, image_url, href")
     .eq("status", "published")
     .order("position", { ascending: true })
-    .order("created_at", { ascending: false })
-    .limit(1);
+    .order("created_at", { ascending: false });
 
-  if (error || !data || data.length === 0) return fallbackHeroBanner;
-  const row = data[0];
-  return { id: row.id, label: row.label, imageUrl: row.image_url, href: row.href };
+  if (error || !data || data.length === 0) return [fallbackHeroBanner];
+  return data.map((row) => ({ id: row.id, label: row.label, imageUrl: row.image_url, href: row.href }));
 }
 
 export default async function CatalogPage({
@@ -61,20 +59,20 @@ export default async function CatalogPage({
   searchParams: Promise<{ category?: string }>;
 }) {
   const { category } = await searchParams;
-  const [products, categories, heroBanner, currency] = await Promise.all([
+  const [products, categories, heroBanners, currency] = await Promise.all([
     getProducts(category),
     getCategories(),
-    getShopHeroBanner(),
+    getShopHeroBanners(),
     resolveCurrency(),
   ]);
 
   return (
     <main>
-      <TopBar currency={currency} />
+      <TopBar />
       <div className="md:hidden">
         <SearchBar />
         <CategoryRow categories={categories} />
-        {!category && <HeroCard banner={heroBanner} />}
+        {!category && <HeroCard banners={heroBanners} />}
       </div>
 
       <section className="px-5 md:px-10 lg:px-16 pb-8 md:pt-8 max-w-[1400px] mx-auto">

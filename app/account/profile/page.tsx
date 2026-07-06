@@ -78,6 +78,12 @@ const icons = {
       <path d="M4 20h4L20 8l-4-4L4 16v4Z" stroke="currentColor" strokeWidth={1.5} strokeLinejoin="round" />
     </svg>
   ),
+  gear: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth={1.5} />
+      <path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" />
+    </svg>
+  ),
 };
 
 export default function ProfilePage() {
@@ -148,6 +154,7 @@ export default function ProfilePage() {
       <div className="bg-paper-raised rounded-2xl divide-y divide-ink/5 mb-6">
         <Row href="/account/addresses" icon={icons.address} title="Address Book" subtitle="Manage your saved addresses" />
         <Row href="/account/orders" icon={icons.order} title="Order History" subtitle="View your past orders" />
+        <Row href="/account/settings" icon={icons.gear} title="Settings" subtitle="Currency & appearance" />
         <Row href="/account/language" icon={icons.language} title="Language" subtitle="English" />
         <Row href="/account/notifications" icon={icons.bell} title="Notifications" />
       </div>

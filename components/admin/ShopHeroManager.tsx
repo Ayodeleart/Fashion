@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
 
 type Banner = { id: string; label: string | null; imageUrl: string; href: string | null };
+type Category = { id: string; name: string };
 
 async function uploadImage(file: File): Promise<string> {
   const ext = file.name.split(".").pop() || "jpg";
@@ -24,11 +25,11 @@ async function uploadImage(file: File): Promise<string> {
   return data.publicUrl;
 }
 
-export default function ShopHeroManager({ initialBanners }: { initialBanners: Banner[] }) {
+export default function ShopHeroManager({ initialBanners, categories }: { initialBanners: Banner[]; categories: Category[] }) {
   const router = useRouter();
   const [banners, setBanners] = useState(initialBanners);
   const [label, setLabel] = useState("");
-  const [href, setHref] = useState("");
+  const [href, setHref] = useState("/catalog");
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -93,13 +94,19 @@ export default function ShopHeroManager({ initialBanners }: { initialBanners: Ba
           />
         </div>
         <div>
-          <label className="block text-sm mb-1">Link (optional)</label>
-          <input
+          <label className="block text-sm mb-1">Links to</label>
+          <select
             value={href}
             onChange={(e) => setHref(e.target.value)}
-            placeholder="/catalog?category=..."
             className="w-full border border-ink/20 rounded px-3 py-2 text-sm bg-white"
-          />
+          >
+            <option value="/catalog">All products</option>
+            {categories.map((c) => (
+              <option key={c.id} value={`/catalog?category=${encodeURIComponent(c.name)}`}>
+                {c.name}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="block text-sm mb-1">Image (portrait, ~4:5)</label>

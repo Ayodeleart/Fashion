@@ -4,10 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
 import ProfilePlaceholderIcon from "@/components/ProfilePlaceholderIcon";
-import CurrencyToggle from "@/components/CurrencyToggle";
-import type { Currency } from "@/lib/currency-shared";
 
-export default function TopBar({ currency }: { currency?: Currency }) {
+export default function TopBar() {
   const [name, setName] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [signedIn, setSignedIn] = useState(false);
@@ -47,7 +45,6 @@ export default function TopBar({ currency }: { currency?: Currency }) {
       </Link>
 
       <div className="flex items-center gap-3">
-        {currency && <CurrencyToggle current={currency} />}
         <button
           type="button"
           aria-label="Notifications"

@@ -19,7 +19,7 @@ function HomeIcon({ active }: { active: boolean }) {
 }
 function ReelsIcon({ active }: { active: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <svg width="22" height="22" viewBox="3.5 3.5 17 17" fill="none">
       <path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -37,10 +37,6 @@ function ReelsIcon({ active }: { active: boolean }) {
         strokeWidth={active ? 2 : 1.5}
         strokeLinecap="round"
         strokeLinejoin="round"
-      />
-      <path
-        d="M19 9.75C19.4142 9.75 19.75 9.41421 19.75 9C19.75 8.58579 19.4142 8.25 19 8.25V9.75ZM12 8.25C11.5858 8.25 11.25 8.58579 11.25 9C11.25 9.41421 11.5858 9.75 12 9.75V8.25ZM5 8.25C4.58579 8.25 4.25 8.58579 4.25 9C4.25 9.41421 4.58579 9.75 5 9.75V8.25ZM12 9.75C12.4142 9.75 12.75 9.41421 12.75 9C12.75 8.58579 12.4142 8.25 12 8.25V9.75ZM11.25 9C11.25 9.41421 11.5858 9.75 12 9.75C12.4142 9.75 12.75 9.41421 12.75 9H11.25ZM12.75 5C12.75 4.58579 12.4142 4.25 12 4.25C11.5858 4.25 11.25 4.58579 11.25 5H12.75ZM19 8.25H12V9.75H19V8.25ZM5 9.75H12V8.25H5V9.75ZM12.75 9V5H11.25V9H12.75Z"
-        fill="currentColor"
       />
     </svg>
   );
@@ -92,61 +88,37 @@ export default function BottomNav() {
   const { count } = useCart();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-30 pb-[env(safe-area-inset-bottom)]">
-      <div className="max-w-md mx-auto relative h-[74px]">
-        {/* The bar shape itself — drawn as one SVG path so the top edge
-            genuinely curves down and wraps around the cart button,
-            instead of a flat bar with a circle floating on top of it.
-            preserveAspectRatio="none" stretches it to the container's
-            actual width; the notch curve is defined in percent-based
-            viewBox units (0-100) so it stays centered regardless of
-            width. */}
-        <svg
-          viewBox="0 0 100 34"
-          preserveAspectRatio="none"
-          className="absolute inset-0 w-full h-full drop-shadow-[0_-2px_10px_rgba(0,0,0,0.08)]"
-        >
-          <path
-            d="M0,6
-               C0,2.7 2.7,0 6,0
-               H36
-               C41,0 40,11 50,11
-               C60,11 59,0 64,0
-               H94
-               C97.3,0 100,2.7 100,6
-               V34 H0 Z"
-            className="fill-paper"
-          />
-        </svg>
+    // Deliberately simple: a flat bar, and the cart button is just the
+    // LAST element in the DOM so it paints on top of the bar and floats
+    // above it via a negative top offset. No cutout/notch shape — that
+    // was causing the bar's own fill to visually intrude on the button.
+    <nav className="fixed bottom-0 left-0 right-0 z-30 bg-paper border-t border-ink/10 pb-[env(safe-area-inset-bottom)]">
+      <div className="max-w-md mx-auto relative flex items-center justify-between px-6 h-16">
+        {leftItems.map(({ href, label, Icon }) => {
+          const active = pathname === href;
+          return (
+            <Link key={href} href={href} className="flex flex-col items-center justify-center gap-1 text-ink w-12">
+              <Icon active={active} />
+              <span className={`text-[11px] ${active ? "text-ink" : "text-muted"}`}>{label}</span>
+            </Link>
+          );
+        })}
 
-        <div className="relative h-full flex items-center justify-between px-6">
-          {leftItems.map(({ href, label, Icon }) => {
-            const active = pathname === href;
-            return (
-              <Link key={href} href={href} className="flex flex-col items-center justify-center gap-1 text-ink w-12">
-                <Icon active={active} />
-                <span className={`text-[11px] ${active ? "text-ink" : "text-muted"}`}>{label}</span>
-              </Link>
-            );
-          })}
+        <div className="w-14 shrink-0" />
 
-          {/* Spacer so the two side groups don't creep under the notch */}
-          <div className="w-14 shrink-0" />
-
-          {rightItems.map(({ href, label, Icon }) => {
-            const active = pathname === href;
-            return (
-              <Link key={href} href={href} className="flex flex-col items-center justify-center gap-1 text-ink w-12">
-                <Icon active={active} />
-                <span className={`text-[11px] ${active ? "text-ink" : "text-muted"}`}>{label}</span>
-              </Link>
-            );
-          })}
-        </div>
+        {rightItems.map(({ href, label, Icon }) => {
+          const active = pathname === href;
+          return (
+            <Link key={href} href={href} className="flex flex-col items-center justify-center gap-1 text-ink w-12">
+              <Icon active={active} />
+              <span className={`text-[11px] ${active ? "text-ink" : "text-muted"}`}>{label}</span>
+            </Link>
+          );
+        })}
 
         <Link
           href="/cart"
-          className="absolute left-1/2 -translate-x-1/2 -top-6 w-14 h-14 rounded-full bg-ink flex items-center justify-center shadow-lg"
+          className="absolute left-1/2 -translate-x-1/2 -top-7 w-14 h-14 rounded-full bg-ink flex items-center justify-center shadow-lg z-10"
           aria-label="Cart"
         >
           <CartIcon />
@@ -157,6 +129,6 @@ export default function BottomNav() {
           )}
         </Link>
       </div>
-    </div>
+    </nav>
   );
 }

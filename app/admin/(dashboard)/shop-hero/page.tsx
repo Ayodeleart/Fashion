@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase-admin";
+import { getCategories } from "@/lib/categories";
 import ShopHeroManager from "@/components/admin/ShopHeroManager";
 
 export const dynamic = "force-dynamic";
@@ -20,16 +21,17 @@ async function getShopHero() {
 }
 
 export default async function ShopHeroAdminPage() {
-  const banners = await getShopHero();
+  const [banners, categories] = await Promise.all([getShopHero(), getCategories()]);
 
   return (
     <div className="max-w-2xl">
       <h1 className="font-display text-3xl mb-2">Shop Hero</h1>
       <p className="text-sm text-muted mb-6">
         This is the rounded hero card on the mobile shop home (/catalog) — separate from the editorial
-        site&apos;s Hero Looks. Portrait images work best (roughly 4:5).
+        site&apos;s Hero Looks. Portrait images work best (roughly 4:5). Pick a link destination below
+        so &ldquo;Shop now&rdquo; always goes somewhere real.
       </p>
-      <ShopHeroManager initialBanners={banners} />
+      <ShopHeroManager initialBanners={banners} categories={categories} />
     </div>
   );
 }

@@ -1,69 +1,65 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { CartProvider } from "@/components/CartProvider";
 import { SavedProvider } from "@/components/SavedProvider";
 import BottomNav from "@/components/BottomNav";
-import InstallPrompt from "@/components/InstallPrompt";
+import InstallGate from "@/components/InstallGate";
+import { THEME_COOKIE_NAME, type Theme } from "@/lib/theme-shared";
 
-// The real e-commerce flow — browsing, product detail, cart, checkout —
-// now gets a genuine desktop layout, not just a squeezed mobile view.
-// Instagram-style app surfaces (reels, saved, account, search) stay
-// phone-only for now; they were built as a mobile app experience and
-// haven't been asked for on desktop.
-const RESPONSIVE_SHOP_PREFIXES = ["/catalog", "/cart", "/product", "/checkout"];
-const MOBILE_ONLY_PREFIXES = ["/saved", "/account", "/search", "/reels", "/auth"];
-const SHOP_PREFIXES = [...RESPONSIVE_SHOP_PREFIXES, ...MOBILE_ONLY_PREFIXES];
+// The whole shop is a mobile-only, install-gated experience by design —
+// no desktop version, and no browsing in a plain mobile browser tab
+// either. InstallGate blocks everything below until the site is running
+// as an installed PWA (standalone display mode).
+const SHOP_PREFIXES = ["/catalog", "/cart", "/saved", "/account", "/search", "/reels", "/auth", "/product", "/checkout"];
+
+function readTheme(): Theme {
+  if (typeof document === "undefined") return "light";
+  const match = document.cookie.match(new RegExp(`${THEME_COOKIE_NAME}=(dark|light)`));
+  return match?.[1] === "dark" ? "dark" : "light";
+}
 
 export default function StorefrontChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isShop = SHOP_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-  const isResponsive = RESPONSIVE_SHOP_PREFIXES.some((prefix) => pathname.startsWith(prefix));
   const isImmersive = pathname.startsWith("/reels");
+  const [theme, setTheme] = useState<Theme>("light");
+
+  useEffect(() => {
+    setTheme(readTheme());
+    function handleThemeChange(e: Event) {
+      setTheme((e as CustomEvent<Theme>).detail);
+    }
+    window.addEventListener("theme-change", handleThemeChange);
+    return () => window.removeEventListener("theme-change", handleThemeChange);
+  }, []);
 
   if (!isShop) return <>{children}</>;
 
-  if (isResponsive) {
-    return (
-      <CartProvider>
-        <SavedProvider>
-          {/* Bottom nav is a phone-app pattern — desktop gets normal page
-              flow with no reserved bottom padding for it. */}
-          <div className="w-full min-h-screen pb-28 md:pb-0">{children}</div>
-          <div className="md:hidden">
-            <BottomNav />
-          </div>
-          <InstallPrompt />
-        </SavedProvider>
-      </CartProvider>
-    );
-  }
-
   return (
-    <>
-      {/* These remain mobile-only by design — app-style surfaces
-          (reels, saved, account, search) with no desktop layout yet. */}
-      <div className="md:hidden w-full min-h-screen">
-        <CartProvider>
-          <SavedProvider>
-            <div className={`w-full min-h-screen ${isImmersive ? "" : "pb-28"}`}>{children}</div>
-            <BottomNav />
-            <InstallPrompt />
-          </SavedProvider>
-        </CartProvider>
-      </div>
-
-      <div className="hidden md:flex min-h-screen items-center justify-center px-6 text-center bg-paper">
-        <div className="max-w-sm">
-          <h1 className="font-display text-2xl mb-2">This is a mobile experience</h1>
-          <p className="text-sm text-muted">
-            This section is designed for phones — open it on your mobile device.
-          </p>
-          <a href="/" className="inline-block mt-6 text-sm underline text-ink">
-            Back to the homepage
-          </a>
+    <div data-theme={theme} suppressHydrationWarning>
+      <InstallGate>
+        <div className="md:hidden w-full min-h-screen bg-paper">
+          <CartProvider>
+            <SavedProvider>
+              <div className={`w-full min-h-screen ${isImmersive ? "" : "pb-28"}`}>{children}</div>
+              <BottomNav />
+            </SavedProvider>
+          </CartProvider>
         </div>
-      </div>
-    </>
+
+        {/* Once installed, this is effectively a mobile app shell running in
+            its own window — a desktop-sized standalone window is still
+            possible in theory, so keep a minimal fallback rather than
+            nothing, but this is not a designed desktop experience. */}
+        <div className="hidden md:flex min-h-screen items-center justify-center px-6 text-center bg-paper">
+          <div className="max-w-sm">
+            <h1 className="font-display text-2xl mb-2">This is a mobile experience</h1>
+            <p className="text-sm text-muted">Please use this app on your phone.</p>
+          </div>
+        </div>
+      </InstallGate>
+    </div>
   );
 }

@@ -6,7 +6,7 @@ export default function CategoryRow({ categories }: { categories: Category[] }) 
     <section className="px-5 pb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-semibold">Shop by Categories</h2>
-        <Link href="/catalog" className="text-xs text-muted">See all</Link>
+        <Link href="/catalog/categories" className="text-xs text-muted">See all</Link>
       </div>
 
       {categories.length === 0 ? (

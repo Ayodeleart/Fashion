@@ -11,6 +11,7 @@ export default function EditProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState("");
+  const [phone, setPhone] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,10 +27,11 @@ export default function EditProfilePage() {
       setUser(data.user);
       const { data: profile } = await supabase
         .from("ariana_customer_profiles")
-        .select("display_name, avatar_url")
+        .select("display_name, avatar_url, phone")
         .eq("user_id", data.user.id)
         .maybeSingle();
       setDisplayName(profile?.display_name ?? data.user.email?.split("@")[0] ?? "");
+      setPhone(profile?.phone ?? "");
       setAvatarUrl(profile?.avatar_url ?? null);
       setLoading(false);
     });
@@ -56,6 +58,7 @@ export default function EditProfilePage() {
         user_id: user.id,
         avatar_url: pub.publicUrl,
         display_name: displayName || null,
+        phone: phone || null,
         updated_at: new Date().toISOString(),
       });
       if (upsertErr) throw new Error(upsertErr.message);
@@ -76,6 +79,7 @@ export default function EditProfilePage() {
     const { error: upsertErr } = await supabase.from("ariana_customer_profiles").upsert({
       user_id: user.id,
       display_name: displayName || null,
+      phone: phone || null,
       avatar_url: avatarUrl,
       updated_at: new Date().toISOString(),
     });
@@ -128,6 +132,15 @@ export default function EditProfilePage() {
           <input
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
+            className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-white"
+          />
+        </div>
+        <div>
+          <label className="block text-sm mb-1">Phone number</label>
+          <input
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Used for delivery updates"
             className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-white"
           />
         </div>
