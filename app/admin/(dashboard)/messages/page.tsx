@@ -6,6 +6,7 @@ const SOURCE_LABEL: Record<string, string> = {
   contact_page: "Contact form",
   ai_complaint: "Aria · complaint",
   ai_handoff: "Aria · talk to human",
+  reel_send: "Reel inquiry",
 };
 
 async function getMessages() {

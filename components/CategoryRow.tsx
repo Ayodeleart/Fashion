@@ -19,7 +19,7 @@ export default function CategoryRow({ categories }: { categories: Category[] }) 
         // scrolls away normally; bundling it into the sticky bar too
         // made it look like the whole header kept re-entering the
         // screen every time you scrolled.
-        <section className="sticky top-0 z-20 bg-paper pb-4 -mx-5 px-5">
+        <section className="sticky top-0 z-20 bg-paper pb-4 -mx-5 px-5 shadow-[0_1px_0_rgba(0,0,0,0.06)]">
           <div className="flex gap-4 overflow-x-auto no-scrollbar">
             {categories.map((cat) => (
               <Link key={cat.id} href={`/catalog?category=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center gap-2 shrink-0 w-16">
