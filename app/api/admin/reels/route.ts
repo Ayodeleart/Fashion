@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
       thumbnail_url: body.thumbnailUrl || null,
       caption: body.caption || null,
       product_id: body.productId || null,
+      category_id: body.categoryId || null,
       position: count ?? 0,
       status: "published",
     });

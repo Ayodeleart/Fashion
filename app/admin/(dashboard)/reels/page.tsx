@@ -7,7 +7,7 @@ async function getReels() {
   const admin = createAdminClient();
   const { data } = await admin
     .from("ariana_reels")
-    .select("id, video_url, thumbnail_url, caption, product_id, position")
+    .select("id, video_url, thumbnail_url, caption, product_id, category_id, position")
     .order("position", { ascending: true })
     .order("created_at", { ascending: false });
   return data ?? [];
@@ -19,17 +19,24 @@ async function getProducts() {
   return data ?? [];
 }
 
+async function getCategories() {
+  const admin = createAdminClient();
+  const { data } = await admin.from("ariana_categories").select("id, name").order("position");
+  return data ?? [];
+}
+
 export default async function ReelsAdminPage() {
-  const [reels, products] = await Promise.all([getReels(), getProducts()]);
+  const [reels, products, categories] = await Promise.all([getReels(), getProducts(), getCategories()]);
 
   return (
     <div className="max-w-2xl">
       <h1 className="font-display text-3xl mb-2">Reels</h1>
       <p className="text-sm text-muted mb-6">
-        Short vertical videos shown in the shop&apos;s Reels tab (/reels). Optionally link one to a
-        product so a &ldquo;Shop&rdquo; button appears over the video.
+        Short vertical videos shown in the shop&apos;s Reels tab (/reels). Tapping a reel in the grid
+        opens a swipeable feed of every reel in that same category, so pick the category carefully.
+        Optionally link one to a product so a &ldquo;Shop&rdquo; button appears over the video.
       </p>
-      <ReelsManager initialReels={reels} products={products} />
+      <ReelsManager initialReels={reels} products={products} categories={categories} />
     </div>
   );
 }
