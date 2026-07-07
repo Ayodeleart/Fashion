@@ -18,26 +18,42 @@ type ReelRow = {
   ariana_categories: { slug: string } | null;
 };
 
-async function getReels(): Promise<GridReel[]> {
+async function getReels(): Promise<{ reels: GridReel[]; error: string | null }> {
   const supabase = getSupabase();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("ariana_reels")
     .select("id, thumbnail_url, video_url, ariana_categories(slug)")
     .eq("status", "published")
     .order("position", { ascending: true })
     .order("created_at", { ascending: false });
 
+  if (error) {
+    console.error("Reels grid fetch failed:", error.message);
+    return { reels: [], error: error.message };
+  }
+
   const rows = (data as unknown as ReelRow[]) ?? [];
-  return rows.map((r) => ({
-    id: r.id,
-    thumbnail_url: r.thumbnail_url,
-    video_url: r.video_url,
-    category_slug: r.ariana_categories?.slug ?? "uncategorized",
-  }));
+  return {
+    reels: rows.map((r) => ({
+      id: r.id,
+      thumbnail_url: r.thumbnail_url,
+      video_url: r.video_url,
+      category_slug: r.ariana_categories?.slug ?? "uncategorized",
+    })),
+    error: null,
+  };
 }
 
 export default async function ReelsPage() {
-  const reels = await getReels();
+  const { reels, error } = await getReels();
+
+  if (error) {
+    return (
+      <main className="h-screen flex items-center justify-center bg-black px-6 text-center">
+        <p className="text-sm text-red-400">Couldn&apos;t load reels: {error}</p>
+      </main>
+    );
+  }
 
   if (reels.length === 0) {
     return (

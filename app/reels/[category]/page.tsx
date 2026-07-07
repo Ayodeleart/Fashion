@@ -12,7 +12,7 @@ type ReelRow = {
   ariana_products: { slug: string; name: string } | null;
 };
 
-async function getReelsForCategory(categorySlug: string): Promise<FeedReel[]> {
+async function getReelsForCategory(categorySlug: string): Promise<{ reels: FeedReel[]; error: string | null }> {
   const supabase = getSupabase();
   const baseQuery = supabase
     .from("ariana_reels")
@@ -25,26 +25,38 @@ async function getReelsForCategory(categorySlug: string): Promise<FeedReel[]> {
   if (categorySlug === "uncategorized") {
     query = baseQuery.is("category_id", null);
   } else {
-    const { data: category } = await supabase
+    const { data: category, error: categoryError } = await supabase
       .from("ariana_categories")
       .select("id")
       .eq("slug", categorySlug)
       .maybeSingle();
-    if (!category) return [];
+    if (categoryError) {
+      console.error("Category lookup failed:", categoryError.message);
+      return { reels: [], error: categoryError.message };
+    }
+    if (!category) return { reels: [], error: null };
     query = baseQuery.eq("category_id", category.id);
   }
 
-  const { data } = await query;
+  const { data, error } = await query;
+  if (error) {
+    console.error("Reel feed fetch failed:", error.message);
+    return { reels: [], error: error.message };
+  }
+
   const rows = (data as unknown as ReelRow[]) ?? [];
-  return rows.map((r) => ({
-    id: r.id,
-    video_url: r.video_url,
-    thumbnail_url: r.thumbnail_url,
-    caption: r.caption,
-    like_count: r.like_count ?? 0,
-    product_slug: r.ariana_products?.slug ?? null,
-    product_name: r.ariana_products?.name ?? null,
-  }));
+  return {
+    reels: rows.map((r) => ({
+      id: r.id,
+      video_url: r.video_url,
+      thumbnail_url: r.thumbnail_url,
+      caption: r.caption,
+      like_count: r.like_count ?? 0,
+      product_slug: r.ariana_products?.slug ?? null,
+      product_name: r.ariana_products?.name ?? null,
+    })),
+    error: null,
+  };
 }
 
 export default async function ReelsCategoryPage({
@@ -56,7 +68,15 @@ export default async function ReelsCategoryPage({
 }) {
   const { category } = await params;
   const { start } = await searchParams;
-  const reels = await getReelsForCategory(category);
+  const { reels, error } = await getReelsForCategory(category);
+
+  if (error) {
+    return (
+      <main className="h-screen flex items-center justify-center bg-black px-6 text-center">
+        <p className="text-sm text-red-400">Couldn&apos;t load this feed: {error}</p>
+      </main>
+    );
+  }
 
   if (reels.length === 0) {
     return (
