@@ -61,17 +61,15 @@ export default function CatalogGrid({ products, currency }: { products: ProductR
               </div>
             </div>
             <p className="text-sm text-ink truncate">{p.name}</p>
-            <div className="flex items-center justify-between mt-1">
-              <p className="text-sm text-muted">{formatPrice(displayPrice.amount, displayPrice.currency)}</p>
-              <AddToCartButton
-                productId={p.id}
-                name={p.name}
-                price={displayPrice.amount}
-                currency={displayPrice.currency}
-                image={image?.url ?? ""}
-                className="text-[11px] px-2.5 py-1 rounded-full bg-ink text-paper"
-              />
-            </div>
+            <p className="text-sm text-muted mt-1">{formatPrice(displayPrice.amount, displayPrice.currency)}</p>
+            <AddToCartButton
+              productId={p.id}
+              name={p.name}
+              price={displayPrice.amount}
+              currency={displayPrice.currency}
+              image={image?.url ?? ""}
+              className="mt-2 text-[11px] px-2.5 py-1.5 rounded-full bg-ink text-paper w-full"
+            />
           </Link>
         );
       })}

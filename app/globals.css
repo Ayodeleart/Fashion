@@ -27,6 +27,14 @@
 /* Dark mode is scoped to the shop only (data-theme is set on the shop's
    wrapper element in StorefrontChrome) — the editorial site keeps its
    fixed brand palette regardless of this toggle. */
+:root {
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
 [data-theme="dark"] {
   --ink: 243 241 236;
   --paper: 17 17 17;
@@ -38,7 +46,6 @@
 }
 
 html, body {
-  overflow-x: hidden;
   max-width: 100vw;
 }
 
