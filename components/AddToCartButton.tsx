@@ -51,8 +51,8 @@ export default function AddToCartButton({
             return;
           }
           if (result.error) {
-            setError("Couldn't add to cart — try again.");
-            setTimeout(() => setError(null), 3000);
+            setError(result.error);
+            setTimeout(() => setError(null), 4000);
             return;
           }
           setAdded(true);

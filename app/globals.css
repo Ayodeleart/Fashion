@@ -43,10 +43,23 @@
   --muted: 158 155 150;
   --background: rgb(var(--paper));
   --foreground: rgb(var(--ink));
+  /* This is the actual fix. Custom properties cascade fine on their own,
+     but `body { color: var(--foreground) }` below only ever computes
+     ONE value for `color`, using whatever's visible at body — which is
+     always the :root (light) values, since data-theme lives on a
+     descendant div, never on body itself. Every element relying on
+     inherited color (no explicit Tailwind color class — headings,
+     usernames, icons using currentColor, etc.) was stuck with that
+     frozen light value regardless of theme. Redeclaring color/background
+     right here re-establishes correct inheritance for everything below
+     this element. */
+  color: rgb(var(--ink));
+  background-color: rgb(var(--paper));
 }
 
 html, body {
   max-width: 100vw;
+  overscroll-behavior-y: contain;
 }
 
 body {
