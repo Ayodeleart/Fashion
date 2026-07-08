@@ -14,7 +14,7 @@ export type CartItem = {
   quantity: number;
 };
 
-type AddResult = { requiresAuth: boolean };
+type AddResult = { requiresAuth: boolean; error?: string };
 
 type CartContextValue = {
   items: CartItem[];
@@ -116,10 +116,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           .eq("user_id", userId)
           .eq("product_id", item.productId);
         query = variantId ? query.eq("variant_id", variantId) : query.is("variant_id", null);
-        await query;
+        const { error } = await query;
+        if (error) {
+          console.error("Cart update failed:", error.message);
+          return { requiresAuth: false, error: error.message };
+        }
         setItems((prev) => prev.map((i) => (sameLine(i, item.productId, variantId) ? { ...i, quantity: newQty } : i)));
       } else {
-        await supabase.from("ariana_cart_items").insert({
+        const { error } = await supabase.from("ariana_cart_items").insert({
           user_id: userId,
           product_id: item.productId,
           variant_id: variantId,
@@ -130,6 +134,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           image: item.image,
           quantity,
         });
+        if (error) {
+          console.error("Add to cart failed:", error.message);
+          return { requiresAuth: false, error: error.message };
+        }
         setItems((prev) => [...prev, { ...item, variantId, size, quantity }]);
       }
 
@@ -144,7 +152,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const supabase = getSupabase();
     let query = supabase.from("ariana_cart_items").delete().eq("user_id", userId).eq("product_id", productId);
     query = variantId ? query.eq("variant_id", variantId) : query.is("variant_id", null);
-    await query;
+    const { error } = await query;
+    if (error) {
+      console.error("Remove from cart failed:", error.message);
+      return;
+    }
     setItems((prev) => prev.filter((i) => !sameLine(i, productId, variantId)));
   }, []);
 
@@ -156,7 +168,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (quantity <= 0) {
       let delQuery = supabase.from("ariana_cart_items").delete().eq("user_id", userId).eq("product_id", productId);
       delQuery = variantId ? delQuery.eq("variant_id", variantId) : delQuery.is("variant_id", null);
-      await delQuery;
+      const { error } = await delQuery;
+      if (error) {
+        console.error("Remove from cart failed:", error.message);
+        return;
+      }
       setItems((prev) => prev.filter((i) => !sameLine(i, productId, variantId)));
       return;
     }
@@ -167,7 +183,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       .eq("user_id", userId)
       .eq("product_id", productId);
     query = variantId ? query.eq("variant_id", variantId) : query.is("variant_id", null);
-    await query;
+    const { error } = await query;
+    if (error) {
+      console.error("Update cart quantity failed:", error.message);
+      return;
+    }
     setItems((prev) => prev.map((i) => (sameLine(i, productId, variantId) ? { ...i, quantity } : i)));
   }, []);
 
