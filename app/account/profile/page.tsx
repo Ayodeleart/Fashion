@@ -19,7 +19,7 @@ function Row({ href, icon, title, subtitle }: { href: string; icon: React.ReactN
     <a href={href} className="flex items-center gap-3 px-4 py-3.5">
       <div className="w-9 h-9 rounded-full bg-paper flex items-center justify-center text-ink shrink-0">{icon}</div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm">{title}</p>
+        <p className="text-sm text-ink">{title}</p>
         {subtitle && <p className="text-xs text-muted">{subtitle}</p>}
       </div>
       <ChevronRight />

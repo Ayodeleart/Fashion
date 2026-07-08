@@ -91,7 +91,7 @@ function VideoCard({
         )}
       </div>
 
-      <div className="absolute bottom-6 right-4">
+      <div className="absolute bottom-24 right-4">
         <ReelActionRail reelId={reel.id} initialLikeCount={reel.like_count} caption={reel.caption} />
       </div>
 

@@ -3,7 +3,7 @@ import type { Category } from "@/lib/categories";
 
 export default function CategoryRow({ categories }: { categories: Category[] }) {
   return (
-    <section className="sticky top-0 z-20 bg-paper px-5 pt-3 pb-4 shadow-[0_1px_0_rgba(0,0,0,0.06)]">
+    <section className="px-5 pt-3 pb-4">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-semibold">Shop by Categories</h2>
         <Link href="/catalog/categories" className="text-xs text-muted">See all</Link>

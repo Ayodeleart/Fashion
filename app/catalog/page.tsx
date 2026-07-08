@@ -73,8 +73,10 @@ export default async function CatalogPage({
       )}
       <TopBar />
       <div className="md:hidden">
-        <SearchBar />
-        <CategoryRow categories={categories} />
+        <div className="sticky top-0 z-20 bg-paper shadow-[0_1px_0_rgba(0,0,0,0.06)]">
+          <SearchBar />
+          <CategoryRow categories={categories} />
+        </div>
         {!category && <HeroCard banners={heroBanners} />}
       </div>
 
