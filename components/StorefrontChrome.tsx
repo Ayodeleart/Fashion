@@ -29,7 +29,8 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
   const pathname = usePathname();
   const isShop = SHOP_PREFIXES.some((prefix) => pathname.startsWith(prefix));
   const isResponsive = RESPONSIVE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-  const isImmersive = pathname.startsWith("/reels");
+  const isImmersive = pathname.startsWith("/reels/");
+  const hasFloatingBottomBar = pathname.startsWith("/product");
   const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
@@ -52,9 +53,9 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
                 desktop gets normal page flow, no InstallGate either
                 (product/product pages, mobile-only /product excluded
                 deliberately — see note below). */}
-            <div className="w-full min-h-screen bg-paper pb-28 md:pb-0">{children}</div>
+            <div className={`w-full min-h-screen bg-paper ${hasFloatingBottomBar ? "" : "pb-28"} md:pb-0`}>{children}</div>
             <div className="md:hidden">
-              <BottomNav />
+              {!hasFloatingBottomBar && <BottomNav />}
             </div>
           </SavedProvider>
         </CartProvider>
@@ -69,7 +70,7 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
           <CartProvider>
             <SavedProvider>
               <div className={`w-full min-h-screen ${isImmersive ? "" : "pb-28"}`}>{children}</div>
-              <BottomNav />
+              {!isImmersive && <BottomNav />}
             </SavedProvider>
           </CartProvider>
         </div>

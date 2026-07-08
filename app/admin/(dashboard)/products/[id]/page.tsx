@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase-admin";
-import { updateProduct, deleteProduct } from "./actions";
+import { updateProduct, deleteProduct, addVariant, deleteVariant } from "./actions";
 import ProductImageManager from "@/components/admin/ProductImageManager";
 import DeleteProductForm from "@/components/admin/DeleteProductForm";
+import VariantManager from "@/components/admin/VariantManager";
 import { getCategories } from "@/lib/categories";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +20,13 @@ async function getProduct(id: string) {
     .eq("product_id", id)
     .order("position", { ascending: true });
 
-  return { product, images: images ?? [] };
+  const { data: variants } = await admin
+    .from("ariana_product_variants")
+    .select("id, size, color, stock")
+    .eq("product_id", id)
+    .order("size", { ascending: true });
+
+  return { product, images: images ?? [], variants: variants ?? [] };
 }
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
@@ -27,9 +34,10 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   const [result, categories] = await Promise.all([getProduct(id), getCategories()]);
   if (!result) notFound();
 
-  const { product, images } = result;
+  const { product, images, variants } = result;
   const boundUpdate = updateProduct.bind(null, id);
   const boundDelete = deleteProduct.bind(null, id);
+  const boundAddVariant = addVariant.bind(null, id);
 
   return (
     <div className="max-w-lg">
@@ -50,6 +58,10 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
       <div className="mb-8">
         <p className="text-sm font-medium mb-3">Images</p>
         <ProductImageManager productId={id} images={images} />
+      </div>
+
+      <div className="mb-8">
+        <VariantManager productId={id} variants={variants} onAdd={boundAddVariant} onDelete={deleteVariant} />
       </div>
 
       <form action={boundUpdate} className="space-y-5">

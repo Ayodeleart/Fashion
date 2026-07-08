@@ -12,13 +12,26 @@ export function PlayIcon({ className }: { className?: string }) {
 }
 
 export function LikeIcon({ filled, className }: { filled: boolean; className?: string }) {
+  if (filled) {
+    return (
+      <svg viewBox="0 0 200 200" className={className} xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M171.28,41.69a48.29,48.29,0,0,0-68.5,0l-2.5,3-2.5-2.5a48.29,48.29,0,0,0-68.5,0c-19,18.5-19,49-1,68l50,53a29.92,29.92,0,0,0,43.5,0l50.5-53.5c17.5-19.5,17-49.5-1-68Z"
+          fill="currentColor"
+        />
+      </svg>
+    );
+  }
+  // Separate outline-only path (not the filled shape stroked) — stroking
+  // the solid path drew both its inner and outer contour, showing as a
+  // doubled line. This is a plain single-contour heart instead.
   return (
-    <svg viewBox="0 0 200 200" className={className} xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 24 24" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
       <path
-        d="M171.28,41.69a48.29,48.29,0,0,0-68.5,0l-2.5,3-2.5-2.5a48.29,48.29,0,0,0-68.5,0c-19,18.5-19,49-1,68l50,53a29.92,29.92,0,0,0,43.5,0l50.5-53.5c17.5-19.5,17-49.5-1-68Zm-14,53.5-50.5,53.5a10.26,10.26,0,0,1-14.5,0l-50-53c-10.5-11.5-10.5-29,.5-40s29-11,40.5,0l2.5,2.5c8,8,20.5,8,28,0l2.5-2.5a28.37,28.37,0,0,1,40,0,27.78,27.78,0,0,1,1,39.5Z"
-        fill={filled ? "currentColor" : "none"}
+        d="M12 20.5s-7.6-4.35-10.1-9.2C.4 8 2.2 4.4 5.9 3.9c2.2-.3 4.2 1 6.1 3.1 1.9-2.1 3.9-3.4 6.1-3.1 3.7.5 5.5 4.1 4 7.4-2.5 4.85-10.1 9.2-10.1 9.2Z"
         stroke="currentColor"
-        strokeWidth={filled ? 0 : 9}
+        strokeWidth={1.7}
+        strokeLinejoin="round"
       />
     </svg>
   );

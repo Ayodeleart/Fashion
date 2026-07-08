@@ -2,8 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
 import { resolveCurrency, resolvePrice } from "@/lib/currency";
-import AddToCartButton from "@/components/AddToCartButton";
 import ProductGallery from "@/components/ProductGallery";
+import ProductPurchasePanel from "@/components/ProductPurchasePanel";
 import RevealContainer from "@/components/RevealContainer";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +20,8 @@ type ProductDetail = {
   ariana_product_images: { url: string; position: number }[];
 };
 
+type Variant = { id: string; size: string; color: string | null; stock: number };
+
 async function getProduct(slug: string): Promise<ProductDetail | null> {
   const supabase = getSupabase();
   const { data } = await supabase
@@ -32,6 +34,16 @@ async function getProduct(slug: string): Promise<ProductDetail | null> {
   return (data as unknown as ProductDetail) ?? null;
 }
 
+async function getVariants(productId: string): Promise<Variant[]> {
+  const supabase = getSupabase();
+  const { data } = await supabase
+    .from("ariana_product_variants")
+    .select("id, size, color, stock")
+    .eq("product_id", productId)
+    .order("size", { ascending: true });
+  return data ?? [];
+}
+
 function formatPrice(price: number, currency: string) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(price);
 }
@@ -41,22 +53,36 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const [product, currency] = await Promise.all([getProduct(slug), resolveCurrency()]);
   if (!product) notFound();
 
-  const images = [...(product.ariana_product_images ?? [])].sort((a, b) => a.position - b.position);
+  const [images, variants] = await Promise.all([
+    Promise.resolve([...(product.ariana_product_images ?? [])].sort((a, b) => a.position - b.position)),
+    getVariants(product.id),
+  ]);
   const primaryImage = images[0]?.url ?? "";
   const displayPrice = resolvePrice(product, currency);
 
   // No TopBar here by design — the product page is meant to be an
-  // immersive, uninterrupted view of the piece. Back navigation still
-  // works via the category link below and the browser/OS back gesture.
+  // immersive, uninterrupted view of the piece. A real back button
+  // replaces it below (bottom nav is hidden on this route entirely —
+  // see StorefrontChrome — so the floating add-to-cart bar has the
+  // space to itself).
   return (
     <RevealContainer className="md:max-w-5xl md:mx-auto md:pt-8 md:grid md:grid-cols-2 md:gap-10">
-      <div className="px-5 md:px-0">
+      <div className="px-5 pt-5 md:px-0 md:pt-0 flex items-center justify-between">
+        <Link
+          href={product.category ? `/catalog?category=${encodeURIComponent(product.category)}` : "/catalog"}
+          aria-label="Back"
+          className="w-10 h-10 rounded-full bg-paper-raised border border-ink/10 flex items-center justify-center shrink-0"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </Link>
         {product.category && (
           <Link
             href={`/catalog?category=${encodeURIComponent(product.category)}`}
-            className="text-xs text-muted hover:text-brass transition-colors"
+            className="text-xs text-muted hover:text-brass transition-colors md:hidden"
           >
-            ← {product.category}
+            {product.category}
           </Link>
         )}
       </div>
@@ -90,13 +116,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </p>
         )}
 
-        <AddToCartButton
+        <ProductPurchasePanel
           productId={product.id}
           name={product.name}
           price={displayPrice.amount}
           currency={displayPrice.currency}
           image={primaryImage}
-          className="w-full md:w-auto md:px-10 text-sm py-3.5 rounded-full bg-ink text-paper hover:bg-ink/90 transition-colors"
+          variants={variants}
         />
       </section>
     </RevealContainer>

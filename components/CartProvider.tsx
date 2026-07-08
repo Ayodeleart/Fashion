@@ -5,6 +5,8 @@ import { getSupabase } from "@/lib/supabase";
 
 export type CartItem = {
   productId: string;
+  variantId: string | null;
+  size: string | null;
   name: string;
   price: number;
   currency: string;
@@ -18,9 +20,9 @@ type CartContextValue = {
   items: CartItem[];
   loading: boolean;
   signedIn: boolean;
-  addItem: (item: Omit<CartItem, "quantity">, quantity?: number) => Promise<AddResult>;
-  removeItem: (productId: string) => Promise<void>;
-  setQuantity: (productId: string, quantity: number) => Promise<void>;
+  addItem: (item: Omit<CartItem, "quantity" | "variantId" | "size"> & { variantId?: string | null; size?: string | null }, quantity?: number) => Promise<AddResult>;
+  removeItem: (productId: string, variantId?: string | null) => Promise<void>;
+  setQuantity: (productId: string, quantity: number, variantId?: string | null) => Promise<void>;
   clear: () => Promise<void>;
   total: number;
   count: number;
@@ -30,6 +32,8 @@ const CartContext = createContext<CartContextValue | null>(null);
 
 type CartRow = {
   product_id: string;
+  variant_id: string | null;
+  size: string | null;
   name: string;
   price: number;
   currency: string;
@@ -40,12 +44,18 @@ type CartRow = {
 function rowToItem(row: CartRow): CartItem {
   return {
     productId: row.product_id,
+    variantId: row.variant_id,
+    size: row.size,
     name: row.name,
     price: row.price,
     currency: row.currency,
     image: row.image ?? "",
     quantity: row.quantity,
   };
+}
+
+function sameLine(item: { productId: string; variantId?: string | null }, productId: string, variantId?: string | null) {
+  return item.productId === productId && (item.variantId ?? null) === (variantId ?? null);
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
@@ -66,7 +76,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const supabase = getSupabase();
     const { data } = await supabase
       .from("ariana_cart_items")
-      .select("product_id, name, price, currency, image, quantity")
+      .select("product_id, variant_id, size, name, price, currency, image, quantity")
       .eq("user_id", userId)
       .order("created_at", { ascending: true });
     setItems(((data as CartRow[]) ?? []).map(rowToItem));
@@ -85,62 +95,80 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return () => listener.subscription.unsubscribe();
   }, [loadCart]);
 
-  const addItem = useCallback(async (item: Omit<CartItem, "quantity">, quantity = 1): Promise<AddResult> => {
-    const userId = userIdRef.current;
-    if (!userId) return { requiresAuth: true };
+  const addItem = useCallback(
+    async (
+      item: Omit<CartItem, "quantity" | "variantId" | "size"> & { variantId?: string | null; size?: string | null },
+      quantity = 1
+    ): Promise<AddResult> => {
+      const userId = userIdRef.current;
+      if (!userId) return { requiresAuth: true };
 
-    const supabase = getSupabase();
-    const existing = items.find((i) => i.productId === item.productId);
+      const variantId = item.variantId ?? null;
+      const size = item.size ?? null;
+      const supabase = getSupabase();
+      const existing = items.find((i) => sameLine(i, item.productId, variantId));
 
-    if (existing) {
-      const newQty = existing.quantity + quantity;
-      await supabase
-        .from("ariana_cart_items")
-        .update({ quantity: newQty, updated_at: new Date().toISOString() })
-        .eq("user_id", userId)
-        .eq("product_id", item.productId);
-      setItems((prev) => prev.map((i) => (i.productId === item.productId ? { ...i, quantity: newQty } : i)));
-    } else {
-      await supabase.from("ariana_cart_items").insert({
-        user_id: userId,
-        product_id: item.productId,
-        name: item.name,
-        price: item.price,
-        currency: item.currency,
-        image: item.image,
-        quantity,
-      });
-      setItems((prev) => [...prev, { ...item, quantity }]);
-    }
+      if (existing) {
+        const newQty = existing.quantity + quantity;
+        let query = supabase
+          .from("ariana_cart_items")
+          .update({ quantity: newQty, updated_at: new Date().toISOString() })
+          .eq("user_id", userId)
+          .eq("product_id", item.productId);
+        query = variantId ? query.eq("variant_id", variantId) : query.is("variant_id", null);
+        await query;
+        setItems((prev) => prev.map((i) => (sameLine(i, item.productId, variantId) ? { ...i, quantity: newQty } : i)));
+      } else {
+        await supabase.from("ariana_cart_items").insert({
+          user_id: userId,
+          product_id: item.productId,
+          variant_id: variantId,
+          size,
+          name: item.name,
+          price: item.price,
+          currency: item.currency,
+          image: item.image,
+          quantity,
+        });
+        setItems((prev) => [...prev, { ...item, variantId, size, quantity }]);
+      }
 
-    return { requiresAuth: false };
-  }, [items]);
+      return { requiresAuth: false };
+    },
+    [items]
+  );
 
-  const removeItem = useCallback(async (productId: string) => {
+  const removeItem = useCallback(async (productId: string, variantId: string | null = null) => {
     const userId = userIdRef.current;
     if (!userId) return;
     const supabase = getSupabase();
-    await supabase.from("ariana_cart_items").delete().eq("user_id", userId).eq("product_id", productId);
-    setItems((prev) => prev.filter((i) => i.productId !== productId));
+    let query = supabase.from("ariana_cart_items").delete().eq("user_id", userId).eq("product_id", productId);
+    query = variantId ? query.eq("variant_id", variantId) : query.is("variant_id", null);
+    await query;
+    setItems((prev) => prev.filter((i) => !sameLine(i, productId, variantId)));
   }, []);
 
-  const setQuantity = useCallback(async (productId: string, quantity: number) => {
+  const setQuantity = useCallback(async (productId: string, quantity: number, variantId: string | null = null) => {
     const userId = userIdRef.current;
     if (!userId) return;
     const supabase = getSupabase();
 
     if (quantity <= 0) {
-      await supabase.from("ariana_cart_items").delete().eq("user_id", userId).eq("product_id", productId);
-      setItems((prev) => prev.filter((i) => i.productId !== productId));
+      let delQuery = supabase.from("ariana_cart_items").delete().eq("user_id", userId).eq("product_id", productId);
+      delQuery = variantId ? delQuery.eq("variant_id", variantId) : delQuery.is("variant_id", null);
+      await delQuery;
+      setItems((prev) => prev.filter((i) => !sameLine(i, productId, variantId)));
       return;
     }
 
-    await supabase
+    let query = supabase
       .from("ariana_cart_items")
       .update({ quantity, updated_at: new Date().toISOString() })
       .eq("user_id", userId)
       .eq("product_id", productId);
-    setItems((prev) => prev.map((i) => (i.productId === productId ? { ...i, quantity } : i)));
+    query = variantId ? query.eq("variant_id", variantId) : query.is("variant_id", null);
+    await query;
+    setItems((prev) => prev.map((i) => (sameLine(i, productId, variantId) ? { ...i, quantity } : i)));
   }, []);
 
   const clear = useCallback(async () => {

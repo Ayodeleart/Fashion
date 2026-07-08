@@ -76,7 +76,13 @@ export default async function ReelsPage() {
               // eslint-disable-next-line @next/next/no-img-element
               <img src={reel.thumbnail_url} alt="" className="w-full h-full object-cover" />
             ) : (
-              <video src={reel.video_url} className="w-full h-full object-cover" muted preload="metadata" />
+              <video
+                src={`${reel.video_url}#t=0.1`}
+                className="w-full h-full object-cover"
+                muted
+                playsInline
+                preload="metadata"
+              />
             )}
             <PlayIcon className="absolute top-2 right-2 w-6 h-6" />
           </Link>

@@ -12,7 +12,7 @@ export type SavedItem = {
   href: string;
 };
 
-type ToggleResult = { requiresAuth: boolean };
+type ToggleResult = { requiresAuth: boolean; error?: string };
 
 type SavedContextValue = {
   items: SavedItem[];
@@ -91,10 +91,18 @@ export function SavedProvider({ children }: { children: React.ReactNode }) {
     const alreadySaved = items.some((i) => i.productId === item.productId);
 
     if (alreadySaved) {
-      await supabase.from("ariana_saved_items").delete().eq("user_id", userId).eq("product_id", item.productId);
+      const { error } = await supabase
+        .from("ariana_saved_items")
+        .delete()
+        .eq("user_id", userId)
+        .eq("product_id", item.productId);
+      if (error) {
+        console.error("Remove from saved failed:", error.message);
+        return { requiresAuth: false, error: error.message };
+      }
       setItems((prev) => prev.filter((i) => i.productId !== item.productId));
     } else {
-      await supabase.from("ariana_saved_items").insert({
+      const { error } = await supabase.from("ariana_saved_items").insert({
         user_id: userId,
         product_id: item.productId,
         name: item.name,
@@ -103,6 +111,10 @@ export function SavedProvider({ children }: { children: React.ReactNode }) {
         image: item.image,
         href: item.href,
       });
+      if (error) {
+        console.error("Save failed:", error.message);
+        return { requiresAuth: false, error: error.message };
+      }
       setItems((prev) => [...prev, item]);
     }
 

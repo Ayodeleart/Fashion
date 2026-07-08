@@ -31,6 +31,7 @@ export default function CartPage() {
           currency: items[0]?.currency ?? "NGN",
           items: items.map((i) => ({
             product_id: i.productId,
+            variant_id: i.variantId,
             quantity: i.quantity,
             unit_price: i.price,
           })),
@@ -91,29 +92,30 @@ export default function CartPage() {
 
         <ul className="space-y-4 mb-8 md:mb-0">
           {items.map((item) => (
-            <li key={item.productId} className="flex gap-3 md:gap-4 md:pb-4 md:border-b md:border-ink/10">
+            <li key={`${item.productId}-${item.variantId ?? "none"}`} className="flex gap-3 md:gap-4 md:pb-4 md:border-b md:border-ink/10">
               <div className="relative w-16 h-20 md:w-20 md:h-24 rounded-xl overflow-hidden bg-paper-raised shrink-0">
                 {item.image && <Image src={item.image} alt={item.name} fill className="object-cover" sizes="80px" />}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm md:text-base truncate">{item.name}</p>
+                {item.size && <p className="text-xs text-muted">Size: {item.size}</p>}
                 <p className="text-sm text-muted">{formatPrice(item.price, item.currency)}</p>
                 <div className="flex items-center gap-2 mt-1">
                   <button
-                    onClick={() => setQuantity(item.productId, item.quantity - 1)}
+                    onClick={() => setQuantity(item.productId, item.quantity - 1, item.variantId)}
                     className="w-7 h-7 rounded-full border border-ink/20 text-sm"
                   >
                     −
                   </button>
                   <span className="text-sm w-5 text-center">{item.quantity}</span>
                   <button
-                    onClick={() => setQuantity(item.productId, item.quantity + 1)}
+                    onClick={() => setQuantity(item.productId, item.quantity + 1, item.variantId)}
                     className="w-7 h-7 rounded-full border border-ink/20 text-sm"
                   >
                     +
                   </button>
                   <button
-                    onClick={() => removeItem(item.productId)}
+                    onClick={() => removeItem(item.productId, item.variantId)}
                     className="text-xs text-muted ml-2 underline"
                   >
                     Remove
