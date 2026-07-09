@@ -1,6 +1,9 @@
 "use client";
 
+import { useActionState } from "react";
+
 type Variant = { id: string; size: string; color: string | null; stock: number };
+type ActionResult = { error: string | null };
 
 export default function VariantManager({
   productId,
@@ -10,9 +13,14 @@ export default function VariantManager({
 }: {
   productId: string;
   variants: Variant[];
-  onAdd: (formData: FormData) => Promise<void>;
+  onAdd: (formData: FormData) => Promise<ActionResult>;
   onDelete: (variantId: string, productId: string) => Promise<void>;
 }) {
+  const [state, formAction, pending] = useActionState<ActionResult, FormData>(
+    async (_prev, formData) => onAdd(formData),
+    { error: null }
+  );
+
   return (
     <div>
       <p className="text-sm font-medium mb-3">Sizes</p>
@@ -40,7 +48,7 @@ export default function VariantManager({
         </div>
       )}
 
-      <form action={onAdd} className="flex flex-wrap gap-2 items-end">
+      <form action={formAction} className="flex flex-wrap gap-2 items-end">
         <div>
           <label className="block text-xs mb-1">Size</label>
           <input name="size" required placeholder="M" className="w-20 border border-ink/20 rounded px-2 py-1.5 text-sm bg-white" />
@@ -53,10 +61,16 @@ export default function VariantManager({
           <label className="block text-xs mb-1">Stock</label>
           <input name="stock" type="number" defaultValue={0} className="w-20 border border-ink/20 rounded px-2 py-1.5 text-sm bg-white" />
         </div>
-        <button type="submit" className="bg-ink text-white text-sm rounded px-4 py-1.5">
-          Add
+        <button type="submit" disabled={pending} className="bg-ink text-white text-sm rounded px-4 py-1.5 disabled:opacity-50">
+          {pending ? "Adding…" : "Add"}
         </button>
       </form>
+      {state.error && <p className="text-xs text-red-600 mt-2">{state.error}</p>}
+      {!pending && !state.error && state !== undefined && (
+        <p className="text-xs text-muted mt-2" key={variants.length}>
+          {variants.length > 0 ? `${variants.length} size${variants.length === 1 ? "" : "s"} saved.` : ""}
+        </p>
+      )}
     </div>
   );
 }

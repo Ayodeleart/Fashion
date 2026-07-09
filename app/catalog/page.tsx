@@ -72,13 +72,15 @@ export default async function CatalogPage({
         <link rel="preload" as="image" href={heroBanners[0].imageUrl} fetchPriority="high" />
       )}
       <TopBar />
-      <div className="md:hidden">
-        <div className="sticky top-0 z-20 bg-paper shadow-[0_1px_0_rgba(0,0,0,0.06)]">
-          <SearchBar />
-          <CategoryRow categories={categories} />
-        </div>
-        {!category && <HeroCard banners={heroBanners} />}
+      <div className="sticky top-0 z-20 bg-paper shadow-[0_1px_0_rgba(0,0,0,0.06)] md:hidden">
+        <SearchBar />
+        <CategoryRow categories={categories} />
       </div>
+      {!category && (
+        <div className="md:hidden">
+          <HeroCard banners={heroBanners} />
+        </div>
+      )}
 
       <section className="px-5 md:px-10 lg:px-16 pb-8 md:pt-8 max-w-[1400px] mx-auto">
         {/* Desktop category filter — the mobile CategoryRow above is

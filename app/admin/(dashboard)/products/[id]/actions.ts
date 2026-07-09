@@ -68,7 +68,7 @@ export async function addVariant(productId: string, formData: FormData) {
   const color = String(formData.get("color") ?? "").trim();
   const stock = Number(formData.get("stock") ?? 0);
 
-  if (!size) throw new Error("Size is required.");
+  if (!size) return { error: "Size is required." };
 
   const admin = createAdminClient();
   const { error } = await admin.from("ariana_product_variants").insert({
@@ -77,10 +77,11 @@ export async function addVariant(productId: string, formData: FormData) {
     color: color || null,
     stock: Number.isFinite(stock) ? stock : 0,
   });
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
 
   revalidatePath(`/admin/products/${productId}`);
-  revalidatePath(`/product`);
+  revalidatePath("/product/[slug]", "page");
+  return { error: null };
 }
 
 export async function deleteVariant(variantId: string, productId: string) {
@@ -89,5 +90,5 @@ export async function deleteVariant(variantId: string, productId: string) {
   if (error) throw new Error(error.message);
 
   revalidatePath(`/admin/products/${productId}`);
-  revalidatePath(`/product`);
+  revalidatePath("/product/[slug]", "page");
 }
