@@ -51,7 +51,7 @@ invent a specific price or promise a delivery date.`;
 
 export async function POST(request: NextRequest) {
   try {
-    const { message } = await request.json();
+    const { message, history } = await request.json();
     const text = String(message ?? "").trim();
     if (!text) {
       return NextResponse.json({ error: "Tell me a bit about what you're looking for." });
@@ -64,6 +64,18 @@ export async function POST(request: NextRequest) {
 
     const systemPrompt = await buildSystemPrompt();
 
+    const priorTurns: { role: "user" | "assistant"; content: string }[] = Array.isArray(history)
+      ? history
+          .filter((m: unknown): m is { role: string; content: string } =>
+            typeof m === "object" && m !== null && "role" in m && "content" in m
+          )
+          .map((m): { role: "user" | "assistant"; content: string } => ({
+            role: m.role === "assistant" ? "assistant" : "user",
+            content: String(m.content),
+          }))
+          .slice(-10)
+      : [];
+
     const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -74,6 +86,7 @@ export async function POST(request: NextRequest) {
         model: GROQ_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
+          ...priorTurns,
           { role: "user", content: text },
         ],
         max_tokens: 300,
