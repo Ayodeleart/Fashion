@@ -16,7 +16,7 @@ import { THEME_COOKIE_NAME, type Theme } from "@/lib/theme-shared";
 // - MOBILE_ONLY_PREFIXES: unchanged from before — install-gated,
 //   phone-only (reels, saved, search, the rest of /account).
 const RESPONSIVE_PREFIXES = ["/catalog", "/cart", "/checkout", "/account/login", "/account/signup", "/product"];
-const MOBILE_ONLY_PREFIXES = ["/saved", "/account", "/search", "/reels", "/auth"];
+const MOBILE_ONLY_PREFIXES = ["/saved", "/account", "/search", "/reels", "/auth", "/aria"];
 const SHOP_PREFIXES = [...RESPONSIVE_PREFIXES, ...MOBILE_ONLY_PREFIXES];
 
 function readTheme(): Theme {
@@ -29,7 +29,7 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
   const pathname = usePathname();
   const isShop = SHOP_PREFIXES.some((prefix) => pathname.startsWith(prefix));
   const isResponsive = RESPONSIVE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-  const isImmersive = pathname.startsWith("/reels/");
+  const isImmersive = pathname.startsWith("/reels/") || pathname === "/aria";
   const hasFloatingBottomBar = pathname.startsWith("/product");
   const [theme, setTheme] = useState<Theme>("light");
 

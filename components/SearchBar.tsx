@@ -2,13 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Link from "next/link";
 import AriaIcon from "@/components/AriaIcon";
-import AriaSheet from "@/components/AriaSheet";
 
 export default function SearchBar() {
   const router = useRouter();
   const [value, setValue] = useState("");
-  const [ariaOpen, setAriaOpen] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,16 +37,9 @@ export default function SearchBar() {
         </div>
       </form>
 
-      <button
-        type="button"
-        onClick={() => setAriaOpen(true)}
-        aria-label="Ask Aria"
-        className="w-11 h-11 rounded-full overflow-hidden shrink-0"
-      >
+      <Link href="/aria" aria-label="Ask Aria" className="w-11 h-11 rounded-full overflow-hidden shrink-0">
         <AriaIcon className="w-full h-full" />
-      </button>
-
-      <AriaSheet open={ariaOpen} onClose={() => setAriaOpen(false)} />
+      </Link>
     </div>
   );
 }
