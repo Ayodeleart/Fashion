@@ -26,7 +26,35 @@ self.addEventListener("activate", (event) => {
 // whenever a request happens to fail right after a new deploy. This
 // static page has zero dependency on any build hash, so it can never go
 // stale this way.
-self.addEventListener("fetch", (event) => {
+self.addEventListener("push", (event) => {
+  let data = { title: "Ariana Fashion", body: "", url: "/" };
+  try {
+    if (event.data) data = { ...data, ...event.data.json() };
+  } catch {
+    // Non-JSON push payload — fall back to defaults above.
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+      data: { url: data.url },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || "/";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window" }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(url) && "focus" in client) return client.focus();
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(url);
+    })
+  );
+});
   const { request } = event;
   if (request.method !== "GET" || request.url.includes("/admin") || request.url.includes("/api/")) {
     return;

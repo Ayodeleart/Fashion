@@ -14,6 +14,8 @@ const links = [
   { href: "/admin/lookbook", label: "Lookbook" },
   { href: "/admin/orders", label: "Orders" },
   { href: "/admin/messages", label: "Messages" },
+  { href: "/admin/notifications", label: "Notifications" },
+  { href: "/admin/promo-banner", label: "Promo Banner" },
   { href: "/admin/login-background", label: "Login Background" },
 ];
 

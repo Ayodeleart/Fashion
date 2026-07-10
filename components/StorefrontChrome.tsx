@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { CartProvider } from "@/components/CartProvider";
 import { SavedProvider } from "@/components/SavedProvider";
+import PromoBannerPopup from "@/components/PromoBannerPopup";
 import BottomNav from "@/components/BottomNav";
 import InstallGate from "@/components/InstallGate";
 import { THEME_COOKIE_NAME, type Theme } from "@/lib/theme-shared";
@@ -71,6 +72,7 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
             <SavedProvider>
               <div className={`w-full min-h-screen ${isImmersive ? "" : "pb-28"}`}>{children}</div>
               {!isImmersive && <BottomNav />}
+              {!isImmersive && <PromoBannerPopup />}
             </SavedProvider>
           </CartProvider>
         </div>
