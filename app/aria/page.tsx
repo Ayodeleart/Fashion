@@ -1,7 +1,9 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import AriaIcon from "@/components/AriaIcon";
 import AriaMeasureCard from "@/components/aria/AriaMeasureCard";
@@ -23,12 +25,28 @@ function BackIcon() {
 
 export default function AriaPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [panel, setPanel] = useState<Panel>("chat");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Deep-linking from the search bar's suggestion chips — either jump
+  // straight to a panel (?panel=appointment) or land in chat with a
+  // prompt ready to send (?prompt=...), sent automatically since the
+  // person already chose that exact suggestion, not typed it themselves.
+  useEffect(() => {
+    const panelParam = searchParams.get("panel");
+    if (panelParam === "appointment" || panelParam === "handoff") {
+      setPanel(panelParam);
+      return;
+    }
+    const prompt = searchParams.get("prompt");
+    if (prompt) sendMessage(prompt);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
