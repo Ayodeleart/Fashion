@@ -31,6 +31,7 @@ export default function LookbookUploadForm() {
   const [href, setHref] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const [pending, setPending] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -41,6 +42,7 @@ export default function LookbookUploadForm() {
     }
     setPending(true);
     setError(null);
+    setSuccess(false);
 
     try {
       const imageUrl = await uploadDirect(file);
@@ -56,6 +58,8 @@ export default function LookbookUploadForm() {
       setLabel("");
       setHref("");
       setFile(null);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed.");
@@ -67,6 +71,7 @@ export default function LookbookUploadForm() {
   return (
     <form onSubmit={handleSubmit} className="max-w-sm space-y-4 border border-ink/10 rounded p-5">
       {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-2">{error}</p>}
+      {success && <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded p-2">Panel added.</p>}
 
       <div>
         <label className="block text-sm mb-1">Label</label>

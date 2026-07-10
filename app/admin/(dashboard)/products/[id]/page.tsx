@@ -29,8 +29,15 @@ async function getProduct(id: string) {
   return { product, images: images ?? [], variants: variants ?? [] };
 }
 
-export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditProductPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ saved?: string }>;
+}) {
   const { id } = await params;
+  const { saved } = await searchParams;
   const [result, categories] = await Promise.all([getProduct(id), getCategories()]);
   if (!result) notFound();
 
@@ -41,6 +48,11 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
 
   return (
     <div className="max-w-lg">
+      {saved === "1" && (
+        <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded p-3 mb-4">
+          Changes saved.
+        </p>
+      )}
       <div className="flex items-center justify-between mb-2 text-sm">
         <Link href="/admin/products" className="text-muted hover:text-ink transition-colors">
           ← All products

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Ariana Fashion</title>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #111111;
+    color: #f3f1ec;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+  }
+  .box { max-width: 320px; }
+  h1 { font-size: 1.25rem; margin: 0 0 8px; }
+  p { font-size: 0.875rem; color: #9e9b96; margin: 0 0 20px; line-height: 1.5; }
+  button {
+    background: #f3f1ec;
+    color: #111111;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 24px;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+  <div class="box">
+    <h1>You're offline</h1>
+    <p>Couldn't reach the shop — check your connection and try again.</p>
+    <button onclick="location.reload()">Retry</button>
+  </div>
+</body>
+</html>

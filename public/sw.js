@@ -1,5 +1,5 @@
-const CACHE_NAME = "ariana-shell-v2";
-const SHELL_URLS = ["/", "/manifest.json"];
+const CACHE_NAME = "ariana-shell-v3";
+const SHELL_URLS = ["/offline.html"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -17,8 +17,15 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Network-first for navigation requests, falling back to the cached
-// shell only when fully offline — keeps admin/API traffic untouched.
+// Network-first for navigation requests. On failure, fall back to a
+// static, hash-independent offline page — NOT a cached copy of the app
+// shell itself. A cached app-shell HTML references that deploy's hashed
+// CSS/JS filenames; once a newer deploy ships, those exact files no
+// longer exist on the server, so the stale cached page tries to load
+// CSS/JS that 404s — unstyled, half-broken page, intermittently,
+// whenever a request happens to fail right after a new deploy. This
+// static page has zero dependency on any build hash, so it can never go
+// stale this way.
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET" || request.url.includes("/admin") || request.url.includes("/api/")) {
@@ -26,7 +33,7 @@ self.addEventListener("fetch", (event) => {
   }
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request).catch(() => caches.match("/").then((res) => res || fetch(request)))
+      fetch(request).catch(() => caches.match("/offline.html").then((res) => res || fetch(request)))
     );
   }
 });

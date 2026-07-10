@@ -37,6 +37,7 @@ export default function ProductImageManager({
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const [pending, setPending] = useState(false);
 
   async function handleUpload(e: React.FormEvent) {
@@ -47,6 +48,7 @@ export default function ProductImageManager({
     }
     setPending(true);
     setError(null);
+    setSuccess(false);
 
     try {
       const imageUrl = await uploadDirect(productId, file);
@@ -60,6 +62,8 @@ export default function ProductImageManager({
       if (result.error) throw new Error(result.error);
 
       setFile(null);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed.");
@@ -101,6 +105,7 @@ export default function ProductImageManager({
       )}
 
       {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-2 mb-3">{error}</p>}
+      {success && <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded p-2 mb-3">Image added.</p>}
 
       <form onSubmit={handleUpload} className="flex items-center gap-3">
         <input

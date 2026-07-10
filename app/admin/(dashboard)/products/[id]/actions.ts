@@ -36,6 +36,7 @@ export async function updateProduct(productId: string, formData: FormData) {
   revalidatePath(`/admin/products/${productId}`);
   revalidatePath("/admin/products");
   revalidatePath("/");
+  redirect(`/admin/products/${productId}?saved=1`);
 }
 
 export async function deleteProduct(productId: string) {
