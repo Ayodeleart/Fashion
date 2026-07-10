@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
 import { getSupabase } from "@/lib/supabase";
 
@@ -11,6 +12,7 @@ function formatPrice(price: number, currency: string) {
 
 export default function CartPage() {
   const { items, loading, signedIn, setQuantity, removeItem, total } = useCart();
+  const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,7 +41,24 @@ export default function CartPage() {
       });
       const result = await res.json();
       if (result.error) throw new Error(result.error);
-      window.location.href = result.authorization_url;
+
+      // Inline popup keeps the whole flow inside the PWA — a full
+      // window.location redirect to Paystack's hosted page would break
+      // out to the system browser and lose the installed-app context.
+      const { default: PaystackPop } = await import("@paystack/inline-js");
+      const popup = new PaystackPop();
+      popup.resumeTransaction(result.access_code, {
+        onSuccess: () => {
+          router.push(`/checkout/complete?order_id=${result.order_id}`);
+        },
+        onCancel: () => {
+          setPending(false);
+        },
+        onError: (err: { message: string }) => {
+          setError(err.message || "Payment failed — try again.");
+          setPending(false);
+        },
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Checkout failed.");
       setPending(false);

@@ -87,7 +87,11 @@ export async function POST(req: NextRequest) {
       callbackUrl: `${origin}/checkout/complete?order_id=${order.id}`,
     });
 
-    return NextResponse.json({ authorization_url: transaction.authorization_url, order_id: order.id });
+    return NextResponse.json({
+      authorization_url: transaction.authorization_url,
+      access_code: transaction.access_code,
+      order_id: order.id,
+    });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Paystack initialization failed." },
