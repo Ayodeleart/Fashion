@@ -9,8 +9,10 @@ import { ADMIN_COOKIE_NAME, isValidSessionToken } from "@/lib/admin-auth";
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Let the login page and its submit action through untouched.
-  if (pathname === "/admin/login") {
+  // Let the login page, the Google OAuth callback, and the access-code
+  // step through untouched — none of these have the admin cookie yet by
+  // definition, that's what they're establishing.
+  if (pathname === "/admin/login" || pathname === "/admin/auth/callback" || pathname === "/admin/verify-code") {
     return NextResponse.next();
   }
 

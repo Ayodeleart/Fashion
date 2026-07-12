@@ -12,10 +12,33 @@ const ADMIN_USERNAME = "Ayodeleart1";
 const ADMIN_PASSWORD = "@Ayodele10";
 const SESSION_SECRET = "7kkJuoxU3vxn29vs6CrAeXN6";
 
+// Google sign-in only confirms IDENTITY — this really is your Google
+// account. It is NOT the authorization gate on its own, since anyone
+// could otherwise sign in with any Google account. Two real gates:
+// (1) the email must be on this allowlist, (2) the access code below.
+const ALLOWED_ADMIN_EMAILS = ["ayodeleart1@gmail.com"];
+
+// The actual secret — "so only admin will know the code." Kept as a
+// separate constant (not env var) for the same reason as the
+// username/password above — nothing sensitive sits behind this gate,
+// and env vars have been the actual source of past lockouts, not a
+// security concern here. Change this value any time you want to
+// rotate the code; no redeploy of anything else is needed.
+const ADMIN_ACCESS_CODE = "2048";
+
 export function verifyCredentials(username: string, password: string): boolean {
   const userMatch = timingSafeEqual(username.trim(), ADMIN_USERNAME);
   const passMatch = timingSafeEqual(password.trim(), ADMIN_PASSWORD);
   return userMatch && passMatch;
+}
+
+export function isAllowedAdminEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return ALLOWED_ADMIN_EMAILS.includes(email.trim().toLowerCase());
+}
+
+export function verifyAccessCode(code: string): boolean {
+  return timingSafeEqual(code.trim(), ADMIN_ACCESS_CODE);
 }
 
 function timingSafeEqual(a: string, b: string): boolean {
