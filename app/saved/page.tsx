@@ -126,18 +126,24 @@ export default function SavedPage() {
                 {item.image && <Image src={item.image} alt={item.name} fill className="object-cover" sizes="50vw" />}
               </a>
               <p className="text-sm text-ink truncate">{item.name}</p>
-              <div className="flex items-center justify-between mt-1">
-                <p className="text-sm text-muted">{formatPrice(item.price, item.currency)}</p>
-                <AddToCartButton
-                  productId={item.productId}
-                  name={item.name}
-                  price={item.price}
-                  currency={item.currency}
-                  image={item.image}
-                  className="text-[11px] px-2.5 py-1 rounded-full bg-ink text-paper"
-                />
-              </div>
-              <button onClick={() => toggle(item)} className="text-xs text-muted underline mt-1">
+              {item.kind === "look" ? (
+                <a href={item.href} className="text-sm text-muted underline mt-1 inline-block">
+                  Shop this look
+                </a>
+              ) : (
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-sm text-muted">{formatPrice(item.price, item.currency)}</p>
+                  <AddToCartButton
+                    productId={item.productId}
+                    name={item.name}
+                    price={item.price}
+                    currency={item.currency}
+                    image={item.image}
+                    className="text-[11px] px-2.5 py-1 rounded-full bg-ink text-paper"
+                  />
+                </div>
+              )}
+              <button onClick={() => toggle(item)} className="text-xs text-muted underline mt-1 block">
                 Remove
               </button>
             </div>

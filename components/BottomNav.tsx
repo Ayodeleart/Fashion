@@ -3,7 +3,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCart } from "@/components/CartProvider";
 
 function HomeIcon({ active }: { active: boolean }) {
   return (
@@ -66,25 +65,26 @@ function ProfileIcon({ active }: { active: boolean }) {
     </svg>
   );
 }
-function CartIcon() {
-  // Exact path data from the provided shopping-cart SVG (originally nested
-  // in two <g transform="translate(...)"> — combined here into one, so the
-  // coordinates map directly onto this 0 0 20 20 viewBox). Uses currentColor
-  // (set via text-paper on the wrapping button) instead of a hardcoded
-  // white fill — the button is bg-ink, which flips between near-black
-  // (light theme) and near-white (dark theme), so the icon needs to track
-  // the opposite (paper) token to stay visible in both.
+function ShopIcon() {
+  // Same weight and currentColor convention as CartIcon below it replaces —
+  // still sits in the bg-ink circular button, so needs to track the
+  // paper token in both themes the same way.
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-      <g transform="translate(-164, -2959)">
-        <path d="M180.846448,2977 L167.153448,2977 C166.544448,2977 166.077448,2976.461 166.163448,2975.859 L167.306448,2967.859 C167.376448,2967.366 167.798448,2967 168.296448,2967 L168.999448,2967 L168.999448,2969 C168.999448,2969.552 169.447448,2970 169.999448,2970 C170.552448,2970 170.999448,2969.552 170.999448,2969 L170.999448,2967 L176.999448,2967 L176.999448,2969 C176.999448,2969.552 177.447448,2970 177.999448,2970 C178.552448,2970 178.999448,2969.552 178.999448,2969 L178.999448,2967 L179.703448,2967 C180.201448,2967 180.623448,2967.366 180.693448,2967.859 L181.836448,2975.859 C181.922448,2976.461 181.455448,2977 180.846448,2977 L180.846448,2977 Z M170.999448,2964 C170.999448,2962.346 172.345448,2961 173.999448,2961 C175.654448,2961 176.999448,2962 176.999448,2964 L176.999448,2965 L170.999448,2965 L170.999448,2964 Z M183.979448,2976.717 L182.550448,2966.717 C182.410448,2965.732 181.566448,2965 180.570448,2965 L178.999448,2965 L178.999448,2964 C178.999448,2961 176.756448,2959 173.999448,2959 C171.243448,2959 168.999448,2961.243 168.999448,2964 L168.999448,2965 L167.734448,2965 C166.739448,2965 165.589448,2965.732 165.448448,2966.717 L164.020448,2976.717 C163.848448,2977.922 164.783448,2979 166.000448,2979 L181.999448,2979 C183.216448,2979 184.151448,2977.922 183.979448,2976.717 L183.979448,2976.717 Z" />
-      </g>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M6.5 8.5h11l1 12.5a1.5 1.5 0 0 1-1.5 1.5H7a1.5 1.5 0 0 1-1.5-1.5L6.5 8.5Z"
+        stroke="currentColor"
+        strokeWidth={1.6}
+        strokeLinejoin="round"
+      />
+      <path d="M9 8.5V6.8a3 3 0 0 1 6 0V8.5" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" />
     </svg>
   );
 }
 
 const leftItems = [
-  { href: "/catalog", label: "Home", Icon: HomeIcon },
+  // Home is the editorial style book — not the shop.
+  { href: "/", label: "Home", Icon: HomeIcon },
   { href: "/reels", label: "Reels", Icon: ReelsIcon },
 ];
 const rightItems = [
@@ -94,7 +94,6 @@ const rightItems = [
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const { count } = useCart();
 
   const allItems = [...leftItems, ...rightItems];
   const itemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
@@ -125,17 +124,17 @@ export default function BottomNav() {
   }, [pathname]);
 
   return (
-    // Deliberately simple: a flat bar, and the cart button is just the
+    // Deliberately simple: a flat bar, and the Shop button is just the
     // LAST element in the DOM so it paints on top of the bar and floats
     // above it via a negative top offset. No cutout/notch shape — that
     // was causing the bar's own fill to visually intrude on the button.
     <nav className="fixed bottom-0 left-0 right-0 z-30 bg-paper border-t border-ink/10 pb-[env(safe-area-inset-bottom)]">
       <div ref={containerRef} className="max-w-md mx-auto relative flex items-center justify-between px-6 h-16">
         {/* Liquid indicator — a soft pill that slides + slightly stretches
-            to the active tab. Never rendered behind the middle cart
+            to the active tab. Never rendered behind the middle Shop
             button (that one isn't in allItems, so pill is null there
-            momentarily, but cart is a separate route so this nav's own
-            active-state highlighting doesn't apply to it anyway). A
+            momentarily, but /catalog is a separate route so this nav's
+            own active-state highlighting doesn't apply to it anyway). A
             bouncy easing curve gives the "liquid" overshoot feel; token
             colors (brass/ink at low opacity) keep it visible in both themes. */}
         {pill && (
@@ -188,16 +187,12 @@ export default function BottomNav() {
         })}
 
         <Link
-          href="/cart"
-          className="absolute left-1/2 -translate-x-1/2 -top-7 w-14 h-14 rounded-full bg-ink text-paper flex items-center justify-center shadow-lg z-10"
-          aria-label="Cart"
+          href="/catalog"
+          className="absolute left-1/2 -translate-x-1/2 -top-7 w-14 h-14 rounded-full bg-ink text-paper flex flex-col items-center justify-center shadow-lg z-10 gap-0.5"
+          aria-label="Shop"
         >
-          <CartIcon />
-          {count > 0 && (
-            <span className="absolute -top-1 -right-1 bg-brass text-ink text-[10px] font-medium rounded-full w-5 h-5 flex items-center justify-center">
-              {count > 9 ? "9+" : count}
-            </span>
-          )}
+          <ShopIcon />
+          <span className="text-[9px] leading-none">Shop</span>
         </Link>
       </div>
     </nav>

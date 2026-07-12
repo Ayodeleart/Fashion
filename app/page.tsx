@@ -1,9 +1,37 @@
 import Hero, { HeroBanner } from "@/components/Hero";
 import Lookbook, { LookbookPanel } from "@/components/Lookbook";
-import ProductGrid, { Product } from "@/components/ProductGrid";
 import Footer from "@/components/Footer";
 import { getSupabase } from "@/lib/supabase";
-import { resolveCurrency, resolvePrice } from "@/lib/currency";
+
+// Home is the digital style book — inspiration only. No prices, no product
+// grid, no "add to cart" anywhere on this page. Each category below is its
+// own chapter (eyebrow + heading), rendered in this fixed reading order.
+// A category with zero published panels is skipped rather than shown empty.
+const CATEGORY_ORDER = [
+  "seasonal",
+  "wedding",
+  "celebrity",
+  "aso-oke",
+  "corporate",
+  "streetwear",
+  "couple",
+  "traditional",
+  "designer-spotlight",
+] as const;
+
+type Category = (typeof CATEGORY_ORDER)[number];
+
+const CATEGORY_COPY: Record<Category, { eyebrow: string; heading: string }> = {
+  seasonal: { eyebrow: "This season's edit", heading: "Three ways to wear the season" },
+  wedding: { eyebrow: "Wedding inspiration", heading: "Say I do in style" },
+  celebrity: { eyebrow: "Celebrity looks", heading: "As seen on the red carpet" },
+  "aso-oke": { eyebrow: "Luxury aso oke", heading: "Heritage, rewoven" },
+  corporate: { eyebrow: "Corporate fits", heading: "Boardroom ready" },
+  streetwear: { eyebrow: "Streetwear", heading: "Off-duty, on-brand" },
+  couple: { eyebrow: "Couple styles", heading: "Matching, not matchy" },
+  traditional: { eyebrow: "Traditional styles", heading: "Rooted in craft" },
+  "designer-spotlight": { eyebrow: "Designer spotlight", heading: "Meet the hands behind the thread" },
+};
 
 // Forced dynamic: without this, Next.js can prerender this page as static
 // HTML at build time and cache it — meaning new hero banners, lookbook
@@ -45,81 +73,73 @@ async function getHeroBanners(device: "desktop" | "mobile"): Promise<HeroBanner[
   }));
 }
 
-const fallbackLookbookPanels: LookbookPanel[] = [
-  { id: "look-1", label: "The Tailored Line", image: "/images/look-1.jpg", href: "/catalog?look=tailored" },
-  { id: "look-2", label: "Evening", image: "/images/look-2.jpg", href: "/catalog?look=evening" },
-  { id: "look-3", label: "Off-Duty", image: "/images/look-3.jpg", href: "/catalog?look=off-duty" },
+type PanelRow = {
+  id: string;
+  label: string;
+  image_url: string;
+  href: string;
+  story: string | null;
+  category: string | null;
+};
+
+const fallbackRows: PanelRow[] = [
+  { id: "look-1", label: "The Tailored Line", image_url: "/images/look-1.jpg", href: "/catalog?look=tailored", story: null, category: "seasonal" },
+  { id: "look-2", label: "Evening", image_url: "/images/look-2.jpg", href: "/catalog?look=evening", story: null, category: "seasonal" },
+  { id: "look-3", label: "Off-Duty", image_url: "/images/look-3.jpg", href: "/catalog?look=off-duty", story: null, category: "seasonal" },
 ];
 
-async function getLookbookPanels(): Promise<LookbookPanel[]> {
+// Requires the "category" and "story" columns on ariana_lookbook_panels —
+// see the migration note in the admin/lookbook page. A panel whose category
+// doesn't match a known chapter falls back to "seasonal" so a typo in
+// Supabase never silently drops content from the page.
+async function getLookbookPanelsByCategory(): Promise<Record<Category, LookbookPanel[]>> {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("ariana_lookbook_panels")
-    .select("id, label, image_url, href")
+    .select("id, label, image_url, href, story, category")
     .order("position", { ascending: true })
     .order("created_at", { ascending: true });
 
-  if (error || !data || data.length === 0) return fallbackLookbookPanels;
+  const grouped: Record<Category, LookbookPanel[]> = {
+    seasonal: [], wedding: [], celebrity: [], "aso-oke": [], corporate: [],
+    streetwear: [], couple: [], traditional: [], "designer-spotlight": [],
+  };
 
-  return data.map((row) => ({
-    id: row.id,
-    label: row.label,
-    image: row.image_url,
-    href: row.href,
-  }));
-}
+  const rows: PanelRow[] = !error && data && data.length > 0 ? (data as PanelRow[]) : fallbackRows;
 
-const fallbackProducts: Product[] = [
-  { id: "p1", name: "Structured Wool Blazer", price: 890, currency: "USD", image: "/images/product-1.jpg", href: "/product/structured-wool-blazer" },
-  { id: "p2", name: "Silk Slip Dress", price: 620, currency: "USD", image: "/images/product-2.jpg", href: "/product/silk-slip-dress" },
-  { id: "p3", name: "Tailored Wide-Leg Trouser", price: 410, currency: "USD", image: "/images/product-3.jpg", href: "/product/tailored-wide-leg-trouser" },
-  { id: "p4", name: "Cashmere Knit Top", price: 340, currency: "USD", image: "/images/product-4.jpg", href: "/product/cashmere-knit-top" },
-];
-
-async function getNewArrivals(): Promise<Product[]> {
-  const supabase = getSupabase();
-  const [{ data, error }, currency] = await Promise.all([
-    supabase
-      .from("ariana_products")
-      .select("id, name, price, currency, price_ngn, slug, ariana_product_images(url, position)")
-      .eq("is_published", true)
-      .order("created_at", { ascending: false })
-      .limit(8),
-    resolveCurrency(),
-  ]);
-
-  if (error || !data || data.length === 0) return fallbackProducts;
-
-  return data.map((row) => {
-    const images = (row.ariana_product_images as { url: string; position: number }[]) ?? [];
-    const firstImage = [...images].sort((a, b) => a.position - b.position)[0];
-    const displayPrice = resolvePrice(row, currency);
-    return {
+  for (const row of rows) {
+    const category: Category = (CATEGORY_ORDER as readonly string[]).includes(row.category ?? "")
+      ? (row.category as Category)
+      : "seasonal";
+    grouped[category].push({
       id: row.id,
-      name: row.name,
-      price: displayPrice.amount,
-      currency: displayPrice.currency,
-      image: firstImage?.url ?? "/images/product-placeholder.jpg",
-      href: `/product/${row.slug}`,
-    };
-  });
+      label: row.label,
+      image: row.image_url,
+      href: row.href,
+      story: row.story ?? undefined,
+    });
+  }
+
+  return grouped;
 }
 
 export default async function Home() {
-  const [desktopBanners, mobileBanners, lookbookPanels, newArrivals] = await Promise.all([
+  const [desktopBanners, mobileBanners, panelsByCategory] = await Promise.all([
     getHeroBanners("desktop"),
     getHeroBanners("mobile"),
-    getLookbookPanels(),
-    getNewArrivals(),
+    getLookbookPanelsByCategory(),
   ]);
 
   return (
     <main>
       <Hero desktopBanners={desktopBanners} mobileBanners={mobileBanners} />
 
-      <Lookbook panels={lookbookPanels} />
-
-      <ProductGrid title="New Arrivals" products={newArrivals} />
+      {CATEGORY_ORDER.map((category) => {
+        const panels = panelsByCategory[category];
+        if (panels.length === 0) return null;
+        const { eyebrow, heading } = CATEGORY_COPY[category];
+        return <Lookbook key={category} eyebrow={eyebrow} heading={heading} panels={panels} />;
+      })}
 
       <Footer brandName="AyodeleGold" />
     </main>
