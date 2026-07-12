@@ -20,6 +20,16 @@ const RESPONSIVE_PREFIXES = ["/catalog", "/cart", "/checkout", "/account/login",
 const MOBILE_ONLY_PREFIXES = ["/saved", "/account", "/search", "/reels", "/auth", "/aria"];
 const SHOP_PREFIXES = [...RESPONSIVE_PREFIXES, ...MOBILE_ONLY_PREFIXES];
 
+// Home ("/") is now the editorial style book and gets the same app shell —
+// bottom nav to move between Home/Shop/Reels/Saved/Profile, and
+// SavedProvider so "Save" works on a look. It already has a real desktop
+// layout (it's the original marketing page), so it's treated like the
+// RESPONSIVE tier — exact match only, never a prefix, or every route
+// would match "/".
+function isHomePath(pathname: string) {
+  return pathname === "/";
+}
+
 function readTheme(): Theme {
   if (typeof document === "undefined") return "light";
   const match = document.cookie.match(new RegExp(`${THEME_COOKIE_NAME}=(dark|light)`));
@@ -28,8 +38,8 @@ function readTheme(): Theme {
 
 export default function StorefrontChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isShop = SHOP_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-  const isResponsive = RESPONSIVE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  const isShop = isHomePath(pathname) || SHOP_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  const isResponsive = isHomePath(pathname) || RESPONSIVE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
   const isImmersive = pathname.startsWith("/reels/") || pathname === "/aria";
   const hasFloatingBottomBar = pathname.startsWith("/product");
   const [theme, setTheme] = useState<Theme>("light");

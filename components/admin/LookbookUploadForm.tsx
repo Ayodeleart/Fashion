@@ -25,9 +25,23 @@ async function uploadDirect(file: File): Promise<string> {
   return data.publicUrl;
 }
 
+const CATEGORIES = [
+  { value: "seasonal", label: "This season's edit" },
+  { value: "wedding", label: "Wedding inspiration" },
+  { value: "celebrity", label: "Celebrity looks" },
+  { value: "aso-oke", label: "Luxury aso oke" },
+  { value: "corporate", label: "Corporate fits" },
+  { value: "streetwear", label: "Streetwear" },
+  { value: "couple", label: "Couple styles" },
+  { value: "traditional", label: "Traditional styles" },
+  { value: "designer-spotlight", label: "Designer spotlight" },
+];
+
 export default function LookbookUploadForm() {
   const router = useRouter();
   const [label, setLabel] = useState("");
+  const [category, setCategory] = useState("seasonal");
+  const [story, setStory] = useState("");
   const [href, setHref] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -50,12 +64,13 @@ export default function LookbookUploadForm() {
       const res = await fetch("/api/admin/lookbook", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label, href: href || "#", imageUrl }),
+        body: JSON.stringify({ label, category, story, href: href || "#", imageUrl }),
       });
       const result: { error?: string } = await res.json();
       if (result.error) throw new Error(result.error);
 
       setLabel("");
+      setStory("");
       setHref("");
       setFile(null);
       setSuccess(true);
@@ -84,13 +99,41 @@ export default function LookbookUploadForm() {
       </div>
 
       <div>
-        <label className="block text-sm mb-1">Link (optional)</label>
+        <label className="block text-sm mb-1">Chapter</label>
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="w-full border border-ink/20 rounded px-3 py-2 bg-white"
+        >
+          {CATEGORIES.map((c) => (
+            <option key={c.value} value={c.value}>
+              {c.label}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-muted mt-1">Which section of the Home style book this look appears in.</p>
+      </div>
+
+      <div>
+        <label className="block text-sm mb-1">Story (optional)</label>
+        <textarea
+          value={story}
+          onChange={(e) => setStory(e.target.value)}
+          placeholder="A sentence or two shown when someone taps this look."
+          rows={3}
+          className="w-full border border-ink/20 rounded px-3 py-2 bg-white"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm mb-1">Shop this look link (optional)</label>
         <input
           value={href}
           onChange={(e) => setHref(e.target.value)}
           placeholder="/catalog?look=tailored"
           className="w-full border border-ink/20 rounded px-3 py-2 bg-white"
         />
+        <p className="text-xs text-muted mt-1">Where "Shop this look" sends the customer.</p>
       </div>
 
       <div>

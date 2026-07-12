@@ -10,6 +10,10 @@ export type SavedItem = {
   currency: string;
   image: string;
   href: string;
+  // "look" = a saved style/editorial from Home's lookbook — never priced,
+  // never carries an add-to-cart action. Defaults to "product" for every
+  // existing call site (product cards, recommendations) that doesn't pass it.
+  kind?: "product" | "look";
 };
 
 type ToggleResult = { requiresAuth: boolean; error?: string };
@@ -31,6 +35,7 @@ type SavedRow = {
   currency: string;
   image: string | null;
   href: string | null;
+  kind: "product" | "look" | null;
 };
 
 function rowToItem(row: SavedRow): SavedItem {
@@ -41,6 +46,7 @@ function rowToItem(row: SavedRow): SavedItem {
     currency: row.currency,
     image: row.image ?? "",
     href: row.href ?? "",
+    kind: row.kind ?? "product",
   };
 }
 
@@ -62,7 +68,7 @@ export function SavedProvider({ children }: { children: React.ReactNode }) {
     const supabase = getSupabase();
     const { data } = await supabase
       .from("ariana_saved_items")
-      .select("product_id, name, price, currency, image, href")
+      .select("product_id, name, price, currency, image, href, kind")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
     setItems(((data as SavedRow[]) ?? []).map(rowToItem));
@@ -110,6 +116,7 @@ export function SavedProvider({ children }: { children: React.ReactNode }) {
         currency: item.currency,
         image: item.image,
         href: item.href,
+        kind: item.kind ?? "product",
       });
       if (error) {
         console.error("Save failed:", error.message);

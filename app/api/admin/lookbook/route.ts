@@ -18,6 +18,8 @@ export async function POST(request: NextRequest) {
     // Supabase Storage via a signed URL (see sign-upload/route.ts).
     const body = await request.json();
     const label = String(body.label ?? "").trim();
+    const category = String(body.category ?? "seasonal").trim() || "seasonal";
+    const story = String(body.story ?? "").trim() || null;
     const href = String(body.href ?? "").trim() || "#";
     const imageUrl = String(body.imageUrl ?? "").trim();
 
@@ -28,6 +30,8 @@ export async function POST(request: NextRequest) {
 
     const { error: insertErr } = await admin.from("ariana_lookbook_panels").insert({
       label,
+      category,
+      story,
       href,
       image_url: imageUrl,
     });
