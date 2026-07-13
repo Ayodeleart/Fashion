@@ -71,7 +71,6 @@ function BannerCarousel({ banners, showOverlay }: { banners: HeroBanner[]; showO
           <a href="/about" className="hover:text-brass transition-colors">About</a>
           <a href="/contact" className="hover:text-brass transition-colors">Contact</a>
         </div>
-        <a href="/cart" className="text-sm tracking-wide hover:text-brass transition-colors">Cart</a>
       </nav>
 
       {banners.map((b, i) => {

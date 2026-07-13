@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import AddToCartButton from "@/components/AddToCartButton";
 import SaveButton from "@/components/SaveButton";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
+import { useHasMeasurements } from "@/hooks/useHasMeasurements";
 import { resolvePrice, type Currency } from "@/lib/currency-shared";
 
 type ProductRow = {
@@ -24,15 +24,16 @@ function formatPrice(price: number, currency: string) {
 
 export default function CatalogGrid({ products, currency }: { products: ProductRow[]; currency: Currency }) {
   const ref = useScrollReveal<HTMLDivElement>(60);
+  const aiFitReady = useHasMeasurements();
 
   return (
-    <div ref={ref} className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-3 md:gap-x-5 gap-y-6 md:gap-y-10">
+    <div ref={ref} className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-px gap-y-px bg-ink/10 md:gap-x-4 md:gap-y-8 md:bg-transparent">
       {products.map((p, index) => {
         const image = [...(p.ariana_product_images ?? [])].sort((a, b) => a.position - b.position)[0];
         const displayPrice = resolvePrice(p, currency);
         return (
-          <Link key={p.id} href={`/product/${p.slug}`} className="group block" data-reveal="card">
-            <div className="relative aspect-[3/4] overflow-hidden rounded-2xl md:rounded-lg bg-paper-raised mb-2">
+          <Link key={p.id} href={`/product/${p.slug}`} className="group block bg-paper" data-reveal="card">
+            <div className="relative aspect-[3/4] overflow-hidden md:rounded-lg bg-paper-raised">
               {image ? (
                 <Image
                   src={image.url}
@@ -47,6 +48,13 @@ export default function CatalogGrid({ products, currency }: { products: ProductR
                   No image
                 </div>
               )}
+
+              {aiFitReady && (
+                <span className="absolute top-2 left-2 text-[10px] tracking-wide bg-ink/85 text-paper px-2 py-1 rounded-full">
+                  AI perfect fit
+                </span>
+              )}
+
               <div className="absolute top-2 right-2">
                 <SaveButton
                   item={{
@@ -60,16 +68,14 @@ export default function CatalogGrid({ products, currency }: { products: ProductR
                 />
               </div>
             </div>
-            <p className="text-sm text-ink truncate">{p.name}</p>
-            <p className="text-sm text-muted mt-1">{formatPrice(displayPrice.amount, displayPrice.currency)}</p>
-            <AddToCartButton
-              productId={p.id}
-              name={p.name}
-              price={displayPrice.amount}
-              currency={displayPrice.currency}
-              image={image?.url ?? ""}
-              className="mt-2 text-[11px] px-2.5 py-1.5 rounded-full bg-ink text-paper w-full"
-            />
+
+            <div className="px-2 pt-2 pb-3">
+              <p className="text-[10px] tracking-wide text-muted uppercase">AyodeleGold</p>
+              <p className="text-sm text-ink truncate">{p.name}</p>
+              <p className="text-sm text-ink font-medium mt-0.5">
+                {formatPrice(displayPrice.amount, displayPrice.currency)}
+              </p>
+            </div>
           </Link>
         );
       })}

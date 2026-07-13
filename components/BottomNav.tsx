@@ -66,18 +66,15 @@ function ProfileIcon({ active }: { active: boolean }) {
   );
 }
 function ShopIcon() {
-  // Same weight and currentColor convention as CartIcon below it replaces —
-  // still sits in the bg-ink circular button, so needs to track the
-  // paper token in both themes the same way.
+  // The original center-button SVG, unchanged. Only the label, href, and
+  // badge logic around it changed (it now reads Shop / -> /catalog, no
+  // cart-count badge, since count moved to the top bar) — the artwork
+  // itself was restored exactly as it shipped, at the person's request.
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M6.5 8.5h11l1 12.5a1.5 1.5 0 0 1-1.5 1.5H7a1.5 1.5 0 0 1-1.5-1.5L6.5 8.5Z"
-        stroke="currentColor"
-        strokeWidth={1.6}
-        strokeLinejoin="round"
-      />
-      <path d="M9 8.5V6.8a3 3 0 0 1 6 0V8.5" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" />
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+      <g transform="translate(-164, -2959)">
+        <path d="M180.846448,2977 L167.153448,2977 C166.544448,2977 166.077448,2976.461 166.163448,2975.859 L167.306448,2967.859 C167.376448,2967.366 167.798448,2967 168.296448,2967 L168.999448,2967 L168.999448,2969 C168.999448,2969.552 169.447448,2970 169.999448,2970 C170.552448,2970 170.999448,2969.552 170.999448,2969 L170.999448,2967 L176.999448,2967 L176.999448,2969 C176.999448,2969.552 177.447448,2970 177.999448,2970 C178.552448,2970 178.999448,2969.552 178.999448,2969 L178.999448,2967 L179.703448,2967 C180.201448,2967 180.623448,2967.366 180.693448,2967.859 L181.836448,2975.859 C181.922448,2976.461 181.455448,2977 180.846448,2977 L180.846448,2977 Z M170.999448,2964 C170.999448,2962.346 172.345448,2961 173.999448,2961 C175.654448,2961 176.999448,2962 176.999448,2964 L176.999448,2965 L170.999448,2965 L170.999448,2964 Z M183.979448,2976.717 L182.550448,2966.717 C182.410448,2965.732 181.566448,2965 180.570448,2965 L178.999448,2965 L178.999448,2964 C178.999448,2961 176.756448,2959 173.999448,2959 C171.243448,2959 168.999448,2961.243 168.999448,2964 L168.999448,2965 L167.734448,2965 C166.739448,2965 165.589448,2965.732 165.448448,2966.717 L164.020448,2976.717 C163.848448,2977.922 164.783448,2979 166.000448,2979 L181.999448,2979 C183.216448,2979 184.151448,2977.922 183.979448,2976.717 L183.979448,2976.717 Z" />
+      </g>
     </svg>
   );
 }

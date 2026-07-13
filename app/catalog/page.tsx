@@ -1,13 +1,12 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { getSupabase } from "@/lib/supabase";
 import { getCategories } from "@/lib/categories";
 import { resolveCurrency } from "@/lib/currency";
 import TopBar from "@/components/TopBar";
-import SearchBar from "@/components/SearchBar";
 import CategoryRow from "@/components/CategoryRow";
-import HeroCard from "@/components/HeroCard";
+import FilterSortRow from "@/components/FilterSortRow";
 import CatalogGrid from "@/components/CatalogGrid";
-import type { HeroBanner } from "@/components/Hero";
 
 // This is the e-commerce shop home (the mobile app screen). "/" stays the
 // separate editorial landing page — this is deliberately its own surface.
@@ -24,65 +23,47 @@ type ProductRow = {
   ariana_product_images: { url: string; position: number }[];
 };
 
-async function getProducts(category?: string) {
+async function getProducts(category?: string, sort?: string) {
   const supabase = getSupabase();
   let query = supabase
     .from("ariana_products")
     .select("id, name, slug, price, currency, price_ngn, category, ariana_product_images(url, position)")
-    .eq("is_published", true)
-    .order("created_at", { ascending: false });
+    .eq("is_published", true);
 
   if (category) query = query.eq("category", category);
+
+  if (sort === "price-asc") query = query.order("price", { ascending: true });
+  else if (sort === "price-desc") query = query.order("price", { ascending: false });
+  else query = query.order("created_at", { ascending: false });
 
   const { data } = await query;
   return (data as unknown as ProductRow[]) ?? [];
 }
 
-const fallbackHeroBanner: HeroBanner = { id: "fallback", imageUrl: "/images/hero-mobile.jpg", href: "/catalog" };
-
-async function getShopHeroBanners(): Promise<HeroBanner[]> {
-  const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from("ariana_shop_hero")
-    .select("id, label, image_url, href")
-    .eq("status", "published")
-    .order("position", { ascending: true })
-    .order("created_at", { ascending: false });
-
-  if (error || !data || data.length === 0) return [fallbackHeroBanner];
-  return data.map((row) => ({ id: row.id, label: row.label, imageUrl: row.image_url, href: row.href }));
-}
-
 export default async function CatalogPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string; sort?: string }>;
 }) {
-  const { category } = await searchParams;
-  const [products, categories, heroBanners, currency] = await Promise.all([
-    getProducts(category),
+  const { category, sort } = await searchParams;
+  const [products, categories, currency] = await Promise.all([
+    getProducts(category, sort),
     getCategories(),
-    getShopHeroBanners(),
     resolveCurrency(),
   ]);
 
   return (
     <main>
-      {heroBanners[0] && (
-        <link rel="preload" as="image" href={heroBanners[0].imageUrl} fetchPriority="high" />
-      )}
       <TopBar />
+
       <div className="sticky top-0 z-20 bg-paper shadow-[0_1px_0_rgba(0,0,0,0.06)] md:hidden">
-        <SearchBar />
         <CategoryRow categories={categories} />
       </div>
-      {!category && (
-        <div className="md:hidden">
-          <HeroCard banners={heroBanners} />
-        </div>
-      )}
+      <Suspense fallback={null}>
+        <FilterSortRow categories={categories} />
+      </Suspense>
 
-      <section className="px-5 md:px-10 lg:px-16 pb-8 md:pt-8 max-w-[1400px] mx-auto">
+      <section className="px-5 md:px-10 lg:px-16 py-4 md:pt-8 max-w-[1400px] mx-auto">
         {/* Desktop category filter — the mobile CategoryRow above is
             hidden at md+, this is the desktop equivalent. */}
         <div className="hidden md:flex flex-wrap gap-2 mb-8">
@@ -105,17 +86,6 @@ export default async function CatalogPage({
               {c.name}
             </Link>
           ))}
-        </div>
-
-        <div className="flex items-baseline justify-between mb-4 md:mb-6">
-          <h2 className="text-base md:text-2xl font-semibold text-ink capitalize">
-            {category ? category : "latest arrivals"}
-          </h2>
-          {category && (
-            <Link href="/catalog" className="text-xs md:text-sm text-muted hover:text-brass transition-colors">
-              Clear filter
-            </Link>
-          )}
         </div>
 
         {products.length === 0 ? (
