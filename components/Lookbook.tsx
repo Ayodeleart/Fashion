@@ -18,10 +18,15 @@ export type LookbookPanel = {
 // "Luxury aso oke"). Home renders one of these per category — see
 // CATEGORY_COPY in app/page.tsx for the eyebrow/heading per category.
 //
-// Layout alternates by how many looks are in the chapter: one photo reads
-// as a single cinematic feature (full-bleed, taller), more than one reads
-// as a grid. Tapping any look opens the existing in-page sheet — no new
-// route — where the story lives alongside Save and Shop this look.
+// Layout is chosen by how many looks are in the chapter, so the page
+// doesn't repeat the same grid rhythm every time you scroll — closer to
+// flipping through a magazine than browsing a store:
+//   1 look   -> full-bleed cinematic spread
+//   2 looks  -> side-by-side spread, like a magazine gatefold
+//   3 looks  -> asymmetric mosaic — one large, two stacked
+//   4+ looks -> a horizontal filmstrip, not a vertical masonry grid
+// Tapping any look opens the existing in-page sheet — no new route —
+// where the story lives alongside Save and Shop this look.
 export default function Lookbook({
   eyebrow,
   heading,
@@ -69,6 +74,55 @@ export default function Lookbook({
     </Sheet>
   );
 
+  // A single tile: image + soft bottom-gradient label, staggered reveal
+  // delay by index so a row of tiles settles in one after another
+  // instead of popping in all at once.
+  function Tile({
+    panel,
+    index,
+    className = "",
+    sizes = "(max-width: 768px) 100vw, 33vw",
+  }: {
+    panel: LookbookPanel;
+    index: number;
+    className?: string;
+    sizes?: string;
+  }) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(panel)}
+        data-reveal="image"
+        style={{ transitionDelay: `${index * 90}ms` }}
+        className={`group relative overflow-hidden bg-paper-raised text-left w-full ${className}`}
+      >
+        <Image
+          src={panel.image}
+          alt={panel.label}
+          fill
+          className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
+          sizes={sizes}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+        <span className="absolute bottom-5 left-5 text-paper font-display text-xl">
+          {panel.label}
+        </span>
+      </button>
+    );
+  }
+
+  const chapterHeading = (
+    <div className="mb-10 md:mb-14 px-6 md:px-10">
+      <p className="eyebrow mb-3" data-reveal="paragraph">
+        {eyebrow}
+      </p>
+      <h2 className="font-display text-4xl md:text-6xl text-ink" data-reveal="heading">
+        {heading}
+      </h2>
+    </div>
+  );
+
+  // 1 — full-bleed cinematic spread, heading lives inside the image.
   if (panels.length === 1) {
     const panel = panels[0];
     return (
@@ -97,38 +151,56 @@ export default function Lookbook({
     );
   }
 
-  return (
-    <section ref={ref} className="bg-paper px-6 md:px-10 py-20 md:py-28">
-      <div className="mb-10 md:mb-14">
-        <p className="eyebrow mb-3" data-reveal="paragraph">
-          {eyebrow}
-        </p>
-        <h2 className="font-display text-4xl md:text-6xl text-ink" data-reveal="heading">
-          {heading}
-        </h2>
-      </div>
+  // 2 — a spread: two tall panels meeting in the middle, gatefold-style.
+  if (panels.length === 2) {
+    return (
+      <section ref={ref} className="bg-paper py-20 md:py-28">
+        {chapterHeading}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2 px-6 md:px-10">
+          {panels.map((panel, i) => (
+            <Tile key={panel.id} panel={panel} index={i} className="aspect-[4/5] md:aspect-[3/4]" sizes="(max-width: 768px) 100vw, 50vw" />
+          ))}
+        </div>
+        {detailSheet}
+      </section>
+    );
+  }
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        {panels.map((panel) => (
-          <button
+  // 3 — asymmetric mosaic: one large left, two stacked right. Classic
+  // editorial page layout, not a uniform grid.
+  if (panels.length === 3) {
+    const [big, ...rest] = panels;
+    return (
+      <section ref={ref} className="bg-paper py-20 md:py-28">
+        {chapterHeading}
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-1 md:gap-2 px-6 md:px-10">
+          <Tile panel={big} index={0} className="row-span-2 aspect-[3/4] md:aspect-[3/5]" sizes="(max-width: 768px) 50vw, 50vw" />
+          <div className="grid grid-rows-2 gap-1 md:gap-2">
+            {rest.map((panel, i) => (
+              <Tile key={panel.id} panel={panel} index={i + 1} className="aspect-square" sizes="(max-width: 768px) 50vw, 25vw" />
+            ))}
+          </div>
+        </div>
+        {detailSheet}
+      </section>
+    );
+  }
+
+  // 4+ — a horizontal filmstrip you scroll through, not a vertical
+  // masonry grid. Deliberately reads as flipping a stack of prints
+  // rather than an infinite feed.
+  return (
+    <section ref={ref} className="bg-paper py-20 md:py-28">
+      {chapterHeading}
+      <div className="flex gap-3 md:gap-4 px-6 md:px-10 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-2">
+        {panels.map((panel, i) => (
+          <Tile
             key={panel.id}
-            type="button"
-            onClick={() => setOpen(panel)}
-            data-reveal="image"
-            className="group relative aspect-[3/4] overflow-hidden bg-paper-raised text-left w-full"
-          >
-            <Image
-              src={panel.image}
-              alt={panel.label}
-              fill
-              className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
-              sizes="(max-width: 768px) 100vw, 33vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-            <span className="absolute bottom-5 left-5 text-paper font-display text-xl">
-              {panel.label}
-            </span>
-          </button>
+            panel={panel}
+            index={i}
+            className="aspect-[3/4] shrink-0 w-[72vw] md:w-[26vw] snap-start"
+            sizes="(max-width: 768px) 72vw, 26vw"
+          />
         ))}
       </div>
       {detailSheet}
