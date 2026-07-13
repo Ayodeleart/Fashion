@@ -1,5 +1,6 @@
 import Hero, { HeroBanner } from "@/components/Hero";
 import Lookbook, { LookbookPanel } from "@/components/Lookbook";
+import Footer from "@/components/Footer";
 import { getSupabase } from "@/lib/supabase";
 
 // Home is the digital style book — inspiration only. No prices, no product
@@ -140,6 +141,8 @@ export default async function Home() {
         const { eyebrow, heading } = CATEGORY_COPY[category];
         return <Lookbook key={category} eyebrow={eyebrow} heading={heading} panels={panels} />;
       })}
+
+      <Footer brandName="AyodeleGold" />
     </main>
   );
 }
