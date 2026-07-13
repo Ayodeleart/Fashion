@@ -65,8 +65,13 @@ function BannerCarousel({ banners, showOverlay }: { banners: HeroBanner[]; showO
           banner (or how light/busy) is behind it — a permanent subtle
           gradient, not a color swap. */}
       <div className="absolute top-0 left-0 right-0 h-32 z-10 bg-gradient-to-b from-black/45 to-transparent pointer-events-none" />
-      <nav className="absolute top-0 left-0 right-0 flex items-center justify-end px-6 md:px-12 py-6 md:py-8 text-paper z-20">
-        <a href="/catalog" className="text-sm tracking-wide hover:text-brass transition-colors">Shop</a>
+      <nav className="absolute top-0 left-0 right-0 flex items-center justify-between px-6 md:px-12 py-6 md:py-8 text-paper z-20">
+        <div className="flex gap-8 text-sm tracking-wide">
+          <a href="/catalog" className="hover:text-brass transition-colors">Catalog</a>
+          <a href="/about" className="hover:text-brass transition-colors">About</a>
+          <a href="/contact" className="hover:text-brass transition-colors">Contact</a>
+        </div>
+        <a href="/cart" className="text-sm tracking-wide hover:text-brass transition-colors">Cart</a>
       </nav>
 
       {banners.map((b, i) => {
@@ -93,18 +98,25 @@ function BannerCarousel({ banners, showOverlay }: { banners: HeroBanner[]; showO
         );
       })}
 
-      {/* Tagline overlay — eyebrow + heading + one quiet CTA into Shop.
-          Deliberately minimal: no marketing paragraph, no oversized
-          button — this is a magazine cover, not a landing-page hero. */}
+      {/* Tagline / CTA overlay — on the image itself for both desktop and
+          mobile now. Desktop has the room for the full copy (eyebrow +
+          heading + paragraph + CTA); mobile drops the paragraph to stay
+          readable in less space, keeping eyebrow + heading + CTA. This
+          used to live in a separate section below the hero on mobile
+          only, with nothing on desktop — now it's consistent on both. */}
       {showOverlay && (
         <div className="absolute bottom-0 left-0 right-0 z-10 pt-24 pb-8 md:pb-12 px-6 md:px-12 bg-gradient-to-t from-black/55 to-transparent pointer-events-none">
           <div className="max-w-md pointer-events-auto">
             <p className="text-paper text-xs md:text-sm tracking-[0.15em] uppercase mb-3">
               Craftsmanship. Culture. Distinction.
             </p>
-            <h2 className="font-display text-2xl md:text-4xl text-paper mb-4 leading-tight">
+            <h2 className="font-display text-2xl md:text-4xl text-paper mb-3 md:mb-4 leading-tight">
               Tailored for how you actually move.
             </h2>
+            <p className="hidden md:block text-paper/85 text-sm leading-relaxed mb-6 max-w-sm">
+              Every piece is fitted, not just sized — cut close where it should hold, loose where
+              you need to move. Nothing here is mass-produced filler.
+            </p>
             <a
               href="/catalog"
               className="inline-block text-xs md:text-sm tracking-wide text-paper border border-paper/70 px-5 py-2.5 rounded-sm hover:bg-paper hover:text-ink transition-colors"
