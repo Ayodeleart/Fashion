@@ -27,11 +27,14 @@ async function uploadDirect(file: File): Promise<string> {
 
 const CATEGORIES = [
   { value: "seasonal", label: "This season's edit" },
+  { value: "trending", label: "Trending this week" },
+  { value: "editors-choice", label: "Editor's choice" },
   { value: "wedding", label: "Wedding inspiration" },
   { value: "celebrity", label: "Celebrity looks" },
   { value: "aso-oke", label: "Luxury aso oke" },
   { value: "corporate", label: "Corporate fits" },
   { value: "streetwear", label: "Streetwear" },
+  { value: "weekend", label: "Weekend looks" },
   { value: "couple", label: "Couple styles" },
   { value: "traditional", label: "Traditional styles" },
   { value: "designer-spotlight", label: "Designer spotlight" },

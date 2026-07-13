@@ -16,7 +16,7 @@ import { THEME_COOKIE_NAME, type Theme } from "@/lib/theme-shared";
 //   completely unchanged; they just ALSO now work on desktop.
 // - MOBILE_ONLY_PREFIXES: unchanged from before — install-gated,
 //   phone-only (reels, saved, search, the rest of /account).
-const RESPONSIVE_PREFIXES = ["/catalog", "/cart", "/checkout", "/account/login", "/account/signup", "/product"];
+const RESPONSIVE_PREFIXES = ["/catalog", "/cart", "/checkout", "/account/login", "/account/signup", "/product", "/style"];
 const MOBILE_ONLY_PREFIXES = ["/saved", "/account", "/search", "/reels", "/auth", "/aria"];
 const SHOP_PREFIXES = [...RESPONSIVE_PREFIXES, ...MOBILE_ONLY_PREFIXES];
 
@@ -41,7 +41,7 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
   const isShop = isHomePath(pathname) || SHOP_PREFIXES.some((prefix) => pathname.startsWith(prefix));
   const isResponsive = isHomePath(pathname) || RESPONSIVE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
   const isImmersive = pathname.startsWith("/reels/") || pathname === "/aria";
-  const hasFloatingBottomBar = pathname.startsWith("/product");
+  const hideBottomNav = pathname.startsWith("/product") || pathname.startsWith("/style");
   const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
@@ -64,9 +64,9 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
                 desktop gets normal page flow, no InstallGate either
                 (product/product pages, mobile-only /product excluded
                 deliberately — see note below). */}
-            <div className={`w-full min-h-screen bg-paper ${hasFloatingBottomBar ? "" : "pb-28"} md:pb-0`}>{children}</div>
+            <div className={`w-full min-h-screen bg-paper ${hideBottomNav ? "" : "pb-28"} md:pb-0`}>{children}</div>
             <div className="md:hidden">
-              {!hasFloatingBottomBar && <BottomNav />}
+              {!hideBottomNav && <BottomNav />}
             </div>
           </SavedProvider>
         </CartProvider>

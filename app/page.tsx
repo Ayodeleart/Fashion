@@ -1,19 +1,22 @@
 import Hero, { HeroBanner } from "@/components/Hero";
 import Lookbook, { LookbookPanel } from "@/components/Lookbook";
-import Footer from "@/components/Footer";
 import { getSupabase } from "@/lib/supabase";
 
 // Home is the digital style book — inspiration only. No prices, no product
-// grid, no "add to cart" anywhere on this page. Each category below is its
-// own chapter (eyebrow + heading), rendered in this fixed reading order.
-// A category with zero published panels is skipped rather than shown empty.
+// grid, no "add to cart", no landing-page chrome (no footer, no About/
+// Contact) anywhere on this page. Each category below is its own chapter
+// (eyebrow + heading), rendered in this fixed reading order. A category
+// with zero published panels is skipped rather than shown empty.
 const CATEGORY_ORDER = [
   "seasonal",
+  "trending",
+  "editors-choice",
   "wedding",
   "celebrity",
   "aso-oke",
   "corporate",
   "streetwear",
+  "weekend",
   "couple",
   "traditional",
   "designer-spotlight",
@@ -23,11 +26,14 @@ type Category = (typeof CATEGORY_ORDER)[number];
 
 const CATEGORY_COPY: Record<Category, { eyebrow: string; heading: string }> = {
   seasonal: { eyebrow: "This season's edit", heading: "Three ways to wear the season" },
+  trending: { eyebrow: "Trending this week", heading: "What everyone's asking for" },
+  "editors-choice": { eyebrow: "Editor's choice", heading: "Hand-picked, no exceptions" },
   wedding: { eyebrow: "Wedding inspiration", heading: "Say I do in style" },
   celebrity: { eyebrow: "Celebrity looks", heading: "As seen on the red carpet" },
   "aso-oke": { eyebrow: "Luxury aso oke", heading: "Heritage, rewoven" },
   corporate: { eyebrow: "Corporate fits", heading: "Boardroom ready" },
   streetwear: { eyebrow: "Streetwear", heading: "Off-duty, on-brand" },
+  weekend: { eyebrow: "Weekend looks", heading: "Easy, unhurried, still sharp" },
   couple: { eyebrow: "Couple styles", heading: "Matching, not matchy" },
   traditional: { eyebrow: "Traditional styles", heading: "Rooted in craft" },
   "designer-spotlight": { eyebrow: "Designer spotlight", heading: "Meet the hands behind the thread" },
@@ -101,8 +107,8 @@ async function getLookbookPanelsByCategory(): Promise<Record<Category, LookbookP
     .order("created_at", { ascending: true });
 
   const grouped: Record<Category, LookbookPanel[]> = {
-    seasonal: [], wedding: [], celebrity: [], "aso-oke": [], corporate: [],
-    streetwear: [], couple: [], traditional: [], "designer-spotlight": [],
+    seasonal: [], trending: [], "editors-choice": [], wedding: [], celebrity: [], "aso-oke": [], corporate: [],
+    streetwear: [], weekend: [], couple: [], traditional: [], "designer-spotlight": [],
   };
 
   const rows: PanelRow[] = !error && data && data.length > 0 ? (data as PanelRow[]) : fallbackRows;
@@ -140,8 +146,6 @@ export default async function Home() {
         const { eyebrow, heading } = CATEGORY_COPY[category];
         return <Lookbook key={category} eyebrow={eyebrow} heading={heading} panels={panels} />;
       })}
-
-      <Footer brandName="AyodeleGold" />
     </main>
   );
 }

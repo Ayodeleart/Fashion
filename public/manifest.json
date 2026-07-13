@@ -2,7 +2,7 @@
   "name": "AyodeleGold",
   "short_name": "AyodeleGold",
   "description": "AyodeleGold — fashionista.",
-  "start_url": "/catalog",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f3f1ec",

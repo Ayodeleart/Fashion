@@ -1,10 +1,6 @@
-"use client";
-
-import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
-import Sheet from "@/components/Sheet";
-import SaveButton from "@/components/SaveButton";
 
 export type LookbookPanel = {
   id: string;
@@ -17,6 +13,13 @@ export type LookbookPanel = {
 // A single chapter of the style book (e.g. "Wedding inspiration",
 // "Luxury aso oke"). Home renders one of these per category — see
 // CATEGORY_COPY in app/page.tsx for the eyebrow/heading per category.
+//
+// Layout is decided by how many looks are in the chapter, not by a
+// separate admin toggle: one photo reads as a single cinematic feature
+// (full-bleed, taller, like a magazine spread), more than one reads as
+// a stacked feed of full-width images. On mobile every chapter is a
+// single column regardless — this only changes desktop's column count
+// and the single-photo case's presentation everywhere.
 export default function Lookbook({
   eyebrow,
   heading,
@@ -27,7 +30,28 @@ export default function Lookbook({
   panels: LookbookPanel[];
 }) {
   const ref = useScrollReveal<HTMLDivElement>(100);
-  const [open, setOpen] = useState<LookbookPanel | null>(null);
+
+  if (panels.length === 1) {
+    const panel = panels[0];
+    return (
+      <section ref={ref} className="bg-paper">
+        <Link href={`/style/${panel.id}`} className="group relative block h-[85vh] w-full overflow-hidden" data-reveal="image">
+          <Image
+            src={panel.image}
+            alt={panel.label}
+            fill
+            className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.02]"
+            sizes="100vw"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent" />
+          <div className="absolute bottom-8 left-6 right-6 md:left-12">
+            <p className="text-paper/80 text-xs tracking-[0.2em] uppercase mb-2">{eyebrow}</p>
+            <h2 className="font-display text-3xl md:text-5xl text-paper leading-tight">{heading}</h2>
+          </div>
+        </Link>
+      </section>
+    );
+  }
 
   return (
     <section ref={ref} className="bg-paper px-6 md:px-10 py-20 md:py-28">
@@ -42,15 +66,11 @@ export default function Lookbook({
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {panels.map((panel) => (
-          // A button, not a link — tapping a look never navigates on its
-          // own. It opens the story below, where the person decides
-          // whether to save it or intentionally move into Shop.
-          <button
+          <Link
             key={panel.id}
-            type="button"
-            onClick={() => setOpen(panel)}
+            href={`/style/${panel.id}`}
             data-reveal="image"
-            className="group relative aspect-[3/4] overflow-hidden bg-paper-raised text-left w-full"
+            className="group relative aspect-[3/4] overflow-hidden bg-paper-raised block"
           >
             <Image
               src={panel.image}
@@ -63,42 +83,9 @@ export default function Lookbook({
             <span className="absolute bottom-5 left-5 text-paper font-display text-xl">
               {panel.label}
             </span>
-          </button>
+          </Link>
         ))}
       </div>
-
-      <Sheet open={!!open} onClose={() => setOpen(null)} title={open?.label ?? ""}>
-        {open && (
-          <div className="space-y-5">
-            <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-paper-raised">
-              <Image src={open.image} alt={open.label} fill className="object-cover" sizes="100vw" />
-            </div>
-
-            {open.story && <p className="text-sm text-muted leading-relaxed">{open.story}</p>}
-
-            <div className="flex items-center gap-3 pt-1">
-              <SaveButton
-                item={{
-                  productId: `look-${open.id}`,
-                  name: open.label,
-                  price: 0,
-                  currency: "",
-                  image: open.image,
-                  href: open.href,
-                  kind: "look",
-                }}
-                className="w-11 h-11 rounded-full border border-ink/15 flex items-center justify-center shrink-0"
-              />
-              <a
-                href={open.href}
-                className="flex-1 text-center text-sm font-medium px-5 py-3 rounded-full bg-ink text-paper"
-              >
-                Shop this look
-              </a>
-            </div>
-          </div>
-        )}
-      </Sheet>
     </section>
   );
 }
