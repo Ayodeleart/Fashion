@@ -5,6 +5,9 @@ import { resolveCurrency, resolvePrice } from "@/lib/currency";
 import ProductGallery from "@/components/ProductGallery";
 import ProductPurchasePanel from "@/components/ProductPurchasePanel";
 import RevealContainer from "@/components/RevealContainer";
+import ReviewsSection, { type Review } from "@/components/ReviewsSection";
+import RelatedProducts from "@/components/RelatedProducts";
+import TrackRecentlyViewed from "@/components/TrackRecentlyViewed";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +47,28 @@ async function getVariants(productId: string): Promise<Variant[]> {
   return data ?? [];
 }
 
+async function getReviews(productId: string): Promise<Review[]> {
+  const supabase = getSupabase();
+  const { data } = await supabase
+    .from("ariana_product_reviews")
+    .select("id, rating, fit_feedback, title, body, author_name, helpful_count, created_at")
+    .eq("product_id", productId)
+    .order("created_at", { ascending: false });
+  return (data as Review[]) ?? [];
+}
+
+async function getSimilarCount(category: string | null, excludeId: string): Promise<number> {
+  if (!category) return 0;
+  const supabase = getSupabase();
+  const { count } = await supabase
+    .from("ariana_products")
+    .select("id", { count: "exact", head: true })
+    .eq("is_published", true)
+    .eq("category", category)
+    .neq("id", excludeId);
+  return count ?? 0;
+}
+
 function formatPrice(price: number, currency: string) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(price);
 }
@@ -53,9 +78,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const [product, currency] = await Promise.all([getProduct(slug), resolveCurrency()]);
   if (!product) notFound();
 
-  const [images, variants] = await Promise.all([
+  const [images, variants, reviews, similarCount] = await Promise.all([
     Promise.resolve([...(product.ariana_product_images ?? [])].sort((a, b) => a.position - b.position)),
     getVariants(product.id),
+    getReviews(product.id),
+    getSimilarCount(product.category, product.id),
   ]);
   const primaryImage = images[0]?.url ?? "";
   const displayPrice = resolvePrice(product, currency);
@@ -67,6 +94,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   // space to itself).
   return (
     <RevealContainer className="md:max-w-5xl md:mx-auto md:pt-8 md:grid md:grid-cols-2 md:gap-10">
+      <TrackRecentlyViewed
+        id={product.id}
+        name={product.name}
+        slug={product.slug}
+        price={displayPrice.amount}
+        currency={displayPrice.currency}
+        category={product.category}
+        image={primaryImage}
+      />
+
       <div className="px-5 pt-5 md:px-0 md:pt-0 flex items-center justify-between">
         <Link
           href={product.category ? `/catalog?category=${encodeURIComponent(product.category)}` : "/catalog"}
@@ -123,6 +160,30 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           currency={displayPrice.currency}
           image={primaryImage}
           variants={variants}
+          slug={product.slug}
+        />
+
+        <ReviewsSection productId={product.id} reviews={reviews} />
+
+        {similarCount > 0 && (
+          <div className="flex items-center justify-between mt-10 pt-8 border-t border-ink/10">
+            <p className="text-xs tracking-[0.1em] font-medium text-ink/60">
+              SEE {similarCount}+ SIMILAR STYLES
+            </p>
+            <Link
+              href={`/catalog?category=${encodeURIComponent(product.category ?? "")}`}
+              className="text-sm font-medium bg-ink text-paper rounded-full px-5 py-2.5 hover:bg-ink/90 transition-colors shrink-0"
+            >
+              Shop Similar
+            </Link>
+          </div>
+        )}
+
+        <RelatedProducts
+          title="YOU MIGHT ALSO LIKE"
+          category={product.category}
+          excludeId={product.id}
+          infinite
         />
       </section>
     </RevealContainer>

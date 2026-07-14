@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
 import { getSupabase } from "@/lib/supabase";
+import RecommendationsTabs from "@/components/RecommendationsTabs";
 
 function formatPrice(price: number, currency: string) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(price);
@@ -144,6 +145,8 @@ export default function CartPage() {
             </li>
           ))}
         </ul>
+
+        <RecommendationsTabs />
       </div>
 
       {/* Order summary — sidebar on desktop, inline block on mobile

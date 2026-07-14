@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { CartProvider } from "@/components/CartProvider";
 import { SavedProvider } from "@/components/SavedProvider";
+import { QuickAddProvider } from "@/components/QuickAddProvider";
 import PromoBannerPopup from "@/components/PromoBannerPopup";
 import BottomNav from "@/components/BottomNav";
 import InstallGate from "@/components/InstallGate";
@@ -60,14 +61,16 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
       <div data-theme={theme} suppressHydrationWarning>
         <CartProvider>
           <SavedProvider>
-            {/* Bottom nav + its reserved padding is a phone-app pattern —
-                desktop gets normal page flow, no InstallGate either
-                (product/product pages, mobile-only /product excluded
-                deliberately — see note below). */}
-            <div className={`w-full min-h-screen bg-paper ${hasFloatingBottomBar ? "" : "pb-28"} md:pb-0`}>{children}</div>
-            <div className="md:hidden">
-              {!hasFloatingBottomBar && <BottomNav />}
-            </div>
+            <QuickAddProvider>
+              {/* Bottom nav + its reserved padding is a phone-app pattern —
+                  desktop gets normal page flow, no InstallGate either
+                  (product/product pages, mobile-only /product excluded
+                  deliberately — see note below). */}
+              <div className={`w-full min-h-screen bg-paper ${hasFloatingBottomBar ? "" : "pb-28"} md:pb-0`}>{children}</div>
+              <div className="md:hidden">
+                {!hasFloatingBottomBar && <BottomNav />}
+              </div>
+            </QuickAddProvider>
           </SavedProvider>
         </CartProvider>
       </div>
@@ -80,9 +83,11 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
         <div className="md:hidden w-full min-h-screen bg-paper">
           <CartProvider>
             <SavedProvider>
-              <div className={`w-full min-h-screen ${isImmersive ? "" : "pb-28"}`}>{children}</div>
-              {!isImmersive && <BottomNav />}
-              {!isImmersive && <PromoBannerPopup />}
+              <QuickAddProvider>
+                <div className={`w-full min-h-screen ${isImmersive ? "" : "pb-28"}`}>{children}</div>
+                {!isImmersive && <BottomNav />}
+                {!isImmersive && <PromoBannerPopup />}
+              </QuickAddProvider>
             </SavedProvider>
           </CartProvider>
         </div>

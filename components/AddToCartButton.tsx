@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
 
@@ -14,6 +14,8 @@ type Props = {
   image: string;
   disabled?: boolean;
   className?: string;
+  icon?: ReactNode;
+  label?: string;
 };
 
 export default function AddToCartButton({
@@ -26,6 +28,8 @@ export default function AddToCartButton({
   image,
   disabled,
   className,
+  icon,
+  label = "Add to cart",
 }: Props) {
   const { addItem } = useCart();
   const router = useRouter();
@@ -63,7 +67,16 @@ export default function AddToCartButton({
           "text-xs px-3 py-1.5 rounded-full bg-ink text-paper hover:bg-ink/90 transition-colors disabled:opacity-50"
         }
       >
-        {pending ? "Adding…" : added ? "Added ✓" : "Add to cart"}
+        {pending ? (
+          "Adding…"
+        ) : added ? (
+          "Added ✓"
+        ) : (
+          <>
+            {icon}
+            {label}
+          </>
+        )}
       </button>
       {error && (
         <p className="absolute top-full left-0 mt-1 text-[11px] text-red-600 whitespace-nowrap">{error}</p>
