@@ -41,6 +41,7 @@ export default function StickyAddBar({
   useEffect(() => {
     const el = sentinelRef.current;
     if (!el) return;
+    const sentinel: HTMLDivElement = el;
 
     // Deliberately not using IntersectionObserver + rootMargin here: on iOS
     // Safari/PWA standalone, the collapsing address bar resizes the visual
@@ -54,7 +55,7 @@ export default function StickyAddBar({
 
     function update() {
       ticking = false;
-      const rect = el.getBoundingClientRect();
+      const rect = sentinel.getBoundingClientRect();
       setVisible(rect.top < HEADER_OFFSET);
     }
 
