@@ -34,7 +34,6 @@ export default function CatalogGrid({ products, currency }: { products: ProductR
               currency: displayPrice.currency,
               category: p.category,
               image: image?.url ?? "",
-              brandLabel: "AyodeleGold",
               priority: index < 4,
             }}
           />

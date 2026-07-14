@@ -41,11 +41,36 @@ export default function StickyAddBar({
   useEffect(() => {
     const el = sentinelRef.current;
     if (!el) return;
-    const observer = new IntersectionObserver(([entry]) => setVisible(!entry.isIntersecting), {
-      rootMargin: "-64px 0px 0px 0px",
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
+
+    // Deliberately not using IntersectionObserver + rootMargin here: on iOS
+    // Safari/PWA standalone, the collapsing address bar resizes the visual
+    // viewport mid-scroll, which causes the observer to recompute against a
+    // stale viewport and briefly report isIntersecting=true again even though
+    // we're well past the sentinel — the bar snaps hidden and doesn't get a
+    // second trigger to come back. Checking getBoundingClientRect directly
+    // in a rAF-throttled scroll/resize listener sidesteps that entirely.
+    let ticking = false;
+    const HEADER_OFFSET = 64;
+
+    function update() {
+      ticking = false;
+      const rect = el.getBoundingClientRect();
+      setVisible(rect.top < HEADER_OFFSET);
+    }
+
+    function onScrollOrResize() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    }
+
+    update();
+    window.addEventListener("scroll", onScrollOrResize, { passive: true });
+    window.addEventListener("resize", onScrollOrResize);
+    return () => {
+      window.removeEventListener("scroll", onScrollOrResize);
+      window.removeEventListener("resize", onScrollOrResize);
+    };
   }, [sentinelRef]);
 
   function formatPrice(p: number, c: string) {
