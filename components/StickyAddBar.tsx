@@ -25,6 +25,7 @@ export default function StickyAddBar({
   image,
   disabled,
   sentinelRef,
+  onAdded,
 }: {
   productId: string;
   variantId: string | null;
@@ -35,6 +36,7 @@ export default function StickyAddBar({
   image: string;
   disabled: boolean;
   sentinelRef: React.RefObject<HTMLDivElement | null>;
+  onAdded?: () => void;
 }) {
   const [visible, setVisible] = useState(false);
 
@@ -101,6 +103,7 @@ export default function StickyAddBar({
         currency={currency}
         image={image}
         disabled={disabled}
+        onAdded={onAdded}
         className="shrink-0 text-xs px-4 py-2.5 rounded-full bg-ink text-paper hover:bg-ink/90 transition-colors disabled:opacity-40 flex items-center gap-1.5"
         icon={<BagIcon className="w-3.5 h-3.5" />}
         label="Add to Bag"

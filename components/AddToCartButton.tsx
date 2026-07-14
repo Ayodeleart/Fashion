@@ -17,6 +17,7 @@ type Props = {
   icon?: ReactNode;
   label?: string;
   fullWidth?: boolean;
+  onAdded?: () => void;
 };
 
 export default function AddToCartButton({
@@ -32,6 +33,7 @@ export default function AddToCartButton({
   icon,
   label = "Add to cart",
   fullWidth = false,
+  onAdded,
 }: Props) {
   const { addItem } = useCart();
   const router = useRouter();
@@ -63,6 +65,7 @@ export default function AddToCartButton({
           }
           setAdded(true);
           setTimeout(() => setAdded(false), 1200);
+          onAdded?.();
         }}
         className={
           className ??

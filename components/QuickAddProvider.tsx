@@ -18,6 +18,7 @@ export type QuickAddProduct = {
 };
 
 type Variant = { id: string; size: string; color: string | null; stock: number };
+type ChosenInfo = { size: string; color?: string | null };
 
 type RelatedProduct = {
   id: string;
@@ -30,6 +31,7 @@ type RelatedProduct = {
 
 type QuickAddContextValue = {
   openQuickAdd: (product: QuickAddProduct) => void;
+  showAdded: (product: QuickAddProduct, chosen: { size: string; color?: string | null } | null) => void;
 };
 
 const QuickAddContext = createContext<QuickAddContextValue | null>(null);
@@ -47,7 +49,7 @@ export function QuickAddProvider({ children }: { children: React.ReactNode }) {
   const [step, setStep] = useState<"closed" | "size" | "added">("closed");
   const [variants, setVariants] = useState<Variant[]>([]);
   const [loadingVariants, setLoadingVariants] = useState(false);
-  const [chosen, setChosen] = useState<Variant | null>(null);
+  const [chosen, setChosen] = useState<ChosenInfo | null>(null);
   const [related, setRelated] = useState<RelatedProduct[]>([]);
 
   const openQuickAdd = useCallback((p: QuickAddProduct) => {
@@ -94,8 +96,15 @@ export function QuickAddProvider({ children }: { children: React.ReactNode }) {
     setProduct(null);
   }
 
+  const showAdded = useCallback((p: QuickAddProduct, chosenInfo: ChosenInfo | null) => {
+    setProduct(p);
+    setChosen(chosenInfo);
+    setVariants([]);
+    setStep("added");
+  }, []);
+
   return (
-    <QuickAddContext.Provider value={{ openQuickAdd }}>
+    <QuickAddContext.Provider value={{ openQuickAdd, showAdded }}>
       {children}
 
       <BottomSheet open={step === "size"} onClose={close}>

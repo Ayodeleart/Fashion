@@ -133,7 +133,7 @@ export default function ProductGallery({
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
-            <Image src={active.url} alt={productName} fill className="object-contain" sizes="100vw" />
+            <Image src={active.url} alt={productName} fill className="object-cover" sizes="100vw" />
 
             {images.length > 1 && (
               <button

@@ -161,6 +161,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           image={primaryImage}
           variants={variants}
           slug={product.slug}
+          category={product.category}
         />
 
         <ReviewsSection productId={product.id} reviews={reviews} />

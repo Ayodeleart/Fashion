@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import AddToCartButton from "@/components/AddToCartButton";
 import SaveButton from "@/components/SaveButton";
 import StickyAddBar from "@/components/StickyAddBar";
+import { useQuickAdd } from "@/components/QuickAddProvider";
 
 type Variant = { id: string; size: string; color: string | null; stock: number };
 
@@ -26,6 +27,7 @@ export default function ProductPurchasePanel({
   image,
   variants,
   slug,
+  category,
 }: {
   productId: string;
   name: string;
@@ -34,6 +36,7 @@ export default function ProductPurchasePanel({
   image: string;
   variants: Variant[];
   slug: string;
+  category: string | null;
 }) {
   const colors = useMemo(
     () => Array.from(new Set(variants.map((v) => v.color).filter((c): c is string => !!c))),
@@ -53,10 +56,18 @@ export default function ProductPurchasePanel({
   const needsSelection = hasVariants && !selected;
   const outOfStock = selected ? selected.stock <= 0 : false;
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const { showAdded } = useQuickAdd();
 
   function pickColor(color: string) {
     setSelectedColor(color);
     setSelected(null);
+  }
+
+  function handleAdded() {
+    showAdded(
+      { id: productId, name, price, currency, image, slug, category },
+      selected ? { size: selected.size, color: selected.color } : null
+    );
   }
 
   return (
@@ -71,6 +82,7 @@ export default function ProductPurchasePanel({
         image={image}
         disabled={needsSelection || outOfStock}
         sentinelRef={sentinelRef}
+        onAdded={handleAdded}
       />
       {hasColors && (
         <div className="mb-6">
@@ -155,6 +167,7 @@ export default function ProductPurchasePanel({
           image={image}
           disabled={needsSelection || outOfStock}
           fullWidth
+          onAdded={handleAdded}
           className="flex-1 md:flex-none md:px-10 text-sm py-3.5 rounded-full bg-ink text-paper hover:bg-ink/90 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
           icon={<BagIcon className="w-4 h-4" />}
           label="Add to Bag"
