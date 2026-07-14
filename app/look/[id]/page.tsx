@@ -83,6 +83,7 @@ export default async function LookDetailPage({ params }: { params: Promise<{ id:
 
   const galleryImages = [look.image_url, ...(look.gallery_images ?? [])];
   const hasShopLink = look.href && look.href !== "#";
+  const isBespoke = look.badge === "bespoke" || look.badge === "ready+bespoke";
   const enquiryQuery = new URLSearchParams({ look: look.id, subject: look.label }).toString();
 
   return (
@@ -203,23 +204,28 @@ export default async function LookDetailPage({ params }: { params: Promise<{ id:
           </section>
         )}
 
-        {/* Actions */}
+        {/* Actions — View In Shop is always the top, standout action. */}
         <section className="px-4 md:px-8 py-8 border-t border-ink/10">
           <div className="grid grid-cols-2 gap-2 max-w-md mx-auto md:mx-0">
             {hasShopLink && (
               <Link
                 href={look.href as string}
-                className="col-span-2 flex items-center justify-center h-12 rounded-full bg-ink text-paper text-sm"
+                className="col-span-2 flex items-center justify-center h-12 rounded-full bg-brass text-ink text-sm font-medium"
               >
                 View In Shop
               </Link>
             )}
-            <Link
-              href={`/contact?reason=bespoke&${enquiryQuery}`}
-              className="flex items-center justify-center h-12 rounded-full bg-brass text-ink text-sm text-center px-3"
-            >
-              Make Bespoke
-            </Link>
+
+            {isBespoke && (
+              <Link
+                href={`/contact?reason=bespoke&${enquiryQuery}`}
+                className={`flex items-center justify-center h-12 rounded-full border border-ink/10 text-ink text-sm text-center px-3 ${
+                  !hasShopLink ? "col-span-2" : ""
+                }`}
+              >
+                Discuss With Tailor
+              </Link>
+            )}
             <Link
               href={`/contact?reason=appointment&${enquiryQuery}`}
               className="flex items-center justify-center h-12 rounded-full border border-ink/10 text-ink text-sm text-center px-3"
