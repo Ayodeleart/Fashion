@@ -38,13 +38,26 @@ async function getHeroBanners(device: "desktop" | "mobile"): Promise<HeroBanner[
   }));
 }
 
-// Static on purpose — this page must never read from ariana_lookbook_panels,
-// since that table belongs to Home and its admin form.
-const landingLookbookPanels: LookbookPanel[] = [
-  { id: "look-1", label: "The Tailored Line", image: "/images/look-1.jpg", href: "/catalog?look=tailored" },
-  { id: "look-2", label: "Evening", image: "/images/look-2.jpg", href: "/catalog?look=evening" },
-  { id: "look-3", label: "Off-Duty", image: "/images/look-3.jpg", href: "/catalog?look=off-duty" },
-];
+// Fetched from its own table — completely separate from Home's
+// ariana_lookbook_panels, managed at /admin/landing-lookbook. Empty
+// array (not broken image paths) if nothing's been uploaded yet.
+async function getLandingLookbookPanels(): Promise<LookbookPanel[]> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("ariana_landing_lookbook_panels")
+    .select("id, label, image_url, href")
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error || !data) return [];
+
+  return data.map((row) => ({
+    id: row.id,
+    label: row.label,
+    image: row.image_url,
+    href: row.href,
+  }));
+}
 
 const fallbackProducts: Product[] = [
   { id: "p1", name: "Structured Wool Blazer", price: 890, currency: "USD", image: "/images/product-1.jpg", href: "/product/structured-wool-blazer" },
@@ -83,17 +96,18 @@ async function getNewArrivals(): Promise<Product[]> {
 }
 
 export default async function LandingPage() {
-  const [desktopBanners, mobileBanners, newArrivals] = await Promise.all([
+  const [desktopBanners, mobileBanners, newArrivals, lookbookPanels] = await Promise.all([
     getHeroBanners("desktop"),
     getHeroBanners("mobile"),
     getNewArrivals(),
+    getLandingLookbookPanels(),
   ]);
 
   return (
     <LandingView
       desktopBanners={desktopBanners}
       mobileBanners={mobileBanners}
-      lookbookPanels={landingLookbookPanels}
+      lookbookPanels={lookbookPanels}
       newArrivals={newArrivals}
     />
   );
