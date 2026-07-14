@@ -51,6 +51,7 @@ const FEED_LAYOUTS = [
   { value: "masonry", label: "Masonry" },
   { value: "dramatic", label: "Single dramatic image" },
   { value: "collage", label: "Collage" },
+  { value: "feature", label: "Feature block (full-bleed, can be video)" },
 ];
 
 export default function LookbookUploadForm() {
@@ -74,6 +75,10 @@ export default function LookbookUploadForm() {
   const [editorialLabel, setEditorialLabel] = useState("");
   const [isHero, setIsHero] = useState(false);
   const [galleryFiles, setGalleryFiles] = useState<FileList | null>(null);
+  const [mediaType, setMediaType] = useState<"image" | "video">("image");
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [promoText, setPromoText] = useState("");
+  const [position, setPosition] = useState("");
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -82,7 +87,11 @@ export default function LookbookUploadForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!label.trim() || !file) {
-      setError("Label and image are both required.");
+      setError("Label and a poster image are both required (video needs a poster too).");
+      return;
+    }
+    if (mediaType === "video" && !videoFile) {
+      setError("Add a video file, or switch back to Image.");
       return;
     }
     setPending(true);
@@ -91,6 +100,7 @@ export default function LookbookUploadForm() {
 
     try {
       const imageUrl = await uploadDirect(file);
+      const videoUrl = mediaType === "video" && videoFile ? await uploadDirect(videoFile) : null;
 
       let galleryImages: string[] = [];
       if (galleryFiles && galleryFiles.length > 0) {
@@ -121,6 +131,10 @@ export default function LookbookUploadForm() {
           editorialLabel: editorialLabel || null,
           isHero,
           galleryImages,
+          mediaType,
+          videoUrl,
+          promoText: promoText || null,
+          position: position.trim() ? Number(position) : null,
         }),
       });
       const result: { error?: string } = await res.json();
@@ -142,6 +156,10 @@ export default function LookbookUploadForm() {
       setEditorialLabel("");
       setIsHero(false);
       setGalleryFiles(null);
+      setMediaType("image");
+      setVideoFile(null);
+      setPromoText("");
+      setPosition("");
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
       router.refresh();
@@ -283,6 +301,56 @@ export default function LookbookUploadForm() {
       </div>
 
       <div>
+        <label className="block text-sm mb-1">Media type</label>
+        <select
+          value={mediaType}
+          onChange={(e) => setMediaType(e.target.value as "image" | "video")}
+          className="w-full border border-ink/20 rounded px-3 py-2 bg-white"
+        >
+          <option value="image">Image</option>
+          <option value="video">Video (muted, autoplays, loops)</option>
+        </select>
+      </div>
+
+      {mediaType === "video" && (
+        <div>
+          <label className="block text-sm mb-1">Video file</label>
+          <input
+            type="file"
+            accept="video/*"
+            onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)}
+            className="text-sm"
+          />
+          <p className="text-xs text-muted mt-1">Still needs a poster image below, shown while the video loads.</p>
+        </div>
+      )}
+
+      <div>
+        <label className="block text-sm mb-1">Promo text (optional, overlays the hero/feature block)</label>
+        <input
+          value={promoText}
+          onChange={(e) => setPromoText(e.target.value)}
+          placeholder="e.g. Wedding Season Is Here"
+          className="w-full border border-ink/20 rounded px-3 py-2 bg-white"
+        />
+        <p className="text-xs text-muted mt-1">Only shown if this is the Home hero or a Feature block. Falls back to Label.</p>
+      </div>
+
+      <div>
+        <label className="block text-sm mb-1">Position (optional)</label>
+        <input
+          value={position}
+          onChange={(e) => setPosition(e.target.value)}
+          placeholder="Leave blank to add at the end"
+          inputMode="numeric"
+          className="w-full border border-ink/20 rounded px-3 py-2 bg-white"
+        />
+        <p className="text-xs text-muted mt-1">
+          Controls where this lands in the Home feed. Use this to place a Feature block after a few looks.
+        </p>
+      </div>
+
+      <div>
         <label className="block text-sm mb-1">Feed layout (optional)</label>
         <select
           value={feedLayout}
@@ -324,7 +392,7 @@ export default function LookbookUploadForm() {
       </div>
 
       <div>
-        <label className="block text-sm mb-1">Image</label>
+        <label className="block text-sm mb-1">{mediaType === "video" ? "Poster image (shown before video plays)" : "Image"}</label>
         <input
           type="file"
           accept="image/*"

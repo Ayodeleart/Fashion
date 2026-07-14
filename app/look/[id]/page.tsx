@@ -1,9 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
 import { StyleCard } from "@/components/home/StyleCard";
-import { LookSaveButton, ShareButton } from "@/components/home/LookActions";
+import LookGallery from "@/components/home/LookGallery";
+import { ShareButton } from "@/components/home/LookActions";
+import RevealContainer from "@/components/RevealContainer";
 
 export const dynamic = "force-dynamic";
 
@@ -23,20 +24,36 @@ type LookDetail = {
   gallery_images: string[] | null;
 };
 
+type SimilarProduct = {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  currency: string;
+  ariana_product_images: { url: string; position: number }[];
+};
+
 const DETAIL_COLUMNS =
   "id, label, image_url, href, category, story, designer_name, location, badge, fabric, occasion, description, gallery_images";
 
 async function getLook(id: string): Promise<LookDetail | null> {
   const supabase = getSupabase();
-  const { data } = await supabase
-    .from("ariana_lookbook_panels")
-    .select(DETAIL_COLUMNS)
-    .eq("id", id)
-    .maybeSingle();
+  const { data } = await supabase.from("ariana_lookbook_panels").select(DETAIL_COLUMNS).eq("id", id).maybeSingle();
   return (data as LookDetail) ?? null;
 }
 
-async function getSimilar(category: string | null, excludeId: string) {
+async function getSimilarProducts(category: string | null): Promise<SimilarProduct[]> {
+  if (!category) return [];
+  const supabase = getSupabase();
+  const { data } = await supabase
+    .from("ariana_products")
+    .select("id, name, slug, price, currency, ariana_product_images(url, position)")
+    .eq("category", category)
+    .limit(10);
+  return (data as SimilarProduct[]) ?? [];
+}
+
+async function getCategoryLooks(category: string | null, excludeId: string) {
   if (!category) return [];
   const supabase = getSupabase();
   const { data } = await supabase
@@ -44,52 +61,13 @@ async function getSimilar(category: string | null, excludeId: string) {
     .select("id, label, image_url, designer_name, location, badge")
     .eq("category", category)
     .neq("id", excludeId)
-    .limit(8);
+    .limit(12);
   return data ?? [];
 }
 
-async function getMoreFromDesigner(designerName: string | null, excludeId: string) {
-  if (!designerName) return [];
-  const supabase = getSupabase();
-  const { data } = await supabase
-    .from("ariana_lookbook_panels")
-    .select("id, label, image_url, designer_name, location, badge")
-    .eq("designer_name", designerName)
-    .neq("id", excludeId)
-    .limit(8);
-  return data ?? [];
-}
-
-function ScrollStrip({
-  title,
-  looks,
-}: {
-  title: string;
-  looks: { id: string; label: string; image_url: string; designer_name: string | null; location: string | null; badge: LookDetail["badge"] }[];
-}) {
-  if (looks.length === 0) return null;
-  return (
-    <section className="py-8 border-t border-ink/10">
-      <h2 className="font-display text-xl md:text-2xl text-ink px-6 md:px-14 mb-4">{title}</h2>
-      <div className="flex gap-3 md:gap-4 overflow-x-auto px-6 md:px-14 no-scrollbar">
-        {looks.map((look) => (
-          <div key={look.id} className="w-40 md:w-52 shrink-0">
-            <StyleCard
-              look={{
-                id: look.id,
-                label: look.label,
-                image: look.image_url,
-                href: `/look/${look.id}`,
-                designerName: look.designer_name,
-                location: look.location,
-                badge: look.badge,
-              }}
-              aspectClassName="aspect-[3/4]"
-            />
-          </div>
-        ))}
-      </div>
-    </section>
+function formatPrice(price: number, currency: string) {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: currency || "NGN", maximumFractionDigits: 0 }).format(
+    price
   );
 }
 
@@ -98,9 +76,9 @@ export default async function LookDetailPage({ params }: { params: Promise<{ id:
   const look = await getLook(id);
   if (!look) notFound();
 
-  const [similar, moreFromDesigner] = await Promise.all([
-    getSimilar(look.category, look.id),
-    getMoreFromDesigner(look.designer_name, look.id),
+  const [similarProducts, categoryLooks] = await Promise.all([
+    getSimilarProducts(look.category),
+    getCategoryLooks(look.category, look.id),
   ]);
 
   const galleryImages = [look.image_url, ...(look.gallery_images ?? [])];
@@ -109,7 +87,7 @@ export default async function LookDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <main>
-      <div className="px-5 pt-5 flex items-center">
+      <div className="px-4 pt-4 flex items-center">
         <Link
           href="/"
           aria-label="Back"
@@ -121,94 +99,143 @@ export default async function LookDetailPage({ params }: { params: Promise<{ id:
         </Link>
       </div>
 
-      {/* Large image first */}
-      <section className="relative w-full aspect-[4/5] md:aspect-[16/9] mt-3 bg-paper-raised">
-        <Image src={galleryImages[0]} alt={look.label} fill priority className="object-cover" sizes="100vw" />
-      </section>
-
-      {/* Additional photos */}
-      {galleryImages.length > 1 && (
-        <section className="flex gap-2 overflow-x-auto px-5 py-3 no-scrollbar">
-          {galleryImages.slice(1).map((src, i) => (
-            <div key={i} className="relative w-24 h-32 shrink-0 rounded overflow-hidden bg-paper-raised">
-              <Image src={src} alt={`${look.label} ${i + 2}`} fill className="object-cover" sizes="96px" />
-            </div>
-          ))}
-        </section>
-      )}
-
-      {/* Designer info + description */}
-      <section className="px-6 md:px-14 pt-6 pb-4">
-        <h1 className="font-display text-3xl md:text-4xl text-ink mb-2">{look.label}</h1>
-        <div className="flex items-center gap-2 flex-wrap text-sm text-muted mb-5">
-          {look.designer_name && <span>{look.designer_name}</span>}
-          {look.designer_name && look.location && <span aria-hidden>·</span>}
-          {look.location && <span>{look.location}</span>}
-          {look.badge && (
-            <span className="ml-1 px-2.5 py-0.5 rounded-full bg-paper-raised text-ink text-[10px] tracking-wide uppercase">
-              {look.badge}
-            </span>
-          )}
+      <RevealContainer>
+        {/* Swipeable, Pinterest-style — swipe through every uploaded photo.
+            Love icon in the corner saves it to favorites. */}
+        <div data-reveal="image" className="mt-3">
+          <LookGallery id={look.id} label={look.label} images={galleryImages} />
         </div>
 
-        {(look.description || look.story) && (
-          <p className="text-ink/80 leading-relaxed mb-5 max-w-2xl">{look.description ?? look.story}</p>
+        {/* Caption sits right below the gallery, same spot a caption goes
+            when you write one in the upload form. */}
+        <section className="px-4 md:px-8 pt-5 pb-3">
+          <h1 data-reveal="heading" className="font-display text-3xl md:text-4xl text-ink mb-2">
+            {look.label}
+          </h1>
+          <div className="flex items-center gap-2 flex-wrap text-sm text-muted mb-4">
+            {look.designer_name && <span>{look.designer_name}</span>}
+            {look.designer_name && look.location && <span aria-hidden>·</span>}
+            {look.location && <span>{look.location}</span>}
+            {look.badge && (
+              <span className="ml-1 px-2.5 py-0.5 rounded-full bg-paper-raised text-ink text-[10px] tracking-wide uppercase">
+                {look.badge}
+              </span>
+            )}
+          </div>
+
+          {(look.description || look.story) && (
+            <p data-reveal="paragraph" className="text-ink/80 leading-relaxed mb-4 max-w-2xl">
+              {look.description ?? look.story}
+            </p>
+          )}
+
+          <div className="flex gap-8 text-sm">
+            {look.fabric && (
+              <div>
+                <p className="text-[11px] text-muted uppercase tracking-wide mb-1">Fabric</p>
+                <p className="text-ink">{look.fabric}</p>
+              </div>
+            )}
+            {look.occasion && (
+              <div>
+                <p className="text-[11px] text-muted uppercase tracking-wide mb-1">Occasion</p>
+                <p className="text-ink">{look.occasion}</p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Similar products, with price, straight through to Shop. */}
+        {similarProducts.length > 0 && (
+          <section className="py-6 border-t border-ink/10">
+            <h2 data-reveal="heading" className="font-display text-xl md:text-2xl text-ink px-4 md:px-8 mb-4">
+              Similar Products
+            </h2>
+            <div className="flex gap-2 md:gap-3 overflow-x-auto px-4 md:px-8 no-scrollbar">
+              {similarProducts.map((product) => {
+                const image = [...product.ariana_product_images].sort((a, b) => a.position - b.position)[0]?.url;
+                return (
+                  <Link
+                    key={product.id}
+                    href={`/product/${product.slug}`}
+                    data-reveal="card"
+                    className="w-36 md:w-44 shrink-0"
+                  >
+                    <div className="relative w-full aspect-[3/4] bg-paper-raised overflow-hidden mb-2">
+                      {image && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={image} alt={product.name} className="w-full h-full object-cover" />
+                      )}
+                    </div>
+                    <p className="text-sm text-ink truncate">{product.name}</p>
+                    <p className="text-sm text-ink font-medium">{formatPrice(product.price, product.currency)}</p>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
         )}
 
-        <div className="flex gap-8 text-sm">
-          {look.fabric && (
-            <div>
-              <p className="text-[11px] text-muted uppercase tracking-wide mb-1">Fabric</p>
-              <p className="text-ink">{look.fabric}</p>
+        {/* More pictures from the same category. */}
+        {categoryLooks.length > 0 && (
+          <section className="py-6 border-t border-ink/10">
+            <h2 data-reveal="heading" className="font-display text-xl md:text-2xl text-ink px-4 md:px-8 mb-4">
+              More Looks
+            </h2>
+            <div className="flex gap-1.5 overflow-x-auto px-4 md:px-8 no-scrollbar">
+              {categoryLooks.map((l) => (
+                <div key={l.id} className="w-36 md:w-44 shrink-0">
+                  <StyleCard
+                    look={{
+                      id: l.id,
+                      label: l.label,
+                      image: l.image_url,
+                      href: `/look/${l.id}`,
+                      designerName: l.designer_name,
+                      location: l.location,
+                      badge: l.badge,
+                    }}
+                    aspectClassName="aspect-[3/4]"
+                  />
+                </div>
+              ))}
             </div>
-          )}
-          {look.occasion && (
-            <div>
-              <p className="text-[11px] text-muted uppercase tracking-wide mb-1">Occasion</p>
-              <p className="text-ink">{look.occasion}</p>
-            </div>
-          )}
-        </div>
-      </section>
+          </section>
+        )}
 
-      <ScrollStrip title="Similar Styles" looks={similar} />
-      <ScrollStrip title="More From This Designer" looks={moreFromDesigner} />
-
-      {/* Actions */}
-      <section className="px-6 md:px-14 py-10 border-t border-ink/10">
-        <div className="grid grid-cols-2 gap-3 max-w-md mx-auto md:mx-0">
-          {hasShopLink && (
+        {/* Actions */}
+        <section className="px-4 md:px-8 py-8 border-t border-ink/10">
+          <div className="grid grid-cols-2 gap-2 max-w-md mx-auto md:mx-0">
+            {hasShopLink && (
+              <Link
+                href={look.href as string}
+                className="col-span-2 flex items-center justify-center h-12 rounded-full bg-ink text-paper text-sm"
+              >
+                View In Shop
+              </Link>
+            )}
             <Link
-              href={look.href as string}
-              className="col-span-2 flex items-center justify-center h-12 rounded-full bg-ink text-paper text-sm"
+              href={`/contact?reason=bespoke&${enquiryQuery}`}
+              className="flex items-center justify-center h-12 rounded-full bg-brass text-ink text-sm text-center px-3"
             >
-              Shop This Look
+              Make Bespoke
             </Link>
-          )}
-          <Link
-            href={`/contact?reason=bespoke&${enquiryQuery}`}
-            className="flex items-center justify-center h-12 rounded-full bg-brass text-ink text-sm text-center px-3"
-          >
-            Make Bespoke
-          </Link>
-          <Link
-            href={`/contact?reason=appointment&${enquiryQuery}`}
-            className="flex items-center justify-center h-12 rounded-full border border-ink/15 text-ink text-sm text-center px-3"
-          >
-            Book Appointment
-          </Link>
-          <Link
-            href={`/contact?reason=enquiry&${enquiryQuery}`}
-            className="flex items-center justify-center h-12 rounded-full border border-ink/15 text-ink text-sm text-center px-3"
-          >
-            Make Enquiry
-          </Link>
-          <LookSaveButton id={look.id} label={look.label} image={look.image_url} />
-          <div className="col-span-2">
+            <Link
+              href={`/contact?reason=appointment&${enquiryQuery}`}
+              className="flex items-center justify-center h-12 rounded-full border border-ink/10 text-ink text-sm text-center px-3"
+            >
+              Book Appointment
+            </Link>
+            <Link
+              href={`/contact?reason=enquiry&${enquiryQuery}`}
+              className="flex items-center justify-center h-12 rounded-full border border-ink/10 text-ink text-sm text-center px-3"
+            >
+              Make Enquiry
+            </Link>
             <ShareButton label={look.label} />
           </div>
-        </div>
-      </section>
+        </section>
+      </RevealContainer>
     </main>
   );
 }

@@ -9,7 +9,7 @@ async function getPanels() {
   const { data } = await admin
     .from("ariana_lookbook_panels")
     .select(
-      "id, label, image_url, category, story, position, created_at, designer_name, badge, is_hero, is_editorial_break, editorial_label"
+      "id, label, image_url, category, story, position, created_at, designer_name, badge, is_hero, is_editorial_break, editorial_label, media_type"
     )
     .order("category", { ascending: true })
     .order("position", { ascending: true })
@@ -41,6 +41,11 @@ export default async function AdminLookbookPage() {
                   {panel.is_hero && (
                     <span className="absolute top-1 left-1 bg-ink text-paper text-[9px] px-1.5 py-0.5 rounded">
                       HERO
+                    </span>
+                  )}
+                  {panel.media_type === "video" && (
+                    <span className="absolute top-1 right-1 bg-brass text-ink text-[9px] px-1.5 py-0.5 rounded">
+                      VIDEO
                     </span>
                   )}
                 </div>

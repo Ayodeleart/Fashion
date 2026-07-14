@@ -8,20 +8,27 @@ export type EditorialHeroLook = {
   id: string;
   image: string;
   label: string;
+  mediaType: "image" | "video";
+  videoUrl?: string | null;
+  promoText?: string | null;
   ctaText?: string;
   ctaHref?: string;
 };
 
 /**
- * Full first-viewport moment. Deliberately not a "banner" — one image,
- * one line of type, one CTA. Subtle parallax on scroll (image drifts
- * slower than the page), disabled under prefers-reduced-motion.
+ * Full first-viewport moment. Deliberately not a "banner" — one image
+ * or muted video, one line of type, one CTA. Subtle parallax on scroll
+ * for the image variant, disabled under prefers-reduced-motion. Video
+ * renders separately from the image path — no parallax transform on it,
+ * just plays.
  */
 export default function EditorialHero({ look }: { look: EditorialHeroLook }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [offset, setOffset] = useState(0);
+  const isVideo = look.mediaType === "video" && look.videoUrl;
 
   useEffect(() => {
+    if (isVideo) return; // no parallax on video
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced) return;
 
@@ -37,23 +44,35 @@ export default function EditorialHero({ look }: { look: EditorialHeroLook }) {
     }
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [isVideo]);
 
   return (
     <section ref={wrapRef} className="relative h-[calc(100dvh-34px)] w-full overflow-hidden bg-ink">
-      <div
-        className="absolute inset-0"
-        style={{ transform: `translateY(${offset}px)`, transition: "transform 60ms linear" }}
-      >
-        <Image
-          src={look.image}
-          alt={look.label}
-          fill
-          priority
-          className="object-cover scale-[1.08]"
-          sizes="100vw"
+      {isVideo ? (
+        <video
+          src={look.videoUrl ?? undefined}
+          poster={look.image}
+          muted
+          autoPlay
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
         />
-      </div>
+      ) : (
+        <div
+          className="absolute inset-0"
+          style={{ transform: `translateY(${offset}px)`, transition: "transform 60ms linear" }}
+        >
+          <Image
+            src={look.image}
+            alt={look.label}
+            fill
+            priority
+            className="object-cover scale-[1.08]"
+            sizes="100vw"
+          />
+        </div>
+      )}
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/30" />
 
@@ -62,7 +81,7 @@ export default function EditorialHero({ look }: { look: EditorialHeroLook }) {
           The Edit
         </p>
         <h1 className="font-display text-paper text-5xl md:text-7xl leading-[0.95] mb-8">
-          {look.label}
+          {look.promoText ?? look.label}
         </h1>
         {look.ctaText && look.ctaHref && (
           <Link

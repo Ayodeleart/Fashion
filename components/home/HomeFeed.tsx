@@ -5,13 +5,17 @@ import { useScrollReveal } from "@/hooks/useScrollReveal";
 import StyleFilterBar from "./StyleFilterBar";
 import EditorialDivider from "./EditorialDivider";
 import { StyleCard, type StyleLook } from "./StyleCard";
+import FeatureBlock from "./FeatureBlock";
 
 export type FeedLook = StyleLook & {
   category: string | null;
   styleTags: string[];
-  feedLayout: "full" | "portrait" | "masonry" | "dramatic" | "collage" | null;
+  feedLayout: "full" | "portrait" | "masonry" | "dramatic" | "collage" | "feature" | null;
   isEditorialBreak: boolean;
   editorialLabel: string | null;
+  mediaType: "image" | "video";
+  videoUrl: string | null;
+  promoText: string | null;
 };
 
 function normalizeTag(value: string) {
@@ -36,8 +40,9 @@ const DIVIDER_LABELS = [
   "Traditional Styles",
 ];
 
-// The base rhythm, repeated with a light variation each cycle so it
-// doesn't feel like a fixed template. Numbers are batch sizes.
+// The base rhythm for looks that DON'T carry an explicit feed_layout
+// override, repeated with a light variation each cycle so it doesn't
+// feel like a fixed template. Numbers are batch sizes.
 const RHYTHM: Array<{ type: "full" | "portrait2" | "masonry" | "dramatic" | "collage3"; count: number }> = [
   { type: "full", count: 1 },
   { type: "portrait2", count: 2 },
@@ -53,12 +58,19 @@ const RHYTHM_VARIANT: typeof RHYTHM = [
   { type: "full", count: 1 },
 ];
 
+// feed_layout values that always render as their own single-item block,
+// pulled out of line the moment we reach them — never grouped into a
+// portrait/masonry/collage batch with neighbors. This is what lets an
+// admin drop a "feature" (video/promo) block at an exact position.
+const SINGULAR_OVERRIDES = new Set(["full", "dramatic", "feature"]);
+
 type Block =
   | { kind: "divider"; label: string }
   | { kind: "full"; looks: FeedLook[] }
   | { kind: "portrait2"; looks: FeedLook[] }
   | { kind: "masonry"; looks: FeedLook[] }
   | { kind: "dramatic"; looks: FeedLook[] }
+  | { kind: "feature"; looks: FeedLook[] }
   | { kind: "collage3"; looks: FeedLook[] };
 
 const BREAK_EVERY = 17; // within the 15-20 spec range
@@ -70,23 +82,51 @@ function buildBlocks(looks: FeedLook[]): Block[] {
   let dividerIndex = 0;
   let i = 0;
 
+  function pushDividerIfDue(look: FeedLook, countAdded: number) {
+    sinceLastBreak += countAdded;
+    if (look.isEditorialBreak && look.editorialLabel) {
+      blocks.push({ kind: "divider", label: look.editorialLabel });
+      sinceLastBreak = 0;
+    } else if (sinceLastBreak >= BREAK_EVERY) {
+      blocks.push({ kind: "divider", label: DIVIDER_LABELS[dividerIndex % DIVIDER_LABELS.length] });
+      dividerIndex += 1;
+      sinceLastBreak = 0;
+    }
+  }
+
   while (i < looks.length) {
+    const current = looks[i];
+
+    // Admin-pinned single block (full / dramatic / feature) — respect
+    // its exact position, don't fold it into a batch.
+    if (current.feedLayout && SINGULAR_OVERRIDES.has(current.feedLayout)) {
+      blocks.push({ kind: current.feedLayout as "full" | "dramatic" | "feature", looks: [current] });
+      i += 1;
+      pushDividerIfDue(current, 1);
+      continue;
+    }
+
+    // Otherwise, take the next rhythm-sized batch, but stop the batch
+    // early if we run into a pinned look so it doesn't get swallowed.
     const rhythm = cycleIndex % 2 === 0 ? RHYTHM : RHYTHM_VARIANT;
     const slot = rhythm[cycleIndex % rhythm.length];
+    const batch: FeedLook[] = [];
+    while (batch.length < slot.count && i < looks.length) {
+      const next = looks[i];
+      if (next.feedLayout && SINGULAR_OVERRIDES.has(next.feedLayout)) break;
+      batch.push(next);
+      i += 1;
+    }
+    if (batch.length === 0) continue; // next iteration handles the pinned look
 
-    const batch = looks.slice(i, i + slot.count);
-    if (batch.length === 0) break;
-
-    // An explicit admin-flagged break takes priority over the auto count.
-    const flaggedBreak = batch.find((l) => l.isEditorialBreak);
+    const flaggedBreak = batch.find((l) => l.isEditorialBreak && l.editorialLabel);
 
     blocks.push({ kind: slot.type, looks: batch } as Block);
-    i += batch.length;
-    sinceLastBreak += batch.length;
     cycleIndex += 1;
+    sinceLastBreak += batch.length;
 
-    if (flaggedBreak?.editorialLabel) {
-      blocks.push({ kind: "divider", label: flaggedBreak.editorialLabel });
+    if (flaggedBreak) {
+      blocks.push({ kind: "divider", label: flaggedBreak.editorialLabel as string });
       sinceLastBreak = 0;
     } else if (sinceLastBreak >= BREAK_EVERY && i < looks.length) {
       blocks.push({ kind: "divider", label: DIVIDER_LABELS[dividerIndex % DIVIDER_LABELS.length] });
@@ -130,7 +170,7 @@ export default function HomeFeed({ looks }: { looks: FeedLook[] }) {
     <div ref={revealRef}>
       <StyleFilterBar active={filter} onChange={setFilter} />
 
-      <div className="px-6 md:px-14 py-10 md:py-14 space-y-3 md:space-y-4">
+      <div className="px-1.5 md:px-3 py-4 md:py-6 space-y-1 md:space-y-1.5">
         {blocks.length === 0 && (
           <p className="text-muted text-sm py-20 text-center">No looks in this edit yet.</p>
         )}
@@ -138,6 +178,11 @@ export default function HomeFeed({ looks }: { looks: FeedLook[] }) {
         {blocks.map((block, idx) => {
           if (block.kind === "divider") {
             return <EditorialDivider key={`divider-${idx}`} label={block.label} />;
+          }
+
+          if (block.kind === "feature") {
+            const look = block.looks[0];
+            return <FeatureBlock key={look.id} look={look} />;
           }
 
           if (block.kind === "full") {
@@ -154,16 +199,12 @@ export default function HomeFeed({ looks }: { looks: FeedLook[] }) {
 
           if (block.kind === "dramatic") {
             const look = block.looks[0];
-            return (
-              <div key={look.id} className="md:px-8">
-                <StyleCard look={look} aspectClassName={aspectFor(look, ASPECT.dramatic)} />
-              </div>
-            );
+            return <StyleCard key={look.id} look={look} aspectClassName={aspectFor(look, ASPECT.dramatic)} />;
           }
 
           if (block.kind === "portrait2") {
             return (
-              <div key={`portrait-${idx}`} className="grid grid-cols-2 gap-3 md:gap-4">
+              <div key={`portrait-${idx}`} className="grid grid-cols-2 gap-1 md:gap-1.5">
                 {block.looks.map((look) => (
                   <StyleCard key={look.id} look={look} aspectClassName={aspectFor(look, ASPECT.portrait)} />
                 ))}
@@ -174,13 +215,13 @@ export default function HomeFeed({ looks }: { looks: FeedLook[] }) {
           if (block.kind === "collage3") {
             const [big, small1, small2] = block.looks;
             return (
-              <div key={`collage-${idx}`} className="grid grid-cols-2 gap-3 md:gap-4">
+              <div key={`collage-${idx}`} className="grid grid-cols-2 gap-1 md:gap-1.5">
                 {big && (
                   <div className="row-span-2">
                     <StyleCard look={big} aspectClassName={ASPECT.collageBig} />
                   </div>
                 )}
-                <div className="grid grid-rows-2 gap-3 md:gap-4">
+                <div className="grid grid-rows-2 gap-1 md:gap-1.5">
                   {small1 && <StyleCard look={small1} aspectClassName={ASPECT.collageSmall} />}
                   {small2 && <StyleCard look={small2} aspectClassName={ASPECT.collageSmall} />}
                 </div>
@@ -190,7 +231,7 @@ export default function HomeFeed({ looks }: { looks: FeedLook[] }) {
 
           if (block.kind === "masonry") {
             return (
-              <div key={`masonry-${idx}`} className="columns-2 md:columns-3 gap-3 md:gap-4 space-y-3 md:space-y-4">
+              <div key={`masonry-${idx}`} className="columns-2 md:columns-3 gap-1 md:gap-1.5 space-y-1 md:space-y-1.5">
                 {block.looks.map((look) => (
                   <div key={look.id} className="break-inside-avoid">
                     <StyleCard look={look} />

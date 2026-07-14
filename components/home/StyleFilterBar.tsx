@@ -27,7 +27,7 @@ export default function StyleFilterBar({
 }) {
   return (
     <div className="sticky top-0 z-10 bg-paper/95 backdrop-blur-sm border-b border-ink/5">
-      <div className="flex gap-2 overflow-x-auto px-6 md:px-14 py-4 no-scrollbar">
+      <div className="flex gap-2 overflow-x-auto px-3 md:px-6 py-3 no-scrollbar">
         {FILTERS.map((filter) => {
           const isActive = filter === active;
           return (

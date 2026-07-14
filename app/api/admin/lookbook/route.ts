@@ -35,6 +35,18 @@ export async function POST(request: NextRequest) {
       await admin.from("ariana_lookbook_panels").update({ is_hero: false }).eq("is_hero", true);
     }
 
+    // Blank position = append at the end, same as before this field existed.
+    let position: number | null = typeof body.position === "number" ? body.position : null;
+    if (position === null) {
+      const { data: maxRow } = await admin
+        .from("ariana_lookbook_panels")
+        .select("position")
+        .order("position", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      position = (maxRow?.position ?? 0) + 1;
+    }
+
     const { error: insertErr } = await admin.from("ariana_lookbook_panels").insert({
       label,
       category,
@@ -53,6 +65,10 @@ export async function POST(request: NextRequest) {
       editorial_label: body.editorialLabel ?? null,
       is_hero: Boolean(body.isHero),
       gallery_images: Array.isArray(body.galleryImages) ? body.galleryImages : [],
+      media_type: body.mediaType === "video" ? "video" : "image",
+      video_url: body.videoUrl ?? null,
+      promo_text: body.promoText ?? null,
+      position,
     });
     if (insertErr) throw new Error(insertErr.message);
 

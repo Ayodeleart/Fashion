@@ -11,6 +11,7 @@ const fallbackHero: EditorialHeroLook = {
   id: "fallback-hero",
   image: "/images/look-1.jpg",
   label: "The Season, Reimagined",
+  mediaType: "image",
 };
 
 type PanelRow = {
@@ -28,10 +29,13 @@ type PanelRow = {
   is_editorial_break: boolean | null;
   editorial_label: string | null;
   is_hero: boolean | null;
+  media_type: "image" | "video" | null;
+  video_url: string | null;
+  promo_text: string | null;
 };
 
 const PANEL_COLUMNS =
-  "id, label, image_url, href, category, story, designer_name, location, badge, style_tags, feed_layout, is_editorial_break, editorial_label, is_hero";
+  "id, label, image_url, href, category, story, designer_name, location, badge, style_tags, feed_layout, is_editorial_break, editorial_label, is_hero, media_type, video_url, promo_text";
 
 async function getAllPanels(): Promise<PanelRow[]> {
   const supabase = getSupabase();
@@ -50,6 +54,9 @@ function toHeroLook(row: PanelRow): EditorialHeroLook {
     id: row.id,
     image: row.image_url,
     label: row.label,
+    mediaType: row.media_type ?? "image",
+    videoUrl: row.video_url,
+    promoText: row.promo_text,
     ctaText: "Explore The Edit",
     ctaHref: `/look/${row.id}`,
   };
@@ -69,6 +76,9 @@ function toFeedLook(row: PanelRow): FeedLook {
     feedLayout: row.feed_layout,
     isEditorialBreak: row.is_editorial_break ?? false,
     editorialLabel: row.editorial_label,
+    mediaType: row.media_type ?? "image",
+    videoUrl: row.video_url,
+    promoText: row.promo_text,
   };
 }
 
@@ -81,10 +91,10 @@ export default async function Home() {
   const heroRow = panels.find((p) => p.is_hero) ?? panels[0];
   const heroLook = heroRow ? toHeroLook(heroRow) : fallbackHero;
 
-  // The hero's own look still appears once in the feed below (it's a
-  // real look, not a separate banner) — that's intentional, matches
-  // how the rest of the feed treats every panel equally.
-  const looks = panels.map(toFeedLook);
+  // The hero doesn't repeat in the feed below it — the "feature" blocks
+  // (feed_layout: "feature") are how a look/video/promo shows up again
+  // mid-scroll, placed exactly where the admin sets its position.
+  const looks = panels.filter((p) => p.id !== heroRow?.id).map(toFeedLook);
 
   return (
     <main>
