@@ -1,19 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { isStandalone } from "@/lib/pwa-standalone";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
-
-function isStandalone() {
-  if (typeof window === "undefined") return false;
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    (window.navigator as unknown as { standalone?: boolean }).standalone === true
-  );
-}
 
 function isIOS() {
   return typeof navigator !== "undefined" && /iphone|ipad|ipod/i.test(navigator.userAgent);
@@ -56,6 +50,7 @@ export default function InstallGate({ children }: { children: React.ReactNode })
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setInstalled(isStandalone());
     setReady(true);
 
@@ -104,9 +99,9 @@ export default function InstallGate({ children }: { children: React.ReactNode })
           </p>
         </div>
 
-        <a href="/" className="inline-block mt-6 text-sm underline text-ink">
+        <Link href="/" className="inline-block mt-6 text-sm underline text-ink">
           Back to the homepage
-        </a>
+        </Link>
       </div>
     </main>
   );

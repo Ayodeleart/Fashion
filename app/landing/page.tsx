@@ -1,25 +1,18 @@
-import Hero, { HeroBanner } from "@/components/Hero";
-import Lookbook, { LookbookPanel } from "@/components/Lookbook";
-import ProductGrid, { Product } from "@/components/ProductGrid";
-import Footer from "@/components/Footer";
+import LandingView from "@/components/LandingView";
+import type { HeroBanner } from "@/components/Hero";
+import type { LookbookPanel } from "@/components/Lookbook";
+import type { Product } from "@/components/ProductGrid";
 import { getSupabase } from "@/lib/supabase";
 import { resolveCurrency, resolvePrice } from "@/lib/currency";
 
-// Forced dynamic: without this, Next.js can prerender this page as static
-// HTML at build time and cache it — meaning new hero banners, lookbook
-// panels, or products published afterward via /admin wouldn't show up
-// until the next deployment, regardless of revalidatePath calls. Always
-// fetch live on every request instead.
+// This route always shows the marketing landing page, regardless of
+// install status — a direct link for anyone who wants it specifically.
+// The root route ("/") shows the same content to a plain browser tab too;
+// see app/page.tsx + HomeOrLandingGate.
 export const dynamic = "force-dynamic";
 
-// FALLBACK — only used until a banner is published from /admin/hero, or
-// if the Supabase fetch fails. Kept separate per device, no substitution.
-const fallbackDesktopBanners: HeroBanner[] = [
-  { id: "fallback-desktop", imageUrl: "/images/hero-desktop.jpg" },
-];
-const fallbackMobileBanners: HeroBanner[] = [
-  { id: "fallback-mobile", imageUrl: "/images/hero-mobile.jpg" },
-];
+const fallbackDesktopBanners: HeroBanner[] = [{ id: "fallback-desktop", imageUrl: "/images/hero-desktop.jpg" }];
+const fallbackMobileBanners: HeroBanner[] = [{ id: "fallback-mobile", imageUrl: "/images/hero-mobile.jpg" }];
 
 async function getHeroBanners(device: "desktop" | "mobile"): Promise<HeroBanner[]> {
   const supabase = getSupabase();
@@ -46,10 +39,7 @@ async function getHeroBanners(device: "desktop" | "mobile"): Promise<HeroBanner[
 }
 
 // Static on purpose — this page must never read from ariana_lookbook_panels,
-// since that table now belongs to the Home feed (/) and its admin form.
-// Sharing it would mean anything uploaded for Home quietly reappears here
-// too. Edit these three directly if the landing page's lookbook needs to
-// change; it doesn't touch Supabase at all.
+// since that table belongs to Home and its admin form.
 const landingLookbookPanels: LookbookPanel[] = [
   { id: "look-1", label: "The Tailored Line", image: "/images/look-1.jpg", href: "/catalog?look=tailored" },
   { id: "look-2", label: "Evening", image: "/images/look-2.jpg", href: "/catalog?look=evening" },
@@ -92,7 +82,7 @@ async function getNewArrivals(): Promise<Product[]> {
   });
 }
 
-export default async function Home() {
+export default async function LandingPage() {
   const [desktopBanners, mobileBanners, newArrivals] = await Promise.all([
     getHeroBanners("desktop"),
     getHeroBanners("mobile"),
@@ -100,14 +90,11 @@ export default async function Home() {
   ]);
 
   return (
-    <main>
-      <Hero desktopBanners={desktopBanners} mobileBanners={mobileBanners} />
-
-      <Lookbook panels={landingLookbookPanels} />
-
-      <ProductGrid title="New Arrivals" products={newArrivals} />
-
-      <Footer brandName="AyodeleGold" />
-    </main>
+    <LandingView
+      desktopBanners={desktopBanners}
+      mobileBanners={mobileBanners}
+      lookbookPanels={landingLookbookPanels}
+      newArrivals={newArrivals}
+    />
   );
 }

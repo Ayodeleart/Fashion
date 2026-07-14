@@ -8,6 +8,7 @@ import { QuickAddProvider } from "@/components/QuickAddProvider";
 import PromoBannerPopup from "@/components/PromoBannerPopup";
 import BottomNav from "@/components/BottomNav";
 import InstallGate from "@/components/InstallGate";
+import { isStandalone } from "@/lib/pwa-standalone";
 import { THEME_COOKIE_NAME, type Theme } from "@/lib/theme-shared";
 
 // Two tiers within the shop:
@@ -21,12 +22,13 @@ const RESPONSIVE_PREFIXES = ["/catalog", "/cart", "/checkout", "/account/login",
 const MOBILE_ONLY_PREFIXES = ["/saved", "/account", "/search", "/reels", "/auth", "/aria"];
 const SHOP_PREFIXES = [...RESPONSIVE_PREFIXES, ...MOBILE_ONLY_PREFIXES];
 
-// Home ("/") is now the editorial style book and gets the same app shell —
-// bottom nav to move between Home/Shop/Reels/Saved/Profile, and
-// SavedProvider so "Save" works on a look. It already has a real desktop
-// layout (it's the original marketing page), so it's treated like the
-// RESPONSIVE tier — exact match only, never a prefix, or every route
-// would match "/".
+// "/" is two different pages depending on who's asking (see
+// HomeOrLandingGate + app/page.tsx): a plain browser tab gets the
+// marketing landing page — no app chrome at all, same as any other
+// website. Only once it's actually installed (standalone display mode)
+// does "/" become the real app's Home tab and get the bottom nav +
+// providers. This must match HomeOrLandingGate's own check exactly, or
+// the chrome and the content disagree with each other.
 function isHomePath(pathname: string) {
   return pathname === "/";
 }
@@ -39,13 +41,15 @@ function readTheme(): Theme {
 
 export default function StorefrontChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isShop = isHomePath(pathname) || SHOP_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-  const isResponsive = isHomePath(pathname) || RESPONSIVE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  const isHome = isHomePath(pathname);
   const isImmersive = pathname.startsWith("/reels/") || pathname === "/aria";
   const hasFloatingBottomBar = pathname.startsWith("/product");
   const [theme, setTheme] = useState<Theme>("light");
+  const [installed, setInstalled] = useState(false);
+  const [installChecked, setInstallChecked] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTheme(readTheme());
     function handleThemeChange(e: Event) {
       setTheme((e as CustomEvent<Theme>).detail);
@@ -53,6 +57,20 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
     window.addEventListener("theme-change", handleThemeChange);
     return () => window.removeEventListener("theme-change", handleThemeChange);
   }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setInstalled(isStandalone());
+    setInstallChecked(true);
+  }, []);
+
+  // Only "/" needs to wait on this — every other route's chrome doesn't
+  // depend on install status, so don't delay them.
+  if (isHome && !installChecked) return null;
+
+  const homeGetsAppShell = isHome && installed;
+  const isShop = homeGetsAppShell || SHOP_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  const isResponsive = homeGetsAppShell || RESPONSIVE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
   if (!isShop) return <>{children}</>;
 
