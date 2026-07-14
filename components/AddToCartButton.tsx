@@ -16,6 +16,7 @@ type Props = {
   className?: string;
   icon?: ReactNode;
   label?: string;
+  fullWidth?: boolean;
 };
 
 export default function AddToCartButton({
@@ -30,6 +31,7 @@ export default function AddToCartButton({
   className,
   icon,
   label = "Add to cart",
+  fullWidth = false,
 }: Props) {
   const { addItem } = useCart();
   const router = useRouter();
@@ -39,7 +41,7 @@ export default function AddToCartButton({
   const [error, setError] = useState<string | null>(null);
 
   return (
-    <div className="relative inline-block w-full md:w-auto">
+    <div className={`relative inline-block ${fullWidth ? "w-full md:w-auto" : ""}`}>
       <button
         type="button"
         disabled={pending || disabled}

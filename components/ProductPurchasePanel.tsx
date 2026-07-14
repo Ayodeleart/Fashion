@@ -154,6 +154,7 @@ export default function ProductPurchasePanel({
             currency={currency}
             image={image}
             disabled={needsSelection || outOfStock}
+            fullWidth
             className="flex-1 md:flex-none md:px-10 text-sm py-3.5 rounded-full bg-ink text-paper hover:bg-ink/90 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
             icon={<BagIcon className="w-4 h-4" />}
             label="Add to Bag"
