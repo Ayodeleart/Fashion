@@ -7,6 +7,7 @@ import TopBar from "@/components/TopBar";
 import CategoryRow from "@/components/CategoryRow";
 import FilterSortRow from "@/components/FilterSortRow";
 import CatalogGrid from "@/components/CatalogGrid";
+import ShopHeroCard from "@/components/ShopHeroCard";
 
 // This is the e-commerce shop home (the mobile app screen). "/" is the
 // separate editorial Home feed (Pinterest-style lookbook) — this is
@@ -41,21 +42,40 @@ async function getProducts(category?: string, sort?: string) {
   return (data as unknown as ProductRow[]) ?? [];
 }
 
+async function getShopHero() {
+  const supabase = getSupabase();
+  const { data } = await supabase
+    .from("ariana_shop_hero")
+    .select("id, label, image_url, href")
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: false });
+
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    label: row.label as string | null,
+    imageUrl: row.image_url as string,
+    href: row.href as string | null,
+  }));
+}
+
 export default async function CatalogPage({
   searchParams,
 }: {
   searchParams: Promise<{ category?: string; sort?: string }>;
 }) {
   const { category, sort } = await searchParams;
-  const [products, categories, currency] = await Promise.all([
+  const [products, categories, currency, shopHero] = await Promise.all([
     getProducts(category, sort),
     getCategories(),
     resolveCurrency(),
+    getShopHero(),
   ]);
 
   return (
     <main>
       <TopBar />
+
+      <ShopHeroCard banners={shopHero} />
 
       <div className="sticky top-0 z-20 bg-paper shadow-[0_1px_0_rgba(0,0,0,0.06)] md:hidden">
         <CategoryRow categories={categories} />
