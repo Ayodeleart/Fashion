@@ -80,8 +80,9 @@ function ShopIcon() {
 }
 
 const leftItems = [
-  // Home is the editorial style book — not the shop.
-  { href: "/", label: "Home", Icon: HomeIcon },
+  // Home is the editorial style book — lives at its own route, /home,
+  // completely separate from the landing page at "/". Never merge these.
+  { href: "/home", label: "Home", Icon: HomeIcon },
   { href: "/reels", label: "Reels", Icon: ReelsIcon },
 ];
 const rightItems = [
