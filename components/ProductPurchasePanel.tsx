@@ -61,7 +61,6 @@ export default function ProductPurchasePanel({
 
   return (
     <div>
-      <div ref={sentinelRef} />
       <StickyAddBar
         productId={productId}
         variantId={selected?.id ?? null}
@@ -129,40 +128,39 @@ export default function ProductPurchasePanel({
         </div>
       )}
 
-      {/* Floating bar — the product page hides the bottom nav (see
-          StorefrontChrome) specifically so this can sit right above the
-          safe area without competing with it. */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-paper border-t border-ink/10 px-5 py-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] md:static md:border-0 md:p-0">
-        <div className="flex items-center gap-3">
-          <SaveButton
-            item={{
-              productId,
-              name,
-              price,
-              currency,
-              image,
-              href: `/product/${slug}`,
-            }}
-            className="w-12 h-12 rounded-full border border-ink/15 flex items-center justify-center shrink-0"
-          />
-          <AddToCartButton
-            productId={productId}
-            variantId={selected?.id ?? null}
-            size={selected?.size ?? null}
-            name={name}
-            price={price}
-            currency={currency}
-            image={image}
-            disabled={needsSelection || outOfStock}
-            fullWidth
-            className="flex-1 md:flex-none md:px-10 text-sm py-3.5 rounded-full bg-ink text-paper hover:bg-ink/90 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
-            icon={<BagIcon className="w-4 h-4" />}
-            label="Add to Bag"
-          />
-        </div>
+      {/* Normal in-flow row — NOT fixed/sticky. It scrolls away like any
+          other content. The sentinel right after it is what the top
+          StickyAddBar watches: once this row scrolls out of view, the
+          sticky bar takes over up top. Two different bars never compete
+          for the same space, and this one never floats over content. */}
+      <div className="flex items-center gap-3">
+        <SaveButton
+          item={{
+            productId,
+            name,
+            price,
+            currency,
+            image,
+            href: `/product/${slug}`,
+          }}
+          className="w-12 h-12 rounded-full border border-ink/15 flex items-center justify-center shrink-0"
+        />
+        <AddToCartButton
+          productId={productId}
+          variantId={selected?.id ?? null}
+          size={selected?.size ?? null}
+          name={name}
+          price={price}
+          currency={currency}
+          image={image}
+          disabled={needsSelection || outOfStock}
+          fullWidth
+          className="flex-1 md:flex-none md:px-10 text-sm py-3.5 rounded-full bg-ink text-paper hover:bg-ink/90 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+          icon={<BagIcon className="w-4 h-4" />}
+          label="Add to Bag"
+        />
       </div>
-      {/* Spacer so page content isn't hidden behind the fixed bar above (mobile only). */}
-      <div className="h-24 md:hidden" />
+      <div ref={sentinelRef} />
     </div>
   );
 }

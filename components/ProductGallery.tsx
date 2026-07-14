@@ -96,30 +96,31 @@ export default function ProductGallery({
             </button>
           </>
         )}
+        {/* Dot indicators — the main image itself is the swipeable/tappable
+            surface (touch + click handlers above); no separate thumbnail
+            row here, matching the reference pattern. */}
+        {images.length > 1 && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5" onClick={(e) => e.stopPropagation()}>
+            {images.map((_, i) => (
+              <button
+                key={i}
+                aria-label={`Go to image ${i + 1}`}
+                onClick={() => goTo(i)}
+                className={`h-1.5 rounded-full transition-all ${
+                  i === activeIndex ? "w-4 bg-white" : "w-1.5 bg-white/50"
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
-      {images.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto no-scrollbar mb-6">
-          {images.map((img, i) => (
-            <button
-              key={img.url}
-              onClick={() => goTo(i)}
-              className={`relative w-16 h-20 md:w-20 md:h-24 shrink-0 rounded-lg overflow-hidden bg-paper-raised transition-opacity ${
-                i === activeIndex ? "ring-2 ring-ink" : "opacity-60 hover:opacity-100"
-              }`}
-            >
-              <Image src={img.url} alt="" fill className="object-cover" sizes="80px" />
-            </button>
-          ))}
-        </div>
-      )}
-
       {lightboxOpen && active && (
-        <div className="fixed inset-0 z-[60] bg-black flex flex-col">
+        <div className="fixed inset-0 z-[60] bg-paper flex flex-col">
           <button
             onClick={() => setLightboxOpen(false)}
             aria-label="Close"
-            className="absolute z-10 w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center"
+            className="absolute z-10 w-9 h-9 rounded-full bg-ink/5 text-ink flex items-center justify-center"
             style={{ top: "calc(env(safe-area-inset-top) + 0.75rem)", left: "1rem" }}
           >
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -138,7 +139,7 @@ export default function ProductGallery({
               <button
                 onClick={() => goTo(activeIndex + 1)}
                 aria-label="Next image"
-                className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 text-white items-center justify-center hover:bg-white/20 transition-colors"
+                className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-ink/5 text-ink items-center justify-center hover:bg-ink/10 transition-colors"
               >
                 →
               </button>
@@ -147,15 +148,15 @@ export default function ProductGallery({
 
           {images.length > 1 && (
             <div
-              className="flex gap-2 overflow-x-auto no-scrollbar px-4 py-3 shrink-0"
+              className="flex justify-center gap-2 px-4 py-3 shrink-0"
               style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
             >
               {images.map((img, i) => (
                 <button
                   key={img.url}
                   onClick={() => goTo(i)}
-                  className={`relative w-14 h-16 shrink-0 rounded-md overflow-hidden bg-white/10 transition-opacity ${
-                    i === activeIndex ? "ring-2 ring-white" : "opacity-50 hover:opacity-80"
+                  className={`relative w-14 h-16 shrink-0 rounded-md overflow-hidden bg-paper-raised transition-opacity ${
+                    i === activeIndex ? "ring-2 ring-ink" : "opacity-50 hover:opacity-80"
                   }`}
                 >
                   <Image src={img.url} alt="" fill className="object-cover" sizes="56px" />
