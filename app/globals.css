@@ -170,3 +170,12 @@ html {
 html::-webkit-scrollbar {
   display: none;
 }
+
+/* Home filter row — hides the scrollbar without disabling scroll. */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

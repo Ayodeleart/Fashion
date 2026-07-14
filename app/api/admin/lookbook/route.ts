@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // JSON body — the client already uploaded the image directly to
+    // JSON body — the client already uploaded the image(s) directly to
     // Supabase Storage via a signed URL (see sign-upload/route.ts).
     const body = await request.json();
     const label = String(body.label ?? "").trim();
@@ -28,12 +28,31 @@ export async function POST(request: NextRequest) {
 
     const admin = createAdminClient();
 
+    // Only one look can be the Home hero at a time — unflag any current
+    // one before inserting a new flagged row (the unique partial index
+    // in the DB would reject the insert otherwise).
+    if (body.isHero) {
+      await admin.from("ariana_lookbook_panels").update({ is_hero: false }).eq("is_hero", true);
+    }
+
     const { error: insertErr } = await admin.from("ariana_lookbook_panels").insert({
       label,
       category,
       story,
       href,
       image_url: imageUrl,
+      designer_name: body.designerName ?? null,
+      location: body.location ?? null,
+      badge: body.badge ?? null,
+      fabric: body.fabric ?? null,
+      occasion: body.occasion ?? null,
+      description: body.description ?? null,
+      style_tags: Array.isArray(body.styleTags) ? body.styleTags : [],
+      feed_layout: body.feedLayout ?? null,
+      is_editorial_break: Boolean(body.isEditorialBreak),
+      editorial_label: body.editorialLabel ?? null,
+      is_hero: Boolean(body.isHero),
+      gallery_images: Array.isArray(body.galleryImages) ? body.galleryImages : [],
     });
     if (insertErr) throw new Error(insertErr.message);
 
@@ -59,13 +78,15 @@ export async function DELETE(request: NextRequest) {
 
     const { data: row, error: fetchErr } = await admin
       .from("ariana_lookbook_panels")
-      .select("image_url")
+      .select("image_url, gallery_images")
       .eq("id", id)
       .single();
     if (fetchErr) throw new Error(fetchErr.message);
 
-    const path = row.image_url?.split("/lookbook/").pop();
-    if (path) await admin.storage.from("lookbook").remove([path]);
+    const paths = [row.image_url, ...((row.gallery_images as string[]) ?? [])]
+      .map((url) => url?.split("/lookbook/").pop())
+      .filter((p): p is string => Boolean(p));
+    if (paths.length > 0) await admin.storage.from("lookbook").remove(paths);
 
     const { error: deleteErr } = await admin.from("ariana_lookbook_panels").delete().eq("id", id);
     if (deleteErr) throw new Error(deleteErr.message);
