@@ -45,29 +45,16 @@ async function getHeroBanners(device: "desktop" | "mobile"): Promise<HeroBanner[
   }));
 }
 
-const fallbackLookbookPanels: LookbookPanel[] = [
+// Static on purpose — this page must never read from ariana_lookbook_panels,
+// since that table now belongs to the Home feed (/) and its admin form.
+// Sharing it would mean anything uploaded for Home quietly reappears here
+// too. Edit these three directly if the landing page's lookbook needs to
+// change; it doesn't touch Supabase at all.
+const landingLookbookPanels: LookbookPanel[] = [
   { id: "look-1", label: "The Tailored Line", image: "/images/look-1.jpg", href: "/catalog?look=tailored" },
   { id: "look-2", label: "Evening", image: "/images/look-2.jpg", href: "/catalog?look=evening" },
   { id: "look-3", label: "Off-Duty", image: "/images/look-3.jpg", href: "/catalog?look=off-duty" },
 ];
-
-async function getLookbookPanels(): Promise<LookbookPanel[]> {
-  const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from("ariana_lookbook_panels")
-    .select("id, label, image_url, href")
-    .order("position", { ascending: true })
-    .order("created_at", { ascending: true });
-
-  if (error || !data || data.length === 0) return fallbackLookbookPanels;
-
-  return data.map((row) => ({
-    id: row.id,
-    label: row.label,
-    image: row.image_url,
-    href: row.href,
-  }));
-}
 
 const fallbackProducts: Product[] = [
   { id: "p1", name: "Structured Wool Blazer", price: 890, currency: "USD", image: "/images/product-1.jpg", href: "/product/structured-wool-blazer" },
@@ -106,10 +93,9 @@ async function getNewArrivals(): Promise<Product[]> {
 }
 
 export default async function Home() {
-  const [desktopBanners, mobileBanners, lookbookPanels, newArrivals] = await Promise.all([
+  const [desktopBanners, mobileBanners, newArrivals] = await Promise.all([
     getHeroBanners("desktop"),
     getHeroBanners("mobile"),
-    getLookbookPanels(),
     getNewArrivals(),
   ]);
 
@@ -117,7 +103,7 @@ export default async function Home() {
     <main>
       <Hero desktopBanners={desktopBanners} mobileBanners={mobileBanners} />
 
-      <Lookbook panels={lookbookPanels} />
+      <Lookbook panels={landingLookbookPanels} />
 
       <ProductGrid title="New Arrivals" products={newArrivals} />
 
