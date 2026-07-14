@@ -80,9 +80,12 @@ function ShopIcon() {
 }
 
 const leftItems = [
-  // Home is the editorial style book — lives at its own route, /home,
-  // completely separate from the landing page at "/". Never merge these.
-  { href: "/home", label: "Home", Icon: HomeIcon },
+  // Home = the editorial Pinterest-style lookbook, lives at "/" — this
+  // IS the app's homepage. The old ecommerce showcase page now lives
+  // at /landing, completely unlinked from anywhere in this nav —
+  // same relationship Pinterest has between its marketing site and
+  // its actual home feed.
+  { href: "/", label: "Home", Icon: HomeIcon },
   { href: "/reels", label: "Reels", Icon: ReelsIcon },
 ];
 const rightItems = [

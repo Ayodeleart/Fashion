@@ -1,127 +1,106 @@
-import Hero, { HeroBanner } from "@/components/Hero";
-import Lookbook, { LookbookPanel } from "@/components/Lookbook";
-import ProductGrid, { Product } from "@/components/ProductGrid";
-import Footer from "@/components/Footer";
+import AnnouncementBar from "@/components/home/AnnouncementBar";
+import EditorialHero, { type EditorialHeroLook } from "@/components/home/EditorialHero";
+import HomeFeed, { type FeedLook } from "@/components/home/HomeFeed";
 import { getSupabase } from "@/lib/supabase";
-import { resolveCurrency, resolvePrice } from "@/lib/currency";
 
-// Forced dynamic: without this, Next.js can prerender this page as static
-// HTML at build time and cache it — meaning new hero banners, lookbook
-// panels, or products published afterward via /admin wouldn't show up
-// until the next deployment, regardless of revalidatePath calls. Always
-// fetch live on every request instead.
+// Same reasoning as before: without this, newly published looks from
+// /admin wouldn't show until the next deploy.
 export const dynamic = "force-dynamic";
 
-// FALLBACK — only used until a banner is published from /admin/hero, or
-// if the Supabase fetch fails. Kept separate per device, no substitution.
-const fallbackDesktopBanners: HeroBanner[] = [
-  { id: "fallback-desktop", imageUrl: "/images/hero-desktop.jpg" },
-];
-const fallbackMobileBanners: HeroBanner[] = [
-  { id: "fallback-mobile", imageUrl: "/images/hero-mobile.jpg" },
-];
+const fallbackHero: EditorialHeroLook = {
+  id: "fallback-hero",
+  image: "/images/look-1.jpg",
+  label: "The Season, Reimagined",
+  mediaType: "image",
+};
 
-async function getHeroBanners(device: "desktop" | "mobile"): Promise<HeroBanner[]> {
-  const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from("ariana_hero_banners")
-    .select("id, image_url, href, subtitle, cta_text, cta_href")
-    .eq("status", "published")
-    .eq("device", device)
-    .order("position", { ascending: true })
-    .order("created_at", { ascending: false });
+type PanelRow = {
+  id: string;
+  label: string;
+  image_url: string;
+  href: string | null;
+  category: string | null;
+  story: string | null;
+  designer_name: string | null;
+  location: string | null;
+  badge: "ready-made" | "bespoke" | "ready+bespoke" | null;
+  style_tags: string[] | null;
+  feed_layout: FeedLook["feedLayout"];
+  is_editorial_break: boolean | null;
+  editorial_label: string | null;
+  is_hero: boolean | null;
+  media_type: "image" | "video" | null;
+  video_url: string | null;
+  promo_text: string | null;
+};
 
-  if (error || !data || data.length === 0) {
-    return device === "desktop" ? fallbackDesktopBanners : fallbackMobileBanners;
-  }
+const PANEL_COLUMNS =
+  "id, label, image_url, href, category, story, designer_name, location, badge, style_tags, feed_layout, is_editorial_break, editorial_label, is_hero, media_type, video_url, promo_text";
 
-  return data.map((row) => ({
-    id: row.id,
-    imageUrl: row.image_url,
-    href: row.href,
-    subtitle: row.subtitle,
-    ctaText: row.cta_text,
-    ctaHref: row.cta_href,
-  }));
-}
-
-const fallbackLookbookPanels: LookbookPanel[] = [
-  { id: "look-1", label: "The Tailored Line", image: "/images/look-1.jpg", href: "/catalog?look=tailored" },
-  { id: "look-2", label: "Evening", image: "/images/look-2.jpg", href: "/catalog?look=evening" },
-  { id: "look-3", label: "Off-Duty", image: "/images/look-3.jpg", href: "/catalog?look=off-duty" },
-];
-
-async function getLookbookPanels(): Promise<LookbookPanel[]> {
+async function getAllPanels(): Promise<PanelRow[]> {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("ariana_lookbook_panels")
-    .select("id, label, image_url, href")
+    .select(PANEL_COLUMNS)
     .order("position", { ascending: true })
     .order("created_at", { ascending: true });
 
-  if (error || !data || data.length === 0) return fallbackLookbookPanels;
+  if (error || !data) return [];
+  return data as unknown as PanelRow[];
+}
 
-  return data.map((row) => ({
+function toHeroLook(row: PanelRow): EditorialHeroLook {
+  return {
+    id: row.id,
+    image: row.image_url,
+    label: row.label,
+    mediaType: row.media_type ?? "image",
+    videoUrl: row.video_url,
+    promoText: row.promo_text,
+    ctaText: "Explore The Edit",
+    ctaHref: `/look/${row.id}`,
+  };
+}
+
+function toFeedLook(row: PanelRow): FeedLook {
+  return {
     id: row.id,
     label: row.label,
     image: row.image_url,
-    href: row.href,
-  }));
-}
-
-const fallbackProducts: Product[] = [
-  { id: "p1", name: "Structured Wool Blazer", price: 890, currency: "USD", image: "/images/product-1.jpg", href: "/product/structured-wool-blazer" },
-  { id: "p2", name: "Silk Slip Dress", price: 620, currency: "USD", image: "/images/product-2.jpg", href: "/product/silk-slip-dress" },
-  { id: "p3", name: "Tailored Wide-Leg Trouser", price: 410, currency: "USD", image: "/images/product-3.jpg", href: "/product/tailored-wide-leg-trouser" },
-  { id: "p4", name: "Cashmere Knit Top", price: 340, currency: "USD", image: "/images/product-4.jpg", href: "/product/cashmere-knit-top" },
-];
-
-async function getNewArrivals(): Promise<Product[]> {
-  const supabase = getSupabase();
-  const [{ data, error }, currency] = await Promise.all([
-    supabase
-      .from("ariana_products")
-      .select("id, name, price, currency, price_ngn, slug, ariana_product_images(url, position)")
-      .eq("is_published", true)
-      .order("created_at", { ascending: false })
-      .limit(8),
-    resolveCurrency(),
-  ]);
-
-  if (error || !data || data.length === 0) return fallbackProducts;
-
-  return data.map((row) => {
-    const images = (row.ariana_product_images as { url: string; position: number }[]) ?? [];
-    const firstImage = [...images].sort((a, b) => a.position - b.position)[0];
-    const displayPrice = resolvePrice(row, currency);
-    return {
-      id: row.id,
-      name: row.name,
-      price: displayPrice.amount,
-      currency: displayPrice.currency,
-      image: firstImage?.url ?? "/images/product-placeholder.jpg",
-      href: `/product/${row.slug}`,
-    };
-  });
+    href: `/look/${row.id}`,
+    designerName: row.designer_name,
+    location: row.location,
+    badge: row.badge,
+    category: row.category,
+    styleTags: row.style_tags ?? [],
+    feedLayout: row.feed_layout,
+    isEditorialBreak: row.is_editorial_break ?? false,
+    editorialLabel: row.editorial_label,
+    mediaType: row.media_type ?? "image",
+    videoUrl: row.video_url,
+    promoText: row.promo_text,
+  };
 }
 
 export default async function Home() {
-  const [desktopBanners, mobileBanners, lookbookPanels, newArrivals] = await Promise.all([
-    getHeroBanners("desktop"),
-    getHeroBanners("mobile"),
-    getLookbookPanels(),
-    getNewArrivals(),
-  ]);
+  const panels = await getAllPanels();
+
+  // Home's hero is a look from the SAME lookbook table — never the
+  // landing page's ariana_hero_banners. Admin flags one look with
+  // is_hero; if none is flagged, the first published look stands in.
+  const heroRow = panels.find((p) => p.is_hero) ?? panels[0];
+  const heroLook = heroRow ? toHeroLook(heroRow) : fallbackHero;
+
+  // The hero doesn't repeat in the feed below it — the "feature" blocks
+  // (feed_layout: "feature") are how a look/video/promo shows up again
+  // mid-scroll, placed exactly where the admin sets its position.
+  const looks = panels.filter((p) => p.id !== heroRow?.id).map(toFeedLook);
 
   return (
     <main>
-      <Hero desktopBanners={desktopBanners} mobileBanners={mobileBanners} />
-
-      <Lookbook panels={lookbookPanels} />
-
-      <ProductGrid title="New Arrivals" products={newArrivals} />
-
-      <Footer brandName="AyodeleGold" />
+      <AnnouncementBar />
+      <EditorialHero look={heroLook} />
+      <HomeFeed looks={looks} />
     </main>
   );
 }

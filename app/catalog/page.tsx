@@ -8,8 +8,9 @@ import CategoryRow from "@/components/CategoryRow";
 import FilterSortRow from "@/components/FilterSortRow";
 import CatalogGrid from "@/components/CatalogGrid";
 
-// This is the e-commerce shop home (the mobile app screen). "/" stays the
-// separate editorial landing page — this is deliberately its own surface.
+// This is the e-commerce shop home (the mobile app screen). "/" is the
+// separate editorial Home feed (Pinterest-style lookbook) — this is
+// deliberately its own surface, reached via the bottom nav's Shop button.
 export const dynamic = "force-dynamic";
 
 type ProductRow = {

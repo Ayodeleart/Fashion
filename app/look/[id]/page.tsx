@@ -90,7 +90,7 @@ export default async function LookDetailPage({ params }: { params: Promise<{ id:
     <main>
       <div className="px-4 pt-4 flex items-center">
         <Link
-          href="/home"
+          href="/"
           aria-label="Back"
           className="w-10 h-10 rounded-full bg-paper-raised border border-ink/10 flex items-center justify-center"
         >
