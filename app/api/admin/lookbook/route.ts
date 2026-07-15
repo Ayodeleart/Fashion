@@ -28,13 +28,6 @@ export async function POST(request: NextRequest) {
 
     const admin = createAdminClient();
 
-    // Only one look can be the Home hero at a time — unflag any current
-    // one before inserting a new flagged row (the unique partial index
-    // in the DB would reject the insert otherwise).
-    if (body.isHero) {
-      await admin.from("ariana_lookbook_panels").update({ is_hero: false }).eq("is_hero", true);
-    }
-
     // Blank position = append at the end, same as before this field existed.
     let position: number | null = typeof body.position === "number" ? body.position : null;
     if (position === null) {
@@ -63,7 +56,6 @@ export async function POST(request: NextRequest) {
       feed_layout: body.feedLayout ?? null,
       is_editorial_break: Boolean(body.isEditorialBreak),
       editorial_label: body.editorialLabel ?? null,
-      is_hero: Boolean(body.isHero),
       gallery_images: Array.isArray(body.galleryImages) ? body.galleryImages : [],
       media_type: body.mediaType === "video" ? "video" : "image",
       video_url: body.videoUrl ?? null,

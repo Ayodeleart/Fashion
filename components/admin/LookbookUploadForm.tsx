@@ -73,7 +73,6 @@ export default function LookbookUploadForm() {
   const [feedLayout, setFeedLayout] = useState("");
   const [isEditorialBreak, setIsEditorialBreak] = useState(false);
   const [editorialLabel, setEditorialLabel] = useState("");
-  const [isHero, setIsHero] = useState(false);
   const [galleryFiles, setGalleryFiles] = useState<FileList | null>(null);
   const [mediaType, setMediaType] = useState<"image" | "video">("image");
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -129,7 +128,6 @@ export default function LookbookUploadForm() {
           feedLayout: feedLayout || null,
           isEditorialBreak,
           editorialLabel: editorialLabel || null,
-          isHero,
           galleryImages,
           mediaType,
           videoUrl,
@@ -154,7 +152,6 @@ export default function LookbookUploadForm() {
       setFeedLayout("");
       setIsEditorialBreak(false);
       setEditorialLabel("");
-      setIsHero(false);
       setGalleryFiles(null);
       setMediaType("image");
       setVideoFile(null);
@@ -385,11 +382,6 @@ export default function LookbookUploadForm() {
           />
         </div>
       )}
-
-      <div className="flex items-center gap-2">
-        <input id="is-hero" type="checkbox" checked={isHero} onChange={(e) => setIsHero(e.target.checked)} />
-        <label htmlFor="is-hero" className="text-sm">Use as the Home hero (replaces the current one)</label>
-      </div>
 
       <div>
         <label className="block text-sm mb-1">{mediaType === "video" ? "Poster image (shown before video plays)" : "Image"}</label>

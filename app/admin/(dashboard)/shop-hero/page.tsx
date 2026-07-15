@@ -27,9 +27,10 @@ export default async function ShopHeroAdminPage() {
     <div className="max-w-2xl">
       <h1 className="font-display text-3xl mb-2">Shop Hero</h1>
       <p className="text-sm text-muted mb-6">
-        This is the rounded hero card on the mobile shop home (/catalog) — separate from the editorial
-        site&apos;s Hero Looks. Portrait images work best (roughly 4:5). Pick a link destination below
-        so &ldquo;Shop now&rdquo; always goes somewhere real.
+        This is Home&apos;s hero — the big first-screen image at the top of the app (/) — separate from
+        the marketing landing page&apos;s Hero Looks. The most recent one shows; add another to replace it.
+        Portrait images work best (roughly 4:5). Pick a link destination below so &ldquo;Shop now&rdquo;
+        always goes somewhere real.
       </p>
       <ShopHeroManager initialBanners={banners} categories={categories} />
     </div>

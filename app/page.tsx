@@ -35,14 +35,13 @@ type PanelRow = {
   feed_layout: FeedLook["feedLayout"];
   is_editorial_break: boolean | null;
   editorial_label: string | null;
-  is_hero: boolean | null;
   media_type: "image" | "video" | null;
   video_url: string | null;
   promo_text: string | null;
 };
 
 const PANEL_COLUMNS =
-  "id, label, image_url, href, category, story, designer_name, location, badge, style_tags, feed_layout, is_editorial_break, editorial_label, is_hero, media_type, video_url, promo_text";
+  "id, label, image_url, href, category, story, designer_name, location, badge, style_tags, feed_layout, is_editorial_break, editorial_label, media_type, video_url, promo_text";
 
 async function getAllPanels(): Promise<PanelRow[]> {
   const supabase = getSupabase();
@@ -54,19 +53,6 @@ async function getAllPanels(): Promise<PanelRow[]> {
 
   if (error || !data) return [];
   return data as unknown as PanelRow[];
-}
-
-function toHeroLook(row: PanelRow): EditorialHeroLook {
-  return {
-    id: row.id,
-    image: row.image_url,
-    label: row.label,
-    mediaType: row.media_type ?? "image",
-    videoUrl: row.video_url,
-    promoText: row.promo_text,
-    ctaText: "Explore The Edit",
-    ctaHref: `/look/${row.id}`,
-  };
 }
 
 function toFeedLook(row: PanelRow): FeedLook {
@@ -89,20 +75,36 @@ function toFeedLook(row: PanelRow): FeedLook {
   };
 }
 
+// Home's hero comes from ariana_shop_hero — the same admin section
+// ("Shop Hero") that used to render on /catalog. It's been moved here on
+// request: it's part of the e-commerce PWA's Home feed now, not the Shop
+// grid. This has nothing to do with ariana_hero_banners ("Hero Looks"),
+// which stays exactly where it was — the separate marketing landing page.
+async function getShopHeroLook(): Promise<EditorialHeroLook> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("ariana_shop_hero")
+    .select("id, label, image_url, href")
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return fallbackHero;
+
+  return {
+    id: data.id,
+    image: data.image_url,
+    label: data.label ?? "The Season, Reimagined",
+    mediaType: "image",
+    ctaText: "Shop Now",
+    ctaHref: data.href ?? "/catalog",
+  };
+}
+
 async function getHomeData(): Promise<{ heroLook: EditorialHeroLook; looks: FeedLook[] }> {
-  const panels = await getAllPanels();
-
-  // Home's hero is a look from the SAME lookbook table — never the
-  // landing page's ariana_hero_banners. Admin flags one look with
-  // is_hero; if none is flagged, the first published look stands in.
-  const heroRow = panels.find((p) => p.is_hero) ?? panels[0];
-  const heroLook = heroRow ? toHeroLook(heroRow) : fallbackHero;
-
-  // The hero doesn't repeat in the feed below it — the "feature" blocks
-  // (feed_layout: "feature") are how a look/video/promo shows up again
-  // mid-scroll, placed exactly where the admin sets its position.
-  const looks = panels.filter((p) => p.id !== heroRow?.id).map(toFeedLook);
-
+  const [panels, heroLook] = await Promise.all([getAllPanels(), getShopHeroLook()]);
+  const looks = panels.map(toFeedLook);
   return { heroLook, looks };
 }
 
