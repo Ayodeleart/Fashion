@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AddToCartButton from "@/components/AddToCartButton";
 import SaveButton from "@/components/SaveButton";
 import StickyAddBar from "@/components/StickyAddBar";
 import { useQuickAdd } from "@/components/QuickAddProvider";
+import { useProductColor } from "@/components/ProductColorContext";
 
 type Variant = { id: string; size: string; color: string | null; stock: number };
 
@@ -38,13 +39,9 @@ export default function ProductPurchasePanel({
   slug: string;
   category: string | null;
 }) {
-  const colors = useMemo(
-    () => Array.from(new Set(variants.map((v) => v.color).filter((c): c is string => !!c))),
-    [variants]
-  );
+  const { colors, selectedColor, pickColor: setSelectedColorShared } = useProductColor();
   const hasColors = colors.length > 0;
 
-  const [selectedColor, setSelectedColor] = useState<string | null>(hasColors ? colors[0] : null);
   const [selected, setSelected] = useState<Variant | null>(null);
 
   const sizesForColor = useMemo(
@@ -59,9 +56,16 @@ export default function ProductPurchasePanel({
   const { showAdded } = useQuickAdd();
 
   function pickColor(color: string) {
-    setSelectedColor(color);
+    setSelectedColorShared(color);
     setSelected(null);
   }
+
+  // Color can also change from the swatch overlay on the image itself —
+  // reset the chosen size either way so it never shows a stale variant.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelected(null);
+  }, [selectedColor]);
 
   function handleAdded() {
     showAdded(
@@ -146,17 +150,6 @@ export default function ProductPurchasePanel({
           sticky bar takes over up top. Two different bars never compete
           for the same space, and this one never floats over content. */}
       <div className="flex items-center gap-3">
-        <SaveButton
-          item={{
-            productId,
-            name,
-            price,
-            currency,
-            image,
-            href: `/product/${slug}`,
-          }}
-          className="w-12 h-12 rounded-full border border-ink/15 flex items-center justify-center shrink-0"
-        />
         <AddToCartButton
           productId={productId}
           variantId={selected?.id ?? null}
@@ -171,6 +164,17 @@ export default function ProductPurchasePanel({
           className="flex-1 md:flex-none md:px-10 text-sm py-3.5 rounded-full bg-ink text-paper hover:bg-ink/90 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
           icon={<BagIcon className="w-4 h-4" />}
           label="Add to Bag"
+        />
+        <SaveButton
+          item={{
+            productId,
+            name,
+            price,
+            currency,
+            image,
+            href: `/product/${slug}`,
+          }}
+          className="w-12 h-12 rounded-full border border-ink/15 flex items-center justify-center shrink-0"
         />
       </div>
       <div ref={sentinelRef} />

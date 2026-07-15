@@ -4,6 +4,8 @@ import { getSupabase } from "@/lib/supabase";
 import { resolveCurrency, resolvePrice } from "@/lib/currency";
 import ProductGallery from "@/components/ProductGallery";
 import ProductPurchasePanel from "@/components/ProductPurchasePanel";
+import { ProductColorProvider } from "@/components/ProductColorContext";
+import SmartBackButton from "@/components/SmartBackButton";
 import RevealContainer from "@/components/RevealContainer";
 import ReviewsSection, { type Review } from "@/components/ReviewsSection";
 import RelatedProducts from "@/components/RelatedProducts";
@@ -86,6 +88,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   ]);
   const primaryImage = images[0]?.url ?? "";
   const displayPrice = resolvePrice(product, currency);
+  const colors = Array.from(new Set(variants.map((v) => v.color).filter((c): c is string => !!c)));
 
   // No TopBar here by design — the product page is meant to be an
   // immersive, uninterrupted view of the piece. A real back button
@@ -93,6 +96,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   // see StorefrontChrome — so the floating add-to-cart bar has the
   // space to itself).
   return (
+    <ProductColorProvider colors={colors}>
     <RevealContainer className="md:max-w-5xl md:mx-auto md:pt-8 md:grid md:grid-cols-2 md:gap-10">
       <TrackRecentlyViewed
         id={product.id}
@@ -105,15 +109,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       />
 
       <div className="px-5 pt-5 md:px-0 md:pt-0 flex items-center justify-between">
-        <Link
-          href={product.category ? `/catalog?category=${encodeURIComponent(product.category)}` : "/catalog"}
-          aria-label="Back"
+        <SmartBackButton
+          fallbackHref={product.category ? `/catalog?category=${encodeURIComponent(product.category)}` : "/catalog"}
           className="w-10 h-10 rounded-full bg-paper-raised border border-ink/10 flex items-center justify-center shrink-0"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-        </Link>
+        </SmartBackButton>
         {product.category && (
           <Link
             href={`/catalog?category=${encodeURIComponent(product.category)}`}
@@ -188,5 +191,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         />
       </section>
     </RevealContainer>
+    </ProductColorProvider>
   );
 }

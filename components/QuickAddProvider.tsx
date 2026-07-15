@@ -168,6 +168,7 @@ export function QuickAddProvider({ children }: { children: React.ReactNode }) {
 
             <Link
               href="/cart"
+              onClick={close}
               className="block w-full text-center border border-ink/20 rounded-full py-3 text-sm font-medium mb-6 hover:border-ink/40 transition-colors"
             >
               View Bag ({count})

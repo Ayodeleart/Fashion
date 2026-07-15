@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import SaveButton from "@/components/SaveButton";
+import { useProductColor } from "@/components/ProductColorContext";
 
 type GalleryImage = { url: string };
 
@@ -24,7 +25,9 @@ export default function ProductGallery({
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [swatchesOpen, setSwatchesOpen] = useState(false);
   const touchStartX = useRef<number | null>(null);
+  const { colors, selectedColor, pickColor } = useProductColor();
 
   const active = images[activeIndex];
 
@@ -70,6 +73,48 @@ export default function ProductGallery({
         <div className="absolute top-3 right-3" onClick={(e) => e.stopPropagation()}>
           <SaveButton item={saveItem} className="w-9 h-9 rounded-full bg-white/90 text-black flex items-center justify-center shrink-0" />
         </div>
+
+        {colors.length > 0 && (
+          <div
+            className="absolute top-3 left-3 flex flex-col items-center gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {swatchesOpen &&
+              colors.map((color) => {
+                const isSelected = color === selectedColor;
+                return (
+                  <button
+                    key={color}
+                    type="button"
+                    aria-label={color}
+                    onClick={() => {
+                      pickColor(color);
+                      setSwatchesOpen(false);
+                    }}
+                    className={`w-8 h-8 rounded-full border-2 shadow-sm transition-transform ${
+                      isSelected ? "border-white scale-110" : "border-white/70"
+                    }`}
+                    style={{ backgroundColor: color }}
+                  />
+                );
+              })}
+
+            <button
+              type="button"
+              aria-label={swatchesOpen ? "Close color picker" : "Choose a color"}
+              onClick={() => setSwatchesOpen((open) => !open)}
+              className="w-9 h-9 rounded-full border-2 border-white shadow-sm flex items-center justify-center"
+              style={{ backgroundColor: selectedColor ?? "#e5e5e5" }}
+            >
+              {!swatchesOpen && (
+                <span className="text-white text-xs leading-none drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">+</span>
+              )}
+              {swatchesOpen && (
+                <span className="text-white text-xs leading-none drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">×</span>
+              )}
+            </button>
+          </div>
+        )}
 
         {/* Desktop arrow controls — swipe covers mobile, this covers desktop */}
         {images.length > 1 && (
