@@ -76,7 +76,7 @@ export default function ProductGallery({
 
         {colors.length > 0 && (
           <div
-            className="absolute top-3 left-3 flex flex-col items-center gap-2"
+            className="absolute top-1/2 -translate-y-1/2 left-3 flex flex-col items-center gap-2"
             onClick={(e) => e.stopPropagation()}
           >
             {swatchesOpen &&

@@ -88,31 +88,6 @@ export default function ProductPurchasePanel({
         sentinelRef={sentinelRef}
         onAdded={handleAdded}
       />
-      {hasColors && (
-        <div className="mb-6">
-          <p className="text-sm font-medium mb-2">
-            Color{selectedColor ? <span className="text-muted font-normal"> — {selectedColor}</span> : null}
-          </p>
-          <div className="flex flex-wrap gap-2.5">
-            {colors.map((color) => {
-              const isSelected = selectedColor === color;
-              return (
-                <button
-                  key={color}
-                  type="button"
-                  aria-label={color}
-                  onClick={() => pickColor(color)}
-                  className={`w-9 h-9 rounded-full border-2 transition-all ${
-                    isSelected ? "border-ink scale-110" : "border-ink/15 hover:border-ink/40"
-                  }`}
-                  style={{ backgroundColor: color }}
-                />
-              );
-            })}
-          </div>
-        </div>
-      )}
-
       {hasVariants && (
         <div className="mb-6">
           <p className="text-sm font-medium mb-2">Size</p>
@@ -141,6 +116,31 @@ export default function ProductPurchasePanel({
           </div>
           {needsSelection && <p className="text-xs text-muted mt-2">Pick a size to add this to your cart.</p>}
           {outOfStock && <p className="text-xs text-red-600 mt-2">That size is out of stock.</p>}
+        </div>
+      )}
+
+      {hasColors && (
+        <div className="mb-6">
+          <p className="text-sm font-medium mb-2">
+            Color{selectedColor ? <span className="text-muted font-normal"> — {selectedColor}</span> : null}
+          </p>
+          <div className="flex flex-wrap gap-2.5">
+            {colors.map((color) => {
+              const isSelected = selectedColor === color;
+              return (
+                <button
+                  key={color}
+                  type="button"
+                  aria-label={color}
+                  onClick={() => pickColor(color)}
+                  className={`w-9 h-9 rounded-full border-2 transition-all ${
+                    isSelected ? "border-ink scale-110" : "border-ink/15 hover:border-ink/40"
+                  }`}
+                  style={{ backgroundColor: color }}
+                />
+              );
+            })}
+          </div>
         </div>
       )}
 

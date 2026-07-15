@@ -21,11 +21,26 @@ export type EditorialHeroLook = {
  * for the image variant, disabled under prefers-reduced-motion. Video
  * renders separately from the image path — no parallax transform on it,
  * just plays.
+ *
+ * Rotates through `looks` automatically every 6s when there's more than
+ * one (crossfade, paused while a video look is showing). Height is
+ * shorter than a true full-bleed viewport and object-position anchors
+ * to the top of the frame — full-viewport-height crops on tall portrait
+ * photos were cutting heads off; anchoring top + a shorter box fixes
+ * that regardless of how a given photo is composed.
  */
-export default function EditorialHero({ look }: { look: EditorialHeroLook }) {
+export default function EditorialHero({ looks }: { looks: EditorialHeroLook[] }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [offset, setOffset] = useState(0);
-  const isVideo = look.mediaType === "video" && look.videoUrl;
+  const [index, setIndex] = useState(0);
+  const look = looks[index] ?? looks[0];
+  const isVideo = look?.mediaType === "video" && look.videoUrl;
+
+  useEffect(() => {
+    if (looks.length <= 1 || isVideo) return;
+    const id = setInterval(() => setIndex((i) => (i + 1) % looks.length), 6000);
+    return () => clearInterval(id);
+  }, [looks.length, isVideo]);
 
   useEffect(() => {
     if (isVideo) return; // no parallax on video
@@ -46,8 +61,10 @@ export default function EditorialHero({ look }: { look: EditorialHeroLook }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, [isVideo]);
 
+  if (!look) return null;
+
   return (
-    <section ref={wrapRef} className="relative h-[calc(100dvh-34px)] w-full overflow-hidden bg-ink">
+    <section ref={wrapRef} className="relative h-[72dvh] w-full overflow-hidden bg-ink">
       {isVideo ? (
         <video
           src={look.videoUrl ?? undefined}
@@ -56,7 +73,7 @@ export default function EditorialHero({ look }: { look: EditorialHeroLook }) {
           autoPlay
           loop
           playsInline
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover object-top"
         />
       ) : (
         <div
@@ -64,11 +81,12 @@ export default function EditorialHero({ look }: { look: EditorialHeroLook }) {
           style={{ transform: `translateY(${offset}px)`, transition: "transform 60ms linear" }}
         >
           <Image
+            key={look.id}
             src={look.image}
             alt={look.label}
             fill
             priority
-            className="object-cover scale-[1.08]"
+            className="object-cover object-top transition-opacity duration-700"
             sizes="100vw"
           />
         </div>
@@ -90,6 +108,19 @@ export default function EditorialHero({ look }: { look: EditorialHeroLook }) {
           >
             {look.ctaText}
           </Link>
+        )}
+
+        {looks.length > 1 && (
+          <div className="absolute bottom-4 left-6 md:left-14 flex gap-1.5">
+            {looks.map((l, i) => (
+              <button
+                key={l.id}
+                aria-label={`Go to slide ${i + 1}`}
+                onClick={() => setIndex(i)}
+                className={`h-1.5 rounded-full transition-all ${i === index ? "w-5 bg-paper" : "w-1.5 bg-paper/40"}`}
+              />
+            ))}
+          </div>
         )}
       </div>
     </section>

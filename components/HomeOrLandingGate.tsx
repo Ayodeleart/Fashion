@@ -11,14 +11,14 @@ import type { LookbookPanel } from "@/components/Lookbook";
 import type { Product } from "@/components/ProductGrid";
 
 export default function HomeOrLandingGate({
-  heroLook,
+  heroLooks,
   looks,
   desktopBanners,
   mobileBanners,
   lookbookPanels,
   newArrivals,
 }: {
-  heroLook: EditorialHeroLook;
+  heroLooks: EditorialHeroLook[];
   looks: FeedLook[];
   desktopBanners: HeroBanner[];
   mobileBanners: HeroBanner[];
@@ -46,7 +46,7 @@ export default function HomeOrLandingGate({
   // Plain browser tab → the marketing landing page, no app chrome at all.
   // StorefrontChrome makes the matching decision for the bottom nav/
   // providers — see isHomePath there.
-  if (installed) return <HomeView heroLook={heroLook} looks={looks} />;
+  if (installed) return <HomeView heroLooks={heroLooks} looks={looks} />;
 
   return (
     <LandingView

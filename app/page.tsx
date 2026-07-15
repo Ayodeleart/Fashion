@@ -75,37 +75,38 @@ function toFeedLook(row: PanelRow): FeedLook {
   };
 }
 
+const fallbackHeroLooks: EditorialHeroLook[] = [fallbackHero];
+
 // Home's hero comes from ariana_shop_hero — the same admin section
 // ("Shop Hero") that used to render on /catalog. It's been moved here on
 // request: it's part of the e-commerce PWA's Home feed now, not the Shop
 // grid. This has nothing to do with ariana_hero_banners ("Hero Looks"),
 // which stays exactly where it was — the separate marketing landing page.
-async function getShopHeroLook(): Promise<EditorialHeroLook> {
+async function getShopHeroLooks(): Promise<EditorialHeroLook[]> {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("ariana_shop_hero")
     .select("id, label, image_url, href")
     .order("position", { ascending: true })
     .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(6);
 
-  if (error || !data) return fallbackHero;
+  if (error || !data || data.length === 0) return fallbackHeroLooks;
 
-  return {
-    id: data.id,
-    image: data.image_url,
-    label: data.label ?? "The Season, Reimagined",
-    mediaType: "image",
+  return data.map((row) => ({
+    id: row.id,
+    image: row.image_url,
+    label: row.label ?? "The Season, Reimagined",
+    mediaType: "image" as const,
     ctaText: "Shop Now",
-    ctaHref: data.href ?? "/catalog",
-  };
+    ctaHref: row.href ?? "/catalog",
+  }));
 }
 
-async function getHomeData(): Promise<{ heroLook: EditorialHeroLook; looks: FeedLook[] }> {
-  const [panels, heroLook] = await Promise.all([getAllPanels(), getShopHeroLook()]);
+async function getHomeData(): Promise<{ heroLooks: EditorialHeroLook[]; looks: FeedLook[] }> {
+  const [panels, heroLooks] = await Promise.all([getAllPanels(), getShopHeroLooks()]);
   const looks = panels.map(toFeedLook);
-  return { heroLook, looks };
+  return { heroLooks, looks };
 }
 
 // ---------- Landing (marketing/ecommerce showcase page) ----------
@@ -210,14 +211,14 @@ async function getLandingData() {
 // different audiences — see HomeOrLandingGate and StorefrontChrome.
 
 export default async function RootPage() {
-  const [{ heroLook, looks }, { desktopBanners, mobileBanners, newArrivals, lookbookPanels }] = await Promise.all([
+  const [{ heroLooks, looks }, { desktopBanners, mobileBanners, newArrivals, lookbookPanels }] = await Promise.all([
     getHomeData(),
     getLandingData(),
   ]);
 
   return (
     <HomeOrLandingGate
-      heroLook={heroLook}
+      heroLooks={heroLooks}
       looks={looks}
       desktopBanners={desktopBanners}
       mobileBanners={mobileBanners}
