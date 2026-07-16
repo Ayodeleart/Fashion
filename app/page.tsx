@@ -149,7 +149,11 @@ async function getLandingLookbookPanels(): Promise<LookbookPanel[]> {
     .order("position", { ascending: true })
     .order("created_at", { ascending: true });
 
-  if (error || !data) return [];
+  if (error) {
+    console.error("getLandingLookbookPanels: Supabase query failed —", error.message, error);
+    return [];
+  }
+  if (!data) return [];
 
   return data.map((row) => ({
     id: row.id,
