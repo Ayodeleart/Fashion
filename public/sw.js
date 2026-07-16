@@ -1,4 +1,4 @@
-const CACHE_NAME = "ariana-shell-v4";
+const CACHE_NAME = "ariana-shell-v5";
 const SHELL_URLS = ["/offline.html"];
 
 self.addEventListener("install", (event) => {
@@ -55,6 +55,22 @@ self.addEventListener("notificationclick", (event) => {
     })
   );
 });
+const OFFLINE_FALLBACK_HTML = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>You're offline</title>
+<style>body{font-family:-apple-system,sans-serif;background:#111;color:#eee;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;padding:24px}
+div{max-width:320px}h1{font-size:1.25rem;margin-bottom:8px}p{opacity:.7;font-size:.9rem;margin-bottom:20px}
+button{background:#eee;color:#111;border:0;padding:12px 24px;border-radius:8px;font-size:1rem}</style></head>
+<body><div><h1>You're offline</h1><p>Check your connection and try again.</p>
+<button onclick="location.reload()">Reload</button></div></body></html>`;
+
+function offlineFallbackResponse() {
+  return new Response(OFFLINE_FALLBACK_HTML, {
+    status: 200,
+    headers: { "Content-Type": "text/html; charset=utf-8" },
+  });
+}
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET" || request.url.includes("/admin") || request.url.includes("/api/")) {
@@ -62,7 +78,9 @@ self.addEventListener("fetch", (event) => {
   }
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request).catch(() => caches.match("/offline.html").then((res) => res || fetch(request)))
+      fetch(request).catch(() =>
+        caches.match("/offline.html").then((res) => res ?? offlineFallbackResponse())
+      )
     );
   }
 });
