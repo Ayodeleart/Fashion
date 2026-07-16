@@ -38,30 +38,42 @@ const DETAIL_COLUMNS =
 
 async function getLook(id: string): Promise<LookDetail | null> {
   const supabase = getSupabase();
-  const { data } = await supabase.from("ariana_lookbook_panels").select(DETAIL_COLUMNS).eq("id", id).maybeSingle();
+  const { data, error } = await supabase.from("ariana_lookbook_panels").select(DETAIL_COLUMNS).eq("id", id).maybeSingle();
+  if (error) {
+    console.error(`getLook(${id}): Supabase query failed —`, error.message, error);
+    return null;
+  }
   return (data as LookDetail) ?? null;
 }
 
 async function getSimilarProducts(category: string | null): Promise<SimilarProduct[]> {
   if (!category) return [];
   const supabase = getSupabase();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("ariana_products")
     .select("id, name, slug, price, currency, ariana_product_images(url, position)")
     .eq("category", category)
     .limit(10);
+  if (error) {
+    console.error(`getSimilarProducts(${category}): Supabase query failed —`, error.message, error);
+    return [];
+  }
   return (data as SimilarProduct[]) ?? [];
 }
 
 async function getCategoryLooks(category: string | null, excludeId: string) {
   if (!category) return [];
   const supabase = getSupabase();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("ariana_lookbook_panels")
     .select("id, label, image_url, designer_name, location, badge")
     .eq("category", category)
     .neq("id", excludeId)
     .limit(12);
+  if (error) {
+    console.error(`getCategoryLooks(${category}): Supabase query failed —`, error.message, error);
+    return [];
+  }
   return data ?? [];
 }
 
@@ -154,7 +166,8 @@ export default async function LookDetailPage({ params }: { params: Promise<{ id:
             </h2>
             <div className="flex gap-2 md:gap-3 overflow-x-auto px-4 md:px-8 no-scrollbar">
               {similarProducts.map((product) => {
-                const image = [...product.ariana_product_images].sort((a, b) => a.position - b.position)[0]?.url;
+                const productImages = product.ariana_product_images ?? [];
+                const image = [...productImages].sort((a, b) => a.position - b.position)[0]?.url;
                 return (
                   <Link
                     key={product.id}
