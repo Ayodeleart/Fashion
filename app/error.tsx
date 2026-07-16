@@ -36,6 +36,11 @@ export default function GlobalError({
           Back to Home
         </a>
       </div>
+      {error.digest && (
+        <p className="mt-8 text-xs text-muted font-mono select-all">
+          Ref: {error.digest}
+        </p>
+      )}
     </main>
   );
 }
