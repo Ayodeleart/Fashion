@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import SaveButton from "@/components/SaveButton";
 
 export default function LookGallery({
@@ -30,13 +31,25 @@ export default function LookGallery({
         className="flex w-full aspect-[4/5] md:aspect-[16/9] overflow-x-auto snap-x snap-mandatory no-scrollbar"
       >
         {images.map((src, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={i}
-            src={src}
-            alt={`${label} ${i + 1}`}
-            className="w-full h-full object-cover shrink-0 snap-center"
-          />
+          <div key={i} className="relative w-full h-full shrink-0 snap-center">
+            <Image
+              src={src}
+              alt={`${label} ${i + 1}`}
+              fill
+              className="object-cover"
+              sizes="100vw"
+              // Only the first slide loads eagerly — everything else is
+              // genuinely off-screen in the horizontal track, so there's
+              // no reason to pull full-resolution photos for slides the
+              // person hasn't swiped to yet. Uploaded photography here
+              // runs full-res; without this, a look with several gallery
+              // images loads all of them, full-size, unoptimized, the
+              // instant the page opens — the kind of memory spike that
+              // gets a WKWebView's content process killed on a phone.
+              priority={i === 0}
+              loading={i === 0 ? "eager" : "lazy"}
+            />
+          </div>
         ))}
       </div>
 
