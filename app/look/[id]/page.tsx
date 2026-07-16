@@ -93,7 +93,9 @@ export default async function LookDetailPage({ params }: { params: Promise<{ id:
     getCategoryLooks(look.category, look.id),
   ]);
 
-  const galleryImages = [look.image_url, ...(look.gallery_images ?? [])];
+  const galleryImages = [look.image_url, ...(look.gallery_images ?? [])].filter(
+    (url): url is string => typeof url === "string" && url.trim().length > 0
+  );
   const hasShopLink = look.href && look.href !== "#";
   const isBespoke = look.badge === "bespoke" || look.badge === "ready+bespoke";
   const enquiryQuery = new URLSearchParams({ look: look.id, subject: look.label }).toString();
