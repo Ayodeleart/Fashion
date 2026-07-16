@@ -1,4 +1,4 @@
-const CACHE_NAME = "ariana-shell-v3";
+const CACHE_NAME = "ariana-shell-v4";
 const SHELL_URLS = ["/offline.html"];
 
 self.addEventListener("install", (event) => {
@@ -55,6 +55,7 @@ self.addEventListener("notificationclick", (event) => {
     })
   );
 });
+self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET" || request.url.includes("/admin") || request.url.includes("/api/")) {
     return;
