@@ -36,17 +36,44 @@ type SimilarProduct = {
 const DETAIL_COLUMNS =
   "id, label, image_url, href, category, story, designer_name, location, badge, fabric, occasion, description, gallery_images";
 
-async function getLook(id: string): Promise<LookDetail | null> {
+async function getLook(id: string, trace: string): Promise<LookDetail | null> {
+  console.log(`[${trace}] getLook: fetching id="${id}"`);
   const supabase = getSupabase();
-  const { data, error } = await supabase.from("ariana_lookbook_panels").select(DETAIL_COLUMNS).eq("id", id).maybeSingle();
+  const { data, error, status } = await supabase
+    .from("ariana_lookbook_panels")
+    .select(DETAIL_COLUMNS)
+    .eq("id", id)
+    .maybeSingle();
+
   if (error) {
-    console.error(`getLook(${id}): Supabase query failed —`, error.message, error);
+    // Postgres/PostgREST permission errors (RLS denial via a non-SELECT-safe
+    // path, bad grants, etc.) surface here with a real error code. A row
+    // silently excluded by an RLS SELECT policy does NOT come through this
+    // branch — see the (data === null, error === null) case below, which is
+    // indistinguishable at this layer from "the id genuinely doesn't exist".
+    console.error(
+      `[${trace}] getLook(${id}): Supabase returned an ERROR — status=${status} code=${error.code} message="${error.message}" details="${error.details}" hint="${error.hint}"`
+    );
     return null;
   }
-  return (data as LookDetail) ?? null;
+
+  if (!data) {
+    console.warn(
+      `[${trace}] getLook(${id}): query succeeded but returned NO ROW (status=${status}). ` +
+        `This means either (a) no row with this id exists, or (b) a row exists but an RLS ` +
+        `SELECT policy silently excluded it from the anon-key client — Postgres does not ` +
+        `distinguish these two cases for a plain SELECT, there is no error to catch. ` +
+        `If this id is confirmed to exist in the table, the cause is (b): check the RLS ` +
+        `policy on ariana_lookbook_panels for the anon/authenticated role.`
+    );
+    return null;
+  }
+
+  console.log(`[${trace}] getLook(${id}): OK — row found, label="${(data as LookDetail).label}"`);
+  return data as LookDetail;
 }
 
-async function getSimilarProducts(category: string | null): Promise<SimilarProduct[]> {
+async function getSimilarProducts(category: string | null, trace: string): Promise<SimilarProduct[]> {
   if (!category) return [];
   const supabase = getSupabase();
   const { data, error } = await supabase
@@ -55,13 +82,13 @@ async function getSimilarProducts(category: string | null): Promise<SimilarProdu
     .eq("category", category)
     .limit(10);
   if (error) {
-    console.error(`getSimilarProducts(${category}): Supabase query failed —`, error.message, error);
+    console.error(`[${trace}] getSimilarProducts(${category}): Supabase query failed — code=${error.code} message="${error.message}"`, error);
     return [];
   }
   return (data as SimilarProduct[]) ?? [];
 }
 
-async function getCategoryLooks(category: string | null, excludeId: string) {
+async function getCategoryLooks(category: string | null, excludeId: string, trace: string) {
   if (!category) return [];
   const supabase = getSupabase();
   const { data, error } = await supabase
@@ -71,7 +98,7 @@ async function getCategoryLooks(category: string | null, excludeId: string) {
     .neq("id", excludeId)
     .limit(12);
   if (error) {
-    console.error(`getCategoryLooks(${category}): Supabase query failed —`, error.message, error);
+    console.error(`[${trace}] getCategoryLooks(${category}): Supabase query failed — code=${error.code} message="${error.message}"`, error);
     return [];
   }
   return data ?? [];
@@ -84,14 +111,27 @@ function formatPrice(price: number, currency: string) {
 }
 
 export default async function LookDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const look = await getLook(id);
-  if (!look) notFound();
+  const trace = Math.random().toString(36).slice(2, 8);
+  const rawParams = await params;
+  console.log(`[${trace}] LookDetailPage: raw params =`, JSON.stringify(rawParams));
+
+  const { id } = rawParams;
+  if (!id || id === "undefined" || id === "null") {
+    console.error(`[${trace}] LookDetailPage: received an invalid id ("${id}") from the route params — this is a bad link/href upstream, not a data problem.`);
+    notFound();
+  }
+
+  const look = await getLook(id, trace);
+  if (!look) {
+    console.warn(`[${trace}] LookDetailPage: getLook returned null for id="${id}" — rendering not-found.`);
+    notFound();
+  }
 
   const [similarProducts, categoryLooks] = await Promise.all([
-    getSimilarProducts(look.category),
-    getCategoryLooks(look.category, look.id),
+    getSimilarProducts(look.category, trace),
+    getCategoryLooks(look.category, look.id, trace),
   ]);
+  console.log(`[${trace}] LookDetailPage: rendering "${look.label}" — ${similarProducts.length} similar products, ${categoryLooks.length} category looks`);
 
   const galleryImages = [look.image_url, ...(look.gallery_images ?? [])].filter(
     (url): url is string => typeof url === "string" && url.trim().length > 0

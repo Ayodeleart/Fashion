@@ -57,12 +57,12 @@ export default async function CatalogPage({
     <main>
       <TopBar />
 
-      <div className="sticky top-0 z-20 bg-paper shadow-[0_1px_0_rgba(0,0,0,0.06)] md:hidden">
+      <div className="sticky top-0 z-20 bg-paper shadow-[0_4px_16px_rgba(0,0,0,0.10)] md:hidden">
         <CategoryRow categories={categories} />
+        <Suspense fallback={null}>
+          <FilterSortRow categories={categories} />
+        </Suspense>
       </div>
-      <Suspense fallback={null}>
-        <FilterSortRow categories={categories} />
-      </Suspense>
 
       <section className="px-5 md:px-10 lg:px-16 py-4 md:pt-8 max-w-[1400px] mx-auto">
         {/* Desktop category filter — the mobile CategoryRow above is

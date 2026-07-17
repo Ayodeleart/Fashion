@@ -30,7 +30,7 @@ export default function FilterSortRow({ categories }: { categories: Category[] }
   const sortLabel = SORT_OPTIONS.find((s) => s.value === activeSort)?.label ?? "Sort";
 
   return (
-    <div className="sticky top-[96px] z-10 flex gap-2 px-5 py-2.5 bg-paper border-b border-ink/8 md:hidden">
+    <div className="flex gap-2 px-5 py-2.5 border-t border-ink/8 md:hidden">
       <button
         type="button"
         onClick={() => setOpenSheet("filter")}
