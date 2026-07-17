@@ -81,7 +81,7 @@ export default async function LookDetailPage({ params }: { params: Promise<{ id:
     getCategoryLooks(look.category, look.id),
   ]);
 
-  const galleryImages = [look.image_url, ...(look.gallery_images ?? [])];
+  const galleryImages = [look.image_url, ...(Array.isArray(look.gallery_images) ? look.gallery_images : [])];
   const hasShopLink = look.href && look.href !== "#";
   const isBespoke = look.badge === "bespoke" || look.badge === "ready+bespoke";
   const enquiryQuery = new URLSearchParams({ look: look.id, subject: look.label }).toString();
@@ -154,7 +154,7 @@ export default async function LookDetailPage({ params }: { params: Promise<{ id:
             </h2>
             <div className="flex gap-2 md:gap-3 overflow-x-auto px-4 md:px-8 no-scrollbar">
               {similarProducts.map((product) => {
-                const image = [...product.ariana_product_images].sort((a, b) => a.position - b.position)[0]?.url;
+                const image = [...(product.ariana_product_images ?? [])].sort((a, b) => a.position - b.position)[0]?.url;
                 return (
                   <Link
                     key={product.id}
