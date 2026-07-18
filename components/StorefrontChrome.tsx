@@ -6,7 +6,7 @@ import { CartProvider } from "@/components/CartProvider";
 import { SavedProvider } from "@/components/SavedProvider";
 import { QuickAddProvider } from "@/components/QuickAddProvider";
 import PromoBannerPopup from "@/components/PromoBannerPopup";
-import BottomNav from "@/components/BottomNav";
+import TopNav from "@/components/TopNav";
 import InstallGate from "@/components/InstallGate";
 import DesktopHeader from "@/components/DesktopHeader";
 import DesktopFooter from "@/components/DesktopFooter";
@@ -47,7 +47,6 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
   const pathname = usePathname();
   const isHome = isHomePath(pathname);
   const isImmersive = pathname.startsWith("/reels/") || pathname === "/aria";
-  const hasFloatingBottomBar = pathname.startsWith("/product");
   const [theme, setTheme] = useState<Theme>("light");
   const [installed, setInstalled] = useState(false);
   const [installChecked, setInstallChecked] = useState(false);
@@ -88,9 +87,12 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
           <SavedProvider>
             <QuickAddProvider>
               <div
-                className="w-full min-h-screen bg-paper pb-28 md:pb-0"
+                className="w-full min-h-screen bg-paper"
                 style={{ paddingTop: "env(safe-area-inset-top)" }}
               >
+                <div className="md:hidden">
+                  <TopNav />
+                </div>
                 {children}
               </div>
               <div
@@ -98,9 +100,6 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
                 style={{ height: "env(safe-area-inset-top)" }}
                 aria-hidden="true"
               />
-              <div className="md:hidden">
-                <BottomNav />
-              </div>
             </QuickAddProvider>
           </SavedProvider>
         </CartProvider>
@@ -130,9 +129,10 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
                 {!installChecked ? null : installed ? (
                   <>
                     <div
-                      className={`w-full min-h-screen bg-paper ${hasFloatingBottomBar ? "" : "pb-28"}`}
+                      className="w-full min-h-screen bg-paper"
                       style={{ paddingTop: "env(safe-area-inset-top)" }}
                     >
+                      <TopNav />
                       {children}
                     </div>
                     <div
@@ -140,7 +140,6 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
                       style={{ height: "env(safe-area-inset-top)" }}
                       aria-hidden="true"
                     />
-                    {!hasFloatingBottomBar && <BottomNav />}
                   </>
                 ) : (
                   <MobileInstallPrompt
@@ -164,9 +163,10 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
             <SavedProvider>
               <QuickAddProvider>
                 <div
-                  className={`w-full min-h-screen ${isImmersive ? "" : "pb-28"}`}
+                  className="w-full min-h-screen"
                   style={{ paddingTop: isImmersive ? undefined : "env(safe-area-inset-top)" }}
                 >
+                  {!isImmersive && <TopNav />}
                   {children}
                 </div>
                 {!isImmersive && (
@@ -176,7 +176,6 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
                     aria-hidden="true"
                   />
                 )}
-                {!isImmersive && <BottomNav />}
                 {!isImmersive && <PromoBannerPopup />}
               </QuickAddProvider>
             </SavedProvider>

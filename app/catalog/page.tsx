@@ -60,7 +60,7 @@ export default async function CatalogPage({
 
       <div
         className="sticky z-20 bg-paper shadow-[0_4px_16px_rgba(0,0,0,0.10)] md:hidden"
-        style={{ top: "env(safe-area-inset-top)" }}
+        style={{ top: "calc(env(safe-area-inset-top) + 56px)" }}
       >
         <CategoryRow categories={categories} />
         <Suspense fallback={null}>
