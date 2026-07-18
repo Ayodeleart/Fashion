@@ -18,7 +18,7 @@ import { THEME_COOKIE_NAME, type Theme } from "@/lib/theme-shared";
 //   completely unchanged; they just ALSO now work on desktop.
 // - MOBILE_ONLY_PREFIXES: unchanged from before — install-gated,
 //   phone-only (reels, saved, search, the rest of /account).
-const RESPONSIVE_PREFIXES = ["/catalog", "/cart", "/checkout", "/account/login", "/account/signup", "/product"];
+const RESPONSIVE_PREFIXES = ["/catalog", "/cart", "/checkout", "/account/login", "/account/signup", "/product", "/look"];
 const MOBILE_ONLY_PREFIXES = ["/saved", "/account", "/search", "/reels", "/auth", "/aria"];
 const SHOP_PREFIXES = [...RESPONSIVE_PREFIXES, ...MOBILE_ONLY_PREFIXES];
 
