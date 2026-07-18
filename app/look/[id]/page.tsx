@@ -279,13 +279,13 @@ export default async function LookDetailPage({ params }: { params: Promise<{ id:
               instead of its own full-width pill. */}
           <div className="flex items-center gap-2 max-w-md mx-auto md:mx-0 mt-2">
             <Link
-              href={`/contact?reason=appointment&${enquiryQuery}`}
+              href={`/appointment?${enquiryQuery}`}
               className="flex-1 flex items-center justify-center h-12 rounded-full bg-ink text-paper text-sm text-center px-3"
             >
               Book Appointment
             </Link>
             <Link
-              href={`/contact?reason=enquiry&${enquiryQuery}`}
+              href={`/enquiry?${enquiryQuery}`}
               className="flex-1 flex items-center justify-center h-12 rounded-full bg-ink text-paper text-sm text-center px-3"
             >
               Make Enquiry

@@ -7,13 +7,15 @@ const SOURCE_LABEL: Record<string, string> = {
   ai_complaint: "Aria · complaint",
   ai_handoff: "Aria · talk to human",
   reel_send: "Reel inquiry",
+  appointment: "Appointment request",
+  enquiry: "Enquiry",
 };
 
 async function getMessages() {
   const admin = createAdminClient();
   const { data } = await admin
     .from("ariana_contact_messages")
-    .select("id, name, email, message, created_at, source")
+    .select("id, name, email, message, created_at, source, phone, service_type, preferred_date, preferred_time")
     .order("created_at", { ascending: false });
   return data ?? [];
 }
@@ -25,7 +27,7 @@ export default async function AdminMessagesPage() {
     <div>
       <h1 className="font-display text-3xl mb-2">Messages</h1>
       <p className="text-sm text-muted mb-8 max-w-lg">
-        Submissions from the /contact page and the Aria AI concierge (complaints + human handoff requests).
+        Submissions from the /contact page, the Appointment and Enquiry screens, and the Aria AI concierge (complaints + human handoff requests).
       </p>
 
       {messages.length === 0 ? (
@@ -47,9 +49,16 @@ export default async function AdminMessagesPage() {
                 </div>
                 <p className="text-xs text-muted">{new Date(m.created_at).toLocaleString()}</p>
               </div>
-              <a href={`mailto:${m.email}`} className="text-xs text-brass hover:underline">
-                {m.email}
-              </a>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+                <a href={`mailto:${m.email}`} className="text-brass hover:underline">
+                  {m.email}
+                </a>
+                {m.phone && <a href={`tel:${m.phone}`} className="text-brass hover:underline">{m.phone}</a>}
+                {m.service_type && <span>· {m.service_type}</span>}
+                {(m.preferred_date || m.preferred_time) && (
+                  <span>· Preferred: {m.preferred_date ?? ""} {m.preferred_time ?? ""}</span>
+                )}
+              </div>
               <p className="text-sm mt-2 whitespace-pre-wrap">{m.message}</p>
             </div>
           ))}

@@ -8,19 +8,23 @@ import { QuickAddProvider } from "@/components/QuickAddProvider";
 import PromoBannerPopup from "@/components/PromoBannerPopup";
 import BottomNav from "@/components/BottomNav";
 import InstallGate from "@/components/InstallGate";
+import DesktopHeader from "@/components/DesktopHeader";
+import DesktopFooter from "@/components/DesktopFooter";
+import MobileInstallPrompt from "@/components/MobileInstallPrompt";
 import { isStandalone } from "@/lib/pwa-standalone";
 import { THEME_COOKIE_NAME, type Theme } from "@/lib/theme-shared";
 
 // Two tiers within the shop:
 // - RESPONSIVE_PREFIXES: real desktop layouts exist (catalog, cart,
-//   checkout, login/signup) — these render normally at any width, no
-//   InstallGate, no "mobile only" block. Mobile behavior for these is
-//   completely unchanged; they just ALSO now work on desktop.
+//   checkout, login/signup, product, look). Desktop gets a genuine browser
+//   storefront here — top nav + footer, no bottom nav/app-shell, no install
+//   requirement at all. Mobile browsers get the same app-shell as before,
+//   but ONLY once actually installed; an uninstalled phone browser sees an
+//   install prompt instead of the shopping UI (see MobileInstallPrompt).
 // - MOBILE_ONLY_PREFIXES: unchanged from before — install-gated,
 //   phone-only (reels, saved, search, the rest of /account).
-const RESPONSIVE_PREFIXES = ["/catalog", "/cart", "/checkout", "/account/login", "/account/signup", "/product", "/look"];
+const RESPONSIVE_PREFIXES = ["/catalog", "/cart", "/checkout", "/account/login", "/account/signup", "/product", "/look", "/appointment", "/enquiry"];
 const MOBILE_ONLY_PREFIXES = ["/saved", "/account", "/search", "/reels", "/auth", "/aria"];
-const SHOP_PREFIXES = [...RESPONSIVE_PREFIXES, ...MOBILE_ONLY_PREFIXES];
 
 // "/" is two different pages depending on who's asking (see
 // HomeOrLandingGate + app/page.tsx): a plain browser tab gets the
@@ -69,38 +73,81 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
   if (isHome && !installChecked) return null;
 
   const homeGetsAppShell = isHome && installed;
-  const isShop = homeGetsAppShell || SHOP_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-  const isResponsive = homeGetsAppShell || RESPONSIVE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  const isEcommerceRoute = RESPONSIVE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  const isShop = homeGetsAppShell || isEcommerceRoute || MOBILE_ONLY_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
   if (!isShop) return <>{children}</>;
 
-  if (isResponsive) {
+  // Installed Home keeps its existing mobile app-shell exactly as it was —
+  // untouched by the desktop storefront / install-gate logic below, since by
+  // definition the app is already installed to reach this branch at all.
+  if (homeGetsAppShell) {
     return (
       <div data-theme={theme} suppressHydrationWarning>
         <CartProvider>
           <SavedProvider>
             <QuickAddProvider>
-              {/* Bottom nav + its reserved padding is a phone-app pattern —
-                  desktop gets normal page flow, no InstallGate either
-                  (product/product pages, mobile-only /product excluded
-                  deliberately — see note below). */}
               <div
-                className={`w-full min-h-screen bg-paper ${hasFloatingBottomBar ? "" : "pb-28"} md:pb-0`}
+                className="w-full min-h-screen bg-paper pb-28 md:pb-0"
                 style={{ paddingTop: "env(safe-area-inset-top)" }}
               >
                 {children}
               </div>
-              {/* Padding above only reserves initial space — it scrolls away
-                  with the page like anything else. This mask is position:fixed,
-                  so it never moves and permanently seals the notch strip no
-                  matter what scrolls underneath it (sticky bars included). */}
               <div
                 className="fixed top-0 left-0 right-0 z-30 bg-paper pointer-events-none"
                 style={{ height: "env(safe-area-inset-top)" }}
                 aria-hidden="true"
               />
               <div className="md:hidden">
-                {!hasFloatingBottomBar && <BottomNav />}
+                <BottomNav />
+              </div>
+            </QuickAddProvider>
+          </SavedProvider>
+        </CartProvider>
+      </div>
+    );
+  }
+
+  if (isEcommerceRoute) {
+    return (
+      <div data-theme={theme} suppressHydrationWarning>
+        <CartProvider>
+          <SavedProvider>
+            <QuickAddProvider>
+              {/* Desktop: a real storefront — top nav + footer, no install
+                  requirement, no bottom nav/app-shell at all. */}
+              <div className="hidden md:flex md:flex-col md:min-h-screen">
+                <DesktopHeader />
+                <div className="flex-1">{children}</div>
+                <DesktopFooter />
+              </div>
+
+              {/* Mobile browser: same app-shell as before, but only once
+                  actually installed — otherwise an install prompt instead of
+                  the shopping UI, so mobile web visitors get funneled into
+                  installing rather than browsing uninstalled. */}
+              <div className="md:hidden">
+                {!installChecked ? null : installed ? (
+                  <>
+                    <div
+                      className={`w-full min-h-screen bg-paper ${hasFloatingBottomBar ? "" : "pb-28"}`}
+                      style={{ paddingTop: "env(safe-area-inset-top)" }}
+                    >
+                      {children}
+                    </div>
+                    <div
+                      className="fixed top-0 left-0 right-0 z-30 bg-paper pointer-events-none"
+                      style={{ height: "env(safe-area-inset-top)" }}
+                      aria-hidden="true"
+                    />
+                    {!hasFloatingBottomBar && <BottomNav />}
+                  </>
+                ) : (
+                  <MobileInstallPrompt
+                    heading="Add this app to shop"
+                    body="Browsing and checkout run best as an installed app on your phone — it's quick to add, and keeps things fast and secure."
+                  />
+                )}
               </div>
             </QuickAddProvider>
           </SavedProvider>
