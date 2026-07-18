@@ -67,10 +67,10 @@ export default function AddToCartButton({
           setTimeout(() => setAdded(false), 1200);
           onAdded?.();
         }}
-        className={
+        className={`${
           className ??
           "text-xs px-3 py-1.5 rounded-full bg-ink text-paper hover:bg-ink/90 transition-colors disabled:opacity-50"
-        }
+        } ${fullWidth ? "w-full md:w-auto" : ""}`}
       >
         {pending ? (
           "Adding…"
