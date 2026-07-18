@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import SaveButton from "@/components/SaveButton";
 
 export default function LookGallery({
@@ -36,7 +37,7 @@ export default function LookGallery({
               src={src}
               alt={`${label} ${i + 1}`}
               fill
-              className="object-cover"
+              className="object-cover object-top"
               sizes="100vw"
               // Only the first slide loads eagerly — everything else is
               // genuinely off-screen in the horizontal track, so there's
@@ -65,6 +66,20 @@ export default function LookGallery({
           ))}
         </div>
       )}
+
+      {/* Overlaid on the image itself, same as the product page, instead of
+          pushing the photo down inside its own header row. */}
+      <div className="absolute top-3 left-3">
+        <Link
+          href="/"
+          aria-label="Back"
+          className="w-10 h-10 rounded-full bg-black/35 backdrop-blur-sm flex items-center justify-center text-paper"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </Link>
+      </div>
 
       <div className="absolute top-3 right-3">
         <SaveButton

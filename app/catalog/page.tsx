@@ -44,9 +44,10 @@ async function getProducts(category?: string, sort?: string) {
 export default async function CatalogPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; sort?: string }>;
+  searchParams: Promise<{ category?: string; sort?: string; cols?: string }>;
 }) {
-  const { category, sort } = await searchParams;
+  const { category, sort, cols } = await searchParams;
+  const gridCols = cols === "3" || cols === "4" ? cols : "2";
   const [products, categories, currency] = await Promise.all([
     getProducts(category, sort),
     getCategories(),
@@ -57,7 +58,10 @@ export default async function CatalogPage({
     <main>
       <TopBar />
 
-      <div className="sticky top-0 z-20 bg-paper shadow-[0_4px_16px_rgba(0,0,0,0.10)] md:hidden">
+      <div
+        className="sticky z-20 bg-paper shadow-[0_4px_16px_rgba(0,0,0,0.10)] md:hidden"
+        style={{ top: "env(safe-area-inset-top)" }}
+      >
         <CategoryRow categories={categories} />
         <Suspense fallback={null}>
           <FilterSortRow categories={categories} />
@@ -92,7 +96,7 @@ export default async function CatalogPage({
         {products.length === 0 ? (
           <p className="text-sm text-muted">No products {category ? `in ${category} ` : ""}yet.</p>
         ) : (
-          <CatalogGrid products={products} currency={currency} />
+          <CatalogGrid products={products} currency={currency} cols={gridCols} />
         )}
       </section>
     </main>

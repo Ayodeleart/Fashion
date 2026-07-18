@@ -142,22 +142,12 @@ export default async function LookDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <main>
-      <div className="px-4 pt-4 flex items-center">
-        <Link
-          href="/"
-          aria-label="Back"
-          className="w-10 h-10 rounded-full bg-paper-raised border border-ink/10 flex items-center justify-center"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </Link>
-      </div>
-
       <RevealContainer>
         {/* Swipeable, Pinterest-style — swipe through every uploaded photo.
-            Love icon in the corner saves it to favorites. */}
-        <div data-reveal="image" className="mt-3">
+            Love icon in the corner saves it to favorites. Back button floats
+            on the image itself now (see LookGallery) instead of sitting in
+            its own header row above it. */}
+        <div data-reveal="image">
           <LookGallery id={look.id} label={look.label} images={galleryImages} />
         </div>
 
@@ -281,15 +271,22 @@ export default async function LookDetailPage({ params }: { params: Promise<{ id:
                 Discuss With Tailor
               </Link>
             )}
+          </div>
+
+          {/* Book Appointment / Make Enquiry lead to the same contact form
+              today (different "reason" tag) — no dedicated appointment
+              screen exists yet. Share is now just an icon alongside them
+              instead of its own full-width pill. */}
+          <div className="flex items-center gap-2 max-w-md mx-auto md:mx-0 mt-2">
             <Link
               href={`/contact?reason=appointment&${enquiryQuery}`}
-              className="flex items-center justify-center h-12 rounded-full border border-ink/10 text-ink text-sm text-center px-3"
+              className="flex-1 flex items-center justify-center h-12 rounded-full bg-ink text-paper text-sm text-center px-3"
             >
               Book Appointment
             </Link>
             <Link
               href={`/contact?reason=enquiry&${enquiryQuery}`}
-              className="flex items-center justify-center h-12 rounded-full border border-ink/10 text-ink text-sm text-center px-3"
+              className="flex-1 flex items-center justify-center h-12 rounded-full bg-ink text-paper text-sm text-center px-3"
             >
               Make Enquiry
             </Link>

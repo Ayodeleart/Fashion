@@ -28,7 +28,7 @@ export type CardProduct = {
   priority?: boolean;
 };
 
-export default function ProductCard({ product }: { product: CardProduct }) {
+export default function ProductCard({ product, compact = false }: { product: CardProduct; compact?: boolean }) {
   const { openQuickAdd } = useQuickAdd();
 
   function formatPrice(price: number, currency: string) {
@@ -80,16 +80,16 @@ export default function ProductCard({ product }: { product: CardProduct }) {
               category: product.category,
             });
           }}
-          className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow-sm hover:bg-white transition-colors"
+          className={`absolute bottom-2 right-2 ${compact ? "w-7 h-7" : "w-8 h-8"} rounded-full bg-white/90 text-black flex items-center justify-center shadow-sm hover:bg-white transition-colors`}
         >
-          <BagIcon className="w-4 h-4" />
+          <BagIcon className={compact ? "w-3.5 h-3.5" : "w-4 h-4"} />
         </button>
       </div>
 
       <div className="px-2 pt-2 pb-3">
         {product.brandLabel && <p className="text-[10px] tracking-wide text-muted uppercase">{product.brandLabel}</p>}
-        <p className="text-sm text-ink truncate">{product.name}</p>
-        <p className="text-sm text-ink font-medium mt-0.5">{formatPrice(product.price, product.currency)}</p>
+        <p className={`${compact ? "text-xs" : "text-sm"} text-ink truncate`}>{product.name}</p>
+        <p className={`${compact ? "text-xs" : "text-sm"} text-ink font-medium mt-0.5`}>{formatPrice(product.price, product.currency)}</p>
       </div>
     </Link>
   );

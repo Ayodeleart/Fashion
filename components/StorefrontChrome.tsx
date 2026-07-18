@@ -95,7 +95,7 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
                   so it never moves and permanently seals the notch strip no
                   matter what scrolls underneath it (sticky bars included). */}
               <div
-                className="fixed top-0 left-0 right-0 z-20 bg-paper pointer-events-none"
+                className="fixed top-0 left-0 right-0 z-30 bg-paper pointer-events-none"
                 style={{ height: "env(safe-area-inset-top)" }}
                 aria-hidden="true"
               />
@@ -124,7 +124,7 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
                 </div>
                 {!isImmersive && (
                   <div
-                    className="fixed top-0 left-0 right-0 z-20 bg-paper pointer-events-none"
+                    className="fixed top-0 left-0 right-0 z-30 bg-paper pointer-events-none"
                     style={{ height: "env(safe-area-inset-top)" }}
                     aria-hidden="true"
                   />
