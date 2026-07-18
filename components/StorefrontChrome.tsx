@@ -90,6 +90,15 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
               >
                 {children}
               </div>
+              {/* Padding above only reserves initial space — it scrolls away
+                  with the page like anything else. This mask is position:fixed,
+                  so it never moves and permanently seals the notch strip no
+                  matter what scrolls underneath it (sticky bars included). */}
+              <div
+                className="fixed top-0 left-0 right-0 z-20 bg-paper pointer-events-none"
+                style={{ height: "env(safe-area-inset-top)" }}
+                aria-hidden="true"
+              />
               <div className="md:hidden">
                 {!hasFloatingBottomBar && <BottomNav />}
               </div>
@@ -113,6 +122,13 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
                 >
                   {children}
                 </div>
+                {!isImmersive && (
+                  <div
+                    className="fixed top-0 left-0 right-0 z-20 bg-paper pointer-events-none"
+                    style={{ height: "env(safe-area-inset-top)" }}
+                    aria-hidden="true"
+                  />
+                )}
                 {!isImmersive && <BottomNav />}
                 {!isImmersive && <PromoBannerPopup />}
               </QuickAddProvider>
