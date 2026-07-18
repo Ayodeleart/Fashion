@@ -84,7 +84,12 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
                   desktop gets normal page flow, no InstallGate either
                   (product/product pages, mobile-only /product excluded
                   deliberately — see note below). */}
-              <div className={`w-full min-h-screen bg-paper ${hasFloatingBottomBar ? "" : "pb-28"} md:pb-0`}>{children}</div>
+              <div
+                className={`w-full min-h-screen bg-paper ${hasFloatingBottomBar ? "" : "pb-28"} md:pb-0`}
+                style={{ paddingTop: "env(safe-area-inset-top)" }}
+              >
+                {children}
+              </div>
               <div className="md:hidden">
                 {!hasFloatingBottomBar && <BottomNav />}
               </div>
@@ -102,7 +107,12 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
           <CartProvider>
             <SavedProvider>
               <QuickAddProvider>
-                <div className={`w-full min-h-screen ${isImmersive ? "" : "pb-28"}`}>{children}</div>
+                <div
+                  className={`w-full min-h-screen ${isImmersive ? "" : "pb-28"}`}
+                  style={{ paddingTop: isImmersive ? undefined : "env(safe-area-inset-top)" }}
+                >
+                  {children}
+                </div>
                 {!isImmersive && <BottomNav />}
                 {!isImmersive && <PromoBannerPopup />}
               </QuickAddProvider>
