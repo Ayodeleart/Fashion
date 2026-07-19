@@ -109,6 +109,36 @@ async function getHomeData(): Promise<{ heroLooks: EditorialHeroLook[]; looks: F
   return { heroLooks, looks };
 }
 
+// Small preview set for Home's Video tab. Deliberately separate from
+// app/reels/page.tsx's own query — that page still exists and still
+// works exactly as it did; this is just enough for an in-place preview.
+type ReelPreviewRow = {
+  id: string;
+  thumbnail_url: string | null;
+  video_url: string;
+  ariana_categories: { slug: string } | null;
+};
+
+async function getReelsPreview(): Promise<{ id: string; thumbnailUrl: string | null; videoUrl: string; categorySlug: string }[]> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("ariana_reels")
+    .select("id, thumbnail_url, video_url, ariana_categories(slug)")
+    .eq("status", "published")
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: false })
+    .limit(12);
+
+  if (error || !data) return [];
+
+  return (data as unknown as ReelPreviewRow[]).map((r) => ({
+    id: r.id,
+    thumbnailUrl: r.thumbnail_url,
+    videoUrl: r.video_url,
+    categorySlug: r.ariana_categories?.slug ?? "uncategorized",
+  }));
+}
+
 // ---------- Landing (marketing/ecommerce showcase page) ----------
 
 const fallbackDesktopBanners: HeroBanner[] = [{ id: "fallback-desktop", imageUrl: "/images/hero-desktop.jpg" }];
@@ -215,9 +245,10 @@ async function getLandingData() {
 // different audiences — see HomeOrLandingGate and StorefrontChrome.
 
 export default async function RootPage() {
-  const [{ heroLooks, looks }, { desktopBanners, mobileBanners, newArrivals, lookbookPanels }] = await Promise.all([
+  const [{ heroLooks, looks }, { desktopBanners, mobileBanners, newArrivals, lookbookPanels }, reelsPreview] = await Promise.all([
     getHomeData(),
     getLandingData(),
+    getReelsPreview(),
   ]);
 
   return (
@@ -228,6 +259,7 @@ export default async function RootPage() {
       mobileBanners={mobileBanners}
       lookbookPanels={lookbookPanels}
       newArrivals={newArrivals}
+      reelsPreview={reelsPreview}
     />
   );
 }

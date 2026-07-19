@@ -6,7 +6,6 @@ import { CartProvider } from "@/components/CartProvider";
 import { SavedProvider } from "@/components/SavedProvider";
 import { QuickAddProvider } from "@/components/QuickAddProvider";
 import PromoBannerPopup from "@/components/PromoBannerPopup";
-import TopNav from "@/components/TopNav";
 import InstallGate from "@/components/InstallGate";
 import DesktopHeader from "@/components/DesktopHeader";
 import DesktopFooter from "@/components/DesktopFooter";
@@ -129,7 +128,6 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
                       className="w-full min-h-screen bg-paper"
                       style={{ paddingTop: "env(safe-area-inset-top)" }}
                     >
-                      <TopNav />
                       {children}
                     </div>
                     <div
@@ -163,7 +161,6 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
                   className="w-full min-h-screen"
                   style={{ paddingTop: isImmersive ? undefined : "env(safe-area-inset-top)" }}
                 >
-                  {!isImmersive && <TopNav />}
                   {children}
                 </div>
                 {!isImmersive && (

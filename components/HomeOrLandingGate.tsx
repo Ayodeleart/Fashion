@@ -9,6 +9,7 @@ import type { FeedLook } from "@/components/home/HomeFeed";
 import type { HeroBanner } from "@/components/Hero";
 import type { LookbookPanel } from "@/components/Lookbook";
 import type { Product } from "@/components/ProductGrid";
+import type { ReelPreview } from "@/components/ReelsPreviewGrid";
 
 export default function HomeOrLandingGate({
   heroLooks,
@@ -17,6 +18,7 @@ export default function HomeOrLandingGate({
   mobileBanners,
   lookbookPanels,
   newArrivals,
+  reelsPreview,
 }: {
   heroLooks: EditorialHeroLook[];
   looks: FeedLook[];
@@ -24,6 +26,7 @@ export default function HomeOrLandingGate({
   mobileBanners: HeroBanner[];
   lookbookPanels: LookbookPanel[];
   newArrivals: Product[];
+  reelsPreview: ReelPreview[];
 }) {
   const [ready, setReady] = useState(false);
   const [installed, setInstalled] = useState(false);
@@ -46,7 +49,7 @@ export default function HomeOrLandingGate({
   // Plain browser tab → the marketing landing page, no app chrome at all.
   // StorefrontChrome makes the matching decision for the bottom nav/
   // providers — see isHomePath there.
-  if (installed) return <HomeView heroLooks={heroLooks} looks={looks} />;
+  if (installed) return <HomeView heroLooks={heroLooks} looks={looks} newArrivals={newArrivals} reelsPreview={reelsPreview} />;
 
   return (
     <LandingView

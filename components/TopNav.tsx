@@ -1,8 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useLayoutEffect, useRef, useState, type ReactElement } from "react";
 
 // Exact SVGs supplied for this redesign — untouched.
 function ShopIcon() {
@@ -28,25 +26,25 @@ function VideoIcon() {
   );
 }
 
-const segments = [
-  { href: "/catalog", label: "Shop", Icon: ShopIcon },
-  { href: "/", label: "Lookbook", Icon: LookbookIcon },
-  { href: "/reels", label: "Videos", Icon: VideoIcon },
+export type HomeTab = "shop" | "lookbook" | "video";
+
+const segments: { key: HomeTab; Icon: () => ReactElement }[] = [
+  { key: "shop", Icon: ShopIcon },
+  { key: "lookbook", Icon: LookbookIcon },
+  { key: "video", Icon: VideoIcon },
 ];
 
-// Icon-only, 3 items, evenly spans full width — no labels, no extra
-// icons. Matches the reference exactly.
-export default function TopNav() {
-  const pathname = usePathname();
-
-  const itemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
+// Icon-only, 3 items, evenly spans full width — sticky like a category
+// row: switches which panel renders below, never navigates away, so
+// scrolling up always gets you back to the hero.
+export default function TopNav({ active, onChange }: { active: HomeTab; onChange: (tab: HomeTab) => void }) {
+  const itemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
 
   useLayoutEffect(() => {
     function measure() {
-      const active = segments.find((item) => item.href === pathname);
-      const el = active ? itemRefs.current[active.href] : null;
+      const el = itemRefs.current[active];
       const container = containerRef.current;
       if (!el || !container) {
         setPill(null);
@@ -59,8 +57,7 @@ export default function TopNav() {
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  }, [active]);
 
   return (
     <nav className="sticky top-0 left-0 right-0 z-20 bg-ink">
@@ -77,19 +74,17 @@ export default function TopNav() {
             }}
           />
         )}
-        {segments.map(({ href, Icon }) => {
-          const active = pathname === href;
+        {segments.map(({ key, Icon }) => {
+          const isActive = active === key;
           return (
-            <Link
-              key={href}
-              href={href}
-              ref={(el) => {
-                itemRefs.current[href] = el;
-              }}
-              className={`relative z-10 flex-1 flex items-center justify-center ${active ? "text-ink" : "text-paper"}`}
+            <button
+              key={key}
+              type="button"
+              onClick={() => onChange(key)}
+              className={`relative z-10 flex-1 flex items-center justify-center ${isActive ? "text-ink" : "text-paper"}`}
             >
               <Icon />
-            </Link>
+            </button>
           );
         })}
       </div>
