@@ -28,39 +28,14 @@ function VideoIcon() {
   );
 }
 
-// Kept from BottomNav so Saved/Profile don't lose their icons — only
-// their position changes, artwork is identical.
-function HeartIcon({ active }: { active: boolean }) {
-  return (
-    <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M12 20s-7.5-4.6-9.6-9.2C1.2 7.6 3 4.5 6.3 4.1c2-.2 3.7.9 5.7 3 2-2.1 3.7-3.2 5.7-3 3.3.4 5.1 3.5 3.9 6.7C19.5 15.4 12 20 12 20Z"
-        stroke="currentColor"
-        strokeWidth={active ? 2.2 : 1.6}
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-function ProfileIcon({ active }: { active: boolean }) {
-  return (
-    <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="8" r="3.6" stroke="currentColor" strokeWidth={active ? 2.2 : 1.6} />
-      <path d="M4.5 20c1.4-3.6 4.4-5.5 7.5-5.5s6.1 1.9 7.5 5.5" stroke="currentColor" strokeWidth={active ? 2.2 : 1.6} strokeLinecap="round" />
-    </svg>
-  );
-}
-
-// Center segmented control: Shop / Lookbook(Home) / Reels — this is the
-// one that gets the sliding-pill active indicator. Saved + Profile sit
-// outside it as plain icon links, same as they did in BottomNav's
-// rightItems, just relocated.
 const segments = [
   { href: "/catalog", label: "Shop", Icon: ShopIcon },
   { href: "/", label: "Lookbook", Icon: LookbookIcon },
   { href: "/reels", label: "Videos", Icon: VideoIcon },
 ];
 
+// Icon-only, 3 items, evenly spans full width — no labels, no extra
+// icons. Matches the reference exactly.
 export default function TopNav() {
   const pathname = usePathname();
 
@@ -87,58 +62,36 @@ export default function TopNav() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  const savedActive = pathname === "/saved";
-  const profileActive = pathname === "/account/profile";
-
   return (
-    <nav className="sticky top-0 left-0 right-0 z-20 bg-paper border-b border-ink/10">
-      <div className="max-w-md mx-auto flex items-center justify-between gap-2 px-3 h-14">
-        <Link
-          href="/saved"
-          aria-label="Saved"
-          className="flex items-center justify-center w-9 h-9 shrink-0 text-ink"
-        >
-          <HeartIcon active={savedActive} />
-        </Link>
-
-        <div ref={containerRef} className="relative flex items-center flex-1 justify-between bg-paper-raised rounded-full px-1 h-10">
-          {pill && (
-            <span
-              aria-hidden
-              className="absolute top-1/2 h-8 rounded-full bg-brass/20 pointer-events-none"
-              style={{
-                left: pill.left - 4,
-                width: pill.width + 8,
-                transform: "translateY(-50%)",
-                transition: "left 350ms cubic-bezier(0.34, 1.56, 0.64, 1), width 350ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+    <nav className="sticky top-0 left-0 right-0 z-20 bg-ink">
+      <div ref={containerRef} className="relative flex items-stretch w-full h-14 px-3">
+        {pill && (
+          <span
+            aria-hidden
+            className="absolute top-1/2 h-10 rounded-full bg-paper pointer-events-none"
+            style={{
+              left: pill.left,
+              width: pill.width,
+              transform: "translateY(-50%)",
+              transition: "left 350ms cubic-bezier(0.34, 1.56, 0.64, 1), width 350ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+            }}
+          />
+        )}
+        {segments.map(({ href, Icon }) => {
+          const active = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              ref={(el) => {
+                itemRefs.current[href] = el;
               }}
-            />
-          )}
-          {segments.map(({ href, label, Icon }) => {
-            const active = pathname === href;
-            return (
-              <Link
-                key={href}
-                href={href}
-                ref={(el) => {
-                  itemRefs.current[href] = el;
-                }}
-                className="relative z-10 flex-1 flex items-center justify-center gap-1.5 h-8 text-ink"
-              >
-                <Icon />
-                <span className={`text-[12px] ${active ? "font-medium text-ink" : "text-muted"}`}>{label}</span>
-              </Link>
-            );
-          })}
-        </div>
-
-        <Link
-          href="/account/profile"
-          aria-label="Profile"
-          className="flex items-center justify-center w-9 h-9 shrink-0 text-ink"
-        >
-          <ProfileIcon active={profileActive} />
-        </Link>
+              className={`relative z-10 flex-1 flex items-center justify-center ${active ? "text-ink" : "text-paper"}`}
+            >
+              <Icon />
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );
