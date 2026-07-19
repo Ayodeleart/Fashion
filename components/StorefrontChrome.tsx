@@ -90,9 +90,6 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
                 className="w-full min-h-screen bg-paper"
                 style={{ paddingTop: "env(safe-area-inset-top)" }}
               >
-                <div className="md:hidden">
-                  <TopNav />
-                </div>
                 {children}
               </div>
               <div
