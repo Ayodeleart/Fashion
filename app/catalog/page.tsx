@@ -56,7 +56,7 @@ export default async function CatalogPage({
 
   return (
     <main>
-      <TopBar />
+      <TopBar hideAria />
 
       <div
         className="sticky z-20 bg-paper shadow-[0_4px_16px_rgba(0,0,0,0.10)] md:hidden"

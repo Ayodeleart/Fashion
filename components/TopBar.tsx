@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCart } from "@/components/CartProvider";
 import AriaIcon from "@/components/AriaIcon";
 
-export default function TopBar() {
+export default function TopBar({ hideAria }: { hideAria?: boolean } = {}) {
   const { count } = useCart();
 
   return (
@@ -21,10 +21,14 @@ export default function TopBar() {
       </Link>
 
       <div className="flex items-center gap-3">
-        {/* AI button — unchanged, same AriaIcon used everywhere else Aria is entered */}
-        <Link href="/aria" aria-label="Ask Aria" className="w-10 h-10 rounded-full overflow-hidden shrink-0">
-          <AriaIcon className="w-full h-full" />
-        </Link>
+        {/* AI button — unchanged, same AriaIcon used everywhere else Aria is entered.
+            Hidden where the Concierge FAB now covers this entry point (currently
+            just Shop) so there isn't a redundant AI icon in both places. */}
+        {!hideAria && (
+          <Link href="/aria" aria-label="Ask Aria" className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+            <AriaIcon className="w-full h-full" />
+          </Link>
+        )}
 
         <Link
           href="/cart"

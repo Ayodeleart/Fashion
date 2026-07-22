@@ -261,6 +261,13 @@ export default async function LookDetailPage({ params }: { params: Promise<{ id:
               </Link>
             )}
 
+            <Link
+              href={`/try-on?look=${encodeURIComponent(look.id)}`}
+              className="col-span-2 flex items-center justify-center gap-1.5 h-12 rounded-full border border-brass/40 text-ink text-sm font-medium"
+            >
+              <span aria-hidden>✨</span> Try This Look On
+            </Link>
+
             {isBespoke && (
               <Link
                 href={`/contact?reason=bespoke&${enquiryQuery}`}

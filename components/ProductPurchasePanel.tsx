@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import AddToCartButton from "@/components/AddToCartButton";
 import SaveButton from "@/components/SaveButton";
 import StickyAddBar from "@/components/StickyAddBar";
@@ -165,6 +166,14 @@ export default function ProductPurchasePanel({
           className="w-14 h-14 rounded-full border border-ink/15 flex items-center justify-center shrink-0"
         />
       </div>
+
+      <Link
+        href={`/try-on?product=${encodeURIComponent(slug)}`}
+        className="mt-2.5 w-full h-12 rounded-full border border-brass/40 text-sm font-medium text-ink hover:bg-brass/10 transition-colors flex items-center justify-center gap-1.5"
+      >
+        <span aria-hidden>✨</span> Try It On
+      </Link>
+
       <div ref={sentinelRef} />
     </div>
   );

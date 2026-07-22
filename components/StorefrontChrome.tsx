@@ -7,6 +7,7 @@ import { SavedProvider } from "@/components/SavedProvider";
 import { QuickAddProvider } from "@/components/QuickAddProvider";
 import PromoBannerPopup from "@/components/PromoBannerPopup";
 import BottomNav from "@/components/BottomNav";
+import ConciergeFAB from "@/components/ConciergeFAB";
 import InstallGate from "@/components/InstallGate";
 import DesktopHeader from "@/components/DesktopHeader";
 import DesktopFooter from "@/components/DesktopFooter";
@@ -100,6 +101,7 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
               />
               <div className="md:hidden">
                 <BottomNav />
+                <ConciergeFAB bottomOffsetClass="bottom-[calc(5rem+env(safe-area-inset-bottom))]" />
               </div>
             </QuickAddProvider>
           </SavedProvider>
@@ -141,6 +143,13 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
                       aria-hidden="true"
                     />
                     {!hasFloatingBottomBar && <BottomNav />}
+                    <ConciergeFAB
+                      bottomOffsetClass={
+                        hasFloatingBottomBar
+                          ? "bottom-[calc(1.5rem+env(safe-area-inset-bottom))]"
+                          : "bottom-[calc(5rem+env(safe-area-inset-bottom))]"
+                      }
+                    />
                   </>
                 ) : (
                   <MobileInstallPrompt
