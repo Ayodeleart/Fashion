@@ -49,6 +49,13 @@ export default function MeasurementsFlow() {
         return;
       }
       const h = parseFloat(heightCm);
+      const anklesVisible =
+        (landmarks[27]?.visibility ?? 1) >= 0.4 && (landmarks[28]?.visibility ?? 1) >= 0.4;
+      if (!anklesVisible) {
+        setError("Your feet weren't fully visible — step further back from the camera so your whole body, ankles included, fits in frame, then try again.");
+        setStep("capture-front");
+        return;
+      }
       const result = estimateMeasurements(landmarks, h, img.naturalWidth, img.naturalHeight);
       if (!result) {
         setError("Couldn't estimate from that photo — try again with better lighting and your full body visible.");
@@ -131,7 +138,7 @@ export default function MeasurementsFlow() {
         {error && <p className="text-xs text-red-600">{error}</p>}
         <TimedCameraCapture
           title="Front photo"
-          instructions="Stand facing the camera, full body in frame, plain background if possible. Pick a timer, then step into position — it captures automatically."
+          instructions="Stand facing the camera, far enough back that your feet are fully visible in frame, plain background if possible. Pick a timer, then step into position — it captures automatically."
           onCapture={handleFrontCapture}
         />
       </div>

@@ -51,7 +51,7 @@ export default function TimedCameraCapture({
     setState("requesting");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 1280 } },
+        video: { facingMode: "user", width: { ideal: 1080 }, height: { ideal: 1920 }, aspectRatio: { ideal: 9 / 16 } },
         audio: false,
       });
       streamRef.current = stream;
@@ -137,7 +137,7 @@ export default function TimedCameraCapture({
         <p className="text-xs text-muted mt-0.5">{instructions}</p>
       </div>
 
-      <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden bg-ink/90 flex items-center justify-center">
+      <div className="relative w-full aspect-[9/16] rounded-2xl overflow-hidden bg-ink/90 flex items-center justify-center">
         {state === "captured" && previewUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={previewUrl} alt="Captured" className="w-full h-full object-cover" />
@@ -186,8 +186,13 @@ export default function TimedCameraCapture({
         )}
 
         {state === "countdown" && secondsLeft !== null && secondsLeft > 0 && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-            <span className="text-paper font-display text-7xl leading-none drop-shadow-lg">{secondsLeft}</span>
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+            <span
+              className="font-display text-8xl leading-none"
+              style={{ color: "#ffffff", fontWeight: 800, textShadow: "0 2px 12px rgba(0,0,0,0.65)" }}
+            >
+              {secondsLeft}
+            </span>
           </div>
         )}
 
@@ -195,15 +200,17 @@ export default function TimedCameraCapture({
         {state === "live" && (
           <svg
             aria-hidden
-            viewBox="0 0 100 140"
-            className="absolute inset-0 w-full h-full opacity-30 pointer-events-none"
+            viewBox="0 0 512.00 512.00"
+            className="absolute inset-0 w-full h-full opacity-35 pointer-events-none py-6"
+            preserveAspectRatio="xMidYMid meet"
+            fill="none"
           >
-            <ellipse cx="50" cy="18" rx="10" ry="12" stroke="white" strokeWidth="1.2" fill="none" />
+            <circle stroke="#ffffff" strokeMiterlimit="10" strokeWidth="5.632" cx="256" cy="56" r="40" />
             <path
-              d="M50 30 L50 90 M50 40 L20 70 M50 40 L80 70 M50 90 L30 135 M50 90 L70 135"
-              stroke="white"
-              strokeWidth="1.2"
-              fill="none"
+              stroke="#ffffff"
+              strokeMiterlimit="10"
+              strokeWidth="5.632"
+              d="M199.3,295.62h0l-30.4,172.2a24,24,0,0,0,19.5,27.8,23.76,23.76,0,0,0,27.6-19.5l21-119.9v.2s5.2-32.5,17.5-32.5h3.1c12.5,0,17.5,32.5,17.5,32.5v-.1l21,119.9a23.92,23.92,0,1,0,47.1-8.4l-30.4-172.2-4.9-29.7c-2.9-18.1-4.2-47.6.5-59.7,4-10.4,14.13-14.2,23.2-14.2H424a24,24,0,0,0,0-48H88a24,24,0,0,0,0,48h92.5c9.23,0,19.2,3.8,23.2,14.2,4.7,12.1,3.4,41.6.5,59.7Z"
             />
           </svg>
         )}

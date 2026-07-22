@@ -47,7 +47,7 @@ function readTheme(): Theme {
 export default function StorefrontChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isHome = isHomePath(pathname);
-  const isImmersive = pathname.startsWith("/reels/") || pathname === "/aria";
+  const isImmersive = pathname.startsWith("/reels/") || pathname === "/aria" || pathname === "/account/measurements";
   const hasFloatingBottomBar = pathname.startsWith("/product") || pathname.startsWith("/try-on");
   const [theme, setTheme] = useState<Theme>("light");
   const [installed, setInstalled] = useState(false);

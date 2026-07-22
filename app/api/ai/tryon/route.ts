@@ -16,16 +16,26 @@ const GENERATION_TIMEOUT_MS = 45_000;
 const MAX_IMAGE_DATA_URL_LENGTH = 20_000_000;
 
 function buildPrompt(productName: string | undefined) {
-  const garmentLine = productName
-    ? `the exact garment shown in the second reference image (an item called "${productName}")`
-    : "the exact garment shown in the second reference image";
+  const garmentLine = productName ? ` The garment is called "${productName}".` : "";
 
   return (
-    `Using the first image as the person and the second image as the garment, generate a single photorealistic, premium fashion-editorial image of THIS SAME PERSON wearing ${garmentLine}. ` +
-    "Preserve the person's face, identity, skin tone, hair, and body proportions exactly — do not turn them into a different person. " +
-    "Reproduce the garment's actual color, pattern, embroidery, and design details accurately, adapted naturally to the person's body with realistic fabric folds, shadows, and fit. " +
-    "If the person's original pose or posture is awkward, correct it into a natural, flattering standing fashion pose, keeping hands, arms, and legs anatomically correct. " +
-    "Light it like a professional fashion campaign shoot and place them on a clean, premium studio-quality background that complements the garment. Output one image only."
+    "You are given exactly two reference images. IMAGE 1 is a photo of a real person. IMAGE 2 is a product photo of a garment/outfit.\n\n" +
+    "Generate one photorealistic fashion-editorial image of the person from IMAGE 1 wearing the exact garment from IMAGE 2." +
+    garmentLine +
+    "\n\n" +
+    "Person (from IMAGE 1) — preserve exactly:\n" +
+    "- Face, identity, skin tone, hair, and body proportions must match IMAGE 1 exactly. This must look like the same person, not a different model.\n" +
+    "- If their original pose is awkward, correct it into a natural, flattering standing fashion pose. Keep hands, arms, and legs anatomically correct.\n\n" +
+    "Garment (from IMAGE 2) — reproduce exactly, do not redesign it:\n" +
+    "- Copy the garment's silhouette, cut, and every visible design element precisely: exact color(s), pattern, stripes, embroidery, beading, and trim placement as shown in IMAGE 2.\n" +
+    "- If IMAGE 2 shows a full coordinated look (e.g. an outfit with a matching wrap, headwrap/gele, or draped fabric), include all of it, styled the same way.\n" +
+    "- Do not substitute a different color, pattern, or style. Do not simplify or invent details that aren't in IMAGE 2 — if a detail is unclear, replicate it as closely as possible rather than guessing something new.\n" +
+    "- Fit the garment naturally to the person's body with realistic fabric folds, drape, and shadow — it should look worn, not pasted on.\n\n" +
+    "Background and lighting — this is a strict requirement, not a suggestion:\n" +
+    "- Pure white seamless studio backdrop, evenly lit (like a professional product/fashion studio cyclorama) — not off-white, not grey, not gradient, not colored.\n" +
+    "- Soft, realistic studio shadow directly beneath the subject's feet, consistent with the studio lighting. No other props, textures, or scenery in the background.\n" +
+    "- Light the subject like a professional fashion campaign shoot: soft, flattering, directional studio lighting.\n\n" +
+    "Output exactly one image, full body, nothing else."
   );
 }
 

@@ -48,6 +48,7 @@ export default function TryOnFlow({ target: initialTarget }: { target: Target })
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -108,6 +109,7 @@ export default function TryOnFlow({ target: initialTarget }: { target: Target })
     setError(null);
     setStep("upload");
     if (fileInputRef.current) fileInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
   }
 
   if (pickerOpen || !target) {
@@ -159,20 +161,36 @@ export default function TryOnFlow({ target: initialTarget }: { target: Target })
           {error && <p className="text-xs text-red-600">{error}</p>}
 
           <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="user"
+            onChange={handleFile}
+            className="hidden"
+            id="tryon-camera-input"
+          />
+          <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            capture="environment"
             onChange={handleFile}
             className="hidden"
-            id="tryon-photo-input"
+            id="tryon-upload-input"
           />
-          <label
-            htmlFor="tryon-photo-input"
-            className="w-full h-12 rounded-full border border-ink/15 flex items-center justify-center text-sm font-medium cursor-pointer"
-          >
-            {photo ? "Retake / Choose Another Photo" : "Upload or Take Photo"}
-          </label>
+          <div className="flex gap-2.5">
+            <label
+              htmlFor="tryon-camera-input"
+              className="flex-1 h-12 rounded-full border border-ink/15 flex items-center justify-center text-sm font-medium cursor-pointer"
+            >
+              {photo ? "Retake Photo" : "Take Photo"}
+            </label>
+            <label
+              htmlFor="tryon-upload-input"
+              className="flex-1 h-12 rounded-full border border-ink/15 flex items-center justify-center text-sm font-medium cursor-pointer"
+            >
+              Upload Photo
+            </label>
+          </div>
 
           {step === "ready" && (
             <button
