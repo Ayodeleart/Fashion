@@ -24,7 +24,7 @@ import { THEME_COOKIE_NAME, type Theme } from "@/lib/theme-shared";
 //   install prompt instead of the shopping UI (see MobileInstallPrompt).
 // - MOBILE_ONLY_PREFIXES: unchanged from before — install-gated,
 //   phone-only (reels, saved, search, the rest of /account).
-const RESPONSIVE_PREFIXES = ["/catalog", "/cart", "/checkout", "/account/login", "/account/signup", "/product", "/look", "/appointment", "/enquiry"];
+const RESPONSIVE_PREFIXES = ["/catalog", "/cart", "/checkout", "/account/login", "/account/signup", "/product", "/look", "/appointment", "/enquiry", "/try-on"];
 const MOBILE_ONLY_PREFIXES = ["/saved", "/account", "/search", "/reels", "/auth", "/aria"];
 
 // "/" is two different pages depending on who's asking (see
@@ -48,7 +48,7 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
   const pathname = usePathname();
   const isHome = isHomePath(pathname);
   const isImmersive = pathname.startsWith("/reels/") || pathname === "/aria";
-  const hasFloatingBottomBar = pathname.startsWith("/product");
+  const hasFloatingBottomBar = pathname.startsWith("/product") || pathname.startsWith("/try-on");
   const [theme, setTheme] = useState<Theme>("light");
   const [installed, setInstalled] = useState(false);
   const [installChecked, setInstallChecked] = useState(false);

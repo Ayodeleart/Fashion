@@ -9,6 +9,11 @@ import { NextRequest, NextResponse } from "next/server";
 // preservation + accurate garment reproduction both need — a plain
 // clothing-overlay model can't do either.
 const FAL_MODEL = "fal-ai/nano-banana/edit";
+const GENERATION_TIMEOUT_MS = 45_000;
+// Data-URI images roughly ~1.35x their decoded byte size; ~15MB decoded
+// is already a very large phone photo, so this catches accidental
+// full-resolution uploads before they hit fal.ai's own limits.
+const MAX_IMAGE_DATA_URL_LENGTH = 20_000_000;
 
 function buildPrompt(productName: string | undefined) {
   const garmentLine = productName
@@ -26,10 +31,23 @@ function buildPrompt(productName: string | undefined) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { personImage, productImageUrl, productName } = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Malformed request." }, { status: 400 });
+    }
+    const { personImage, productImageUrl, productName } = (body ?? {}) as {
+      personImage?: unknown;
+      productImageUrl?: unknown;
+      productName?: unknown;
+    };
 
     if (typeof personImage !== "string" || !personImage) {
       return NextResponse.json({ error: "A photo of you is required." }, { status: 400 });
+    }
+    if (personImage.length > MAX_IMAGE_DATA_URL_LENGTH) {
+      return NextResponse.json({ error: "That photo is too large — try a smaller or lower-resolution image." }, { status: 413 });
     }
     if (typeof productImageUrl !== "string" || !productImageUrl) {
       return NextResponse.json({ error: "That product doesn't have a usable photo yet." }, { status: 400 });
@@ -43,38 +61,72 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const falRes = await fetch(`https://fal.run/${FAL_MODEL}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Key ${apiKey}`,
-      },
-      body: JSON.stringify({
-        prompt: buildPrompt(typeof productName === "string" ? productName : undefined),
-        image_urls: [personImage, productImageUrl],
-        num_images: 1,
-        output_format: "jpeg",
-      }),
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), GENERATION_TIMEOUT_MS);
 
-    if (!falRes.ok) {
-      const errText = await falRes.text();
-      throw new Error(`fal.ai error (${falRes.status}): ${errText.slice(0, 300)}`);
+    let falRes: Response;
+    try {
+      falRes = await fetch(`https://fal.run/${FAL_MODEL}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Key ${apiKey}`,
+        },
+        body: JSON.stringify({
+          prompt: buildPrompt(typeof productName === "string" ? productName : undefined),
+          image_urls: [personImage, productImageUrl],
+          num_images: 1,
+          output_format: "jpeg",
+        }),
+        signal: controller.signal,
+      });
+    } catch (fetchErr) {
+      if (fetchErr instanceof Error && fetchErr.name === "AbortError") {
+        return NextResponse.json(
+          { error: "Generation is taking longer than expected — please try again." },
+          { status: 504 }
+        );
+      }
+      throw fetchErr;
+    } finally {
+      clearTimeout(timeout);
     }
 
-    const data = await falRes.json();
-    const resultUrl: string | undefined = data?.images?.[0]?.url;
-    if (!resultUrl) throw new Error("fal.ai returned no image.");
+    if (!falRes.ok) {
+      // fal.ai error bodies are usually JSON but not guaranteed — never
+      // let a non-JSON error body itself throw and mask the real status.
+      let detail = "";
+      try {
+        detail = await falRes.text();
+      } catch {
+        // ignore — we still have falRes.status below
+      }
+      console.error(`[api/ai/tryon] fal.ai returned ${falRes.status}: ${detail.slice(0, 500)}`);
+      const message =
+        falRes.status === 401 || falRes.status === 403
+          ? "AI Try-On isn't configured correctly — check the FAL_KEY value."
+          : "Couldn't generate that look right now — please try again.";
+      return NextResponse.json({ error: message }, { status: 502 });
+    }
+
+    let data: unknown;
+    try {
+      data = await falRes.json();
+    } catch {
+      return NextResponse.json({ error: "Received an unexpected response — please try again." }, { status: 502 });
+    }
+
+    const resultUrl = (data as { images?: { url?: string }[] } | null)?.images?.[0]?.url;
+    if (typeof resultUrl !== "string" || !resultUrl) {
+      console.error("[api/ai/tryon] fal.ai response had no image URL:", JSON.stringify(data).slice(0, 500));
+      return NextResponse.json({ error: "That generation didn't produce an image — please try again." }, { status: 502 });
+    }
 
     return NextResponse.json({ resultUrl });
   } catch (err) {
+    console.error("[api/ai/tryon] unexpected error:", err);
     return NextResponse.json(
-      {
-        error:
-          err instanceof Error
-            ? err.message
-            : "Couldn't generate that look — please try again with a clearer photo.",
-      },
+      { error: "Couldn't generate that look — please try again with a clearer photo." },
       { status: 500 }
     );
   }

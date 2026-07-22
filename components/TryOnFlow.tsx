@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import TryOnPicker, { type PickerTarget } from "@/components/TryOnPicker";
 
 type Target = { name: string; image: string; href: string } | null;
 
@@ -38,7 +39,10 @@ function fileToCompressedDataUrl(file: File): Promise<string> {
   });
 }
 
-export default function TryOnFlow({ target }: { target: Target }) {
+export default function TryOnFlow({ target: initialTarget }: { target: Target }) {
+  const [pickedTarget, setPickedTarget] = useState<PickerTarget | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(!initialTarget);
+  const target = pickedTarget ?? initialTarget;
   const [step, setStep] = useState<Step>("upload");
   const [photo, setPhoto] = useState<string | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
@@ -72,13 +76,25 @@ export default function TryOnFlow({ target }: { target: Target }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ personImage: photo, productImageUrl: target.image, productName: target.name }),
       });
-      const data: { resultUrl?: string; error?: string } = await res.json();
-      if (data.error || !data.resultUrl) throw new Error(data.error || "Something went wrong generating that look.");
+
+      let data: { resultUrl?: string; error?: string } = {};
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error("Received an unexpected response from the server — please try again.");
+      }
+
+      if (!res.ok || !data.resultUrl) {
+        throw new Error(data.error || "Something went wrong generating that look.");
+      }
       setResultUrl(data.resultUrl);
       setStep("result");
     } catch (err) {
+      const isNetworkError = err instanceof TypeError;
       setError(
-        err instanceof Error
+        isNetworkError
+          ? "Couldn't reach the server — check your connection and try again."
+          : err instanceof Error
           ? err.message
           : "Couldn't generate that look. Try a clearer, well-lit full-body photo."
       );
@@ -94,18 +110,20 @@ export default function TryOnFlow({ target }: { target: Target }) {
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
-  if (!target) {
+  if (pickerOpen || !target) {
     return (
-      <div className="rounded-2xl border border-ink/10 p-6 text-center">
-        <p className="text-sm text-muted mb-4">
-          Pick a piece from the shop or a look from the lookbook first, then tap Try It On.
-        </p>
-        <Link
-          href="/catalog"
-          className="inline-flex items-center justify-center h-11 px-6 rounded-full bg-ink text-paper text-sm font-medium"
-        >
-          Browse Shop
-        </Link>
+      <div className="flex flex-col gap-3">
+        <TryOnPicker
+          onPick={(t) => {
+            setPickedTarget(t);
+            setPickerOpen(false);
+          }}
+        />
+        {target && (
+          <button type="button" onClick={() => setPickerOpen(false)} className="text-xs text-muted underline self-center">
+            Cancel
+          </button>
+        )}
       </div>
     );
   }
@@ -116,10 +134,13 @@ export default function TryOnFlow({ target }: { target: Target }) {
         <div className="relative w-14 h-18 rounded-lg overflow-hidden bg-paper-raised shrink-0">
           <Image src={target.image} alt={target.name} fill className="object-cover" sizes="56px" />
         </div>
-        <div>
+        <div className="flex-1 min-w-0">
           <p className="text-xs text-muted">Trying on</p>
-          <p className="text-sm font-medium">{target.name}</p>
+          <p className="text-sm font-medium truncate">{target.name}</p>
         </div>
+        <button type="button" onClick={() => setPickerOpen(true)} className="text-xs text-muted underline shrink-0">
+          Change
+        </button>
       </div>
 
       {(step === "upload" || step === "ready") && (

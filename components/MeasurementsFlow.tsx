@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
 import { estimateMeasurements, type EstimatedMeasurements, type PoseLandmark } from "@/lib/poseMeasurements";
+import TimedCameraCapture from "@/components/measurement/TimedCameraCapture";
 
-type Step = "intro" | "capture" | "processing" | "review" | "saved";
+type Step = "intro" | "capture-front" | "processing" | "capture-side" | "review" | "saved";
 
 const FIELD_LABELS: Record<keyof EstimatedMeasurements, string> = {
   shoulderCm: "Shoulder width",
@@ -25,43 +26,40 @@ const HIGH_CONFIDENCE_FIELDS = new Set<keyof EstimatedMeasurements>(["shoulderCm
 export default function MeasurementsFlow() {
   const router = useRouter();
   const pathname = usePathname();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<Step>("intro");
   const [heightCm, setHeightCm] = useState("170");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [sideImageUrl, setSideImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [values, setValues] = useState<EstimatedMeasurements | null>(null);
   const [saving, setSaving] = useState(false);
 
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function handleFrontCapture(dataUrl: string) {
     setError(null);
-    const url = URL.createObjectURL(file);
-    setImageUrl(url);
+    setImageUrl(dataUrl);
     setStep("processing");
 
     try {
-      const img = await loadImage(url);
+      const img = await loadImage(dataUrl);
       const landmarks = await detectPose(img);
       if (!landmarks) {
         setError("Couldn't get a clear read on that photo — stand facing the camera, full body in frame, arms slightly away from your sides, then try again.");
-        setStep("capture");
+        setStep("capture-front");
         return;
       }
       const h = parseFloat(heightCm);
       const result = estimateMeasurements(landmarks, h, img.naturalWidth, img.naturalHeight);
       if (!result) {
         setError("Couldn't estimate from that photo — try again with better lighting and your full body visible.");
-        setStep("capture");
+        setStep("capture-front");
         return;
       }
       setValues(result);
-      setStep("review");
+      setStep("capture-side");
     } catch {
       setError("Something went wrong analyzing that photo. Try again.");
-      setStep("capture");
+      setStep("capture-front");
     }
   }
 
@@ -106,8 +104,8 @@ export default function MeasurementsFlow() {
         <p className="text-sm text-muted">
           Two things: your height, and one full-body photo facing the camera
           (plain background, arms slightly away from your sides). We estimate
-          your measurements from that — no tape measure needed. You'll get a
-          chance to fine-tune every number before it's saved.
+          your measurements from that — no tape measure needed. You&apos;ll get a
+          chance to fine-tune every number before it&apos;s saved.
         </p>
         <label className="text-sm font-medium">Height (cm)</label>
         <input
@@ -117,7 +115,7 @@ export default function MeasurementsFlow() {
           className="bg-paper-raised rounded-full px-4 py-3 text-sm outline-none"
         />
         <button
-          onClick={() => setStep("capture")}
+          onClick={() => setStep("capture-front")}
           disabled={!heightCm || parseFloat(heightCm) <= 0}
           className="bg-ink text-paper rounded-full py-3 text-sm font-medium disabled:opacity-50"
         >
@@ -127,27 +125,32 @@ export default function MeasurementsFlow() {
     );
   }
 
-  if (step === "capture") {
+  if (step === "capture-front") {
     return (
       <div className="flex flex-col gap-4">
         {error && <p className="text-xs text-red-600">{error}</p>}
-        <p className="text-sm text-muted">
-          Stand facing the camera, full body in frame, plain background if
-          possible.
-        </p>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          capture="user"
-          onChange={handleFile}
-          className="hidden"
+        <TimedCameraCapture
+          title="Front photo"
+          instructions="Stand facing the camera, full body in frame, plain background if possible. Pick a timer, then step into position — it captures automatically."
+          onCapture={handleFrontCapture}
         />
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="bg-ink text-paper rounded-full py-3 text-sm font-medium"
-        >
-          Take photo
+      </div>
+    );
+  }
+
+  if (step === "capture-side") {
+    return (
+      <div className="flex flex-col gap-4">
+        <TimedCameraCapture
+          title="Side photo (optional)"
+          instructions="Turn 90° so your side faces the camera. This helps with future accuracy improvements — you can skip it and use the front photo alone."
+          onCapture={(dataUrl) => {
+            setSideImageUrl(dataUrl);
+            setStep("review");
+          }}
+        />
+        <button onClick={() => setStep("review")} className="text-sm text-muted underline">
+          Skip this step
         </button>
       </div>
     );
@@ -169,9 +172,9 @@ export default function MeasurementsFlow() {
     return (
       <div className="flex flex-col gap-5">
         <p className="text-xs text-muted">
-          These are estimates. Adjust anything that doesn't feel right —
+          These are estimates. Adjust anything that doesn&apos;t feel right —
           especially chest, waist, and hip, which are the least certain from
-          a single photo.
+          a single photo{sideImageUrl ? ", though your side photo is on file for future accuracy improvements" : ""}.
         </p>
         {(Object.keys(values) as (keyof EstimatedMeasurements)[]).map((key) => (
           <div key={key} className="flex flex-col gap-1.5">
@@ -201,7 +204,14 @@ export default function MeasurementsFlow() {
         >
           {saving ? "Saving…" : "Save measurements"}
         </button>
-        <button onClick={() => setStep("capture")} className="text-sm text-muted underline">
+        <button
+          onClick={() => {
+            setImageUrl(null);
+            setSideImageUrl(null);
+            setStep("capture-front");
+          }}
+          className="text-sm text-muted underline"
+        >
           Retake photo
         </button>
       </div>
