@@ -134,32 +134,27 @@ export default function MeasurementsFlow() {
 
   if (step === "capture-front") {
     return (
-      <div className="flex flex-col gap-4">
-        {error && <p className="text-xs text-red-600">{error}</p>}
-        <TimedCameraCapture
-          title="Front photo"
-          instructions="Stand facing the camera, far enough back that your feet are fully visible in frame, plain background if possible. Pick a timer, then step into position — it captures automatically."
-          onCapture={handleFrontCapture}
-        />
-      </div>
+      <TimedCameraCapture
+        label="Front"
+        error={error}
+        onCapture={handleFrontCapture}
+        onCancel={() => setStep("intro")}
+      />
     );
   }
 
   if (step === "capture-side") {
     return (
-      <div className="flex flex-col gap-4">
-        <TimedCameraCapture
-          title="Side photo (optional)"
-          instructions="Turn 90° so your side faces the camera. This helps with future accuracy improvements — you can skip it and use the front photo alone."
-          onCapture={(dataUrl) => {
-            setSideImageUrl(dataUrl);
-            setStep("review");
-          }}
-        />
-        <button onClick={() => setStep("review")} className="text-sm text-muted underline">
-          Skip this step
-        </button>
-      </div>
+      <TimedCameraCapture
+        label="Side (optional)"
+        onCapture={(dataUrl) => {
+          setSideImageUrl(dataUrl);
+          setStep("review");
+        }}
+        onCancel={() => setStep("review")}
+        onSkip={() => setStep("review")}
+        skipLabel="Skip this step"
+      />
     );
   }
 

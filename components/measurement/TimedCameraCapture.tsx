@@ -7,16 +7,26 @@ type CameraState = "idle" | "requesting" | "live" | "countdown" | "captured" | "
 const TIMER_OPTIONS = [3, 5, 10] as const;
 
 export default function TimedCameraCapture({
-  title,
-  instructions,
+  label,
+  error: externalError,
   onCapture,
   onRetakeStart,
+  onCancel,
+  onSkip,
+  skipLabel,
 }: {
-  title: string;
-  instructions: string;
+  /** Short tag shown top-center, e.g. "Front" or "Side" — not a full instructions paragraph. */
+  label: string;
+  /** Error from the parent (e.g. "couldn't detect a full body") to surface over the camera. */
+  error?: string | null;
   onCapture: (dataUrl: string) => void;
   /** Called when the user starts a fresh capture after already having one — lets the parent clear its own captured state. */
   onRetakeStart?: () => void;
+  /** Renders an X button top-left that backs out of the camera entirely. */
+  onCancel?: () => void;
+  /** Renders a "Skip" text link at the bottom — used for the optional side photo. */
+  onSkip?: () => void;
+  skipLabel?: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -29,7 +39,9 @@ export default function TimedCameraCapture({
   const [seconds, setSeconds] = useState<3 | 5 | 10>(5);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+
+  const error = externalError ?? cameraError;
 
   useEffect(() => {
     return () => {
@@ -44,7 +56,7 @@ export default function TimedCameraCapture({
   }
 
   async function startCamera(mode: "user" | "environment" = facingMode) {
-    setError(null);
+    setCameraError(null);
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       setState("unsupported");
       return;
@@ -74,11 +86,19 @@ export default function TimedCameraCapture({
       } else if (name === "NotFoundError" || name === "DevicesNotFoundError") {
         setState("unsupported");
       } else {
-        setError("Couldn't start the camera. You can upload a photo instead.");
+        setCameraError("Couldn't start the camera. You can upload a photo instead.");
         setState("unsupported");
       }
     }
   }
+
+  // Auto-start on mount — no "Enable Camera" tap needed, matches a native
+  // camera opening straight into the live view.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    startCamera();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function flipCamera() {
     startCamera(facingMode === "user" ? "environment" : "user");
@@ -144,86 +164,87 @@ export default function TimedCameraCapture({
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div>
-        <p className="text-sm font-medium">{title}</p>
-        <p className="text-xs text-muted mt-0.5">{instructions}</p>
-      </div>
+    <div className="fixed inset-0 z-50 bg-black">
+      {state === "captured" && previewUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={previewUrl} alt="Captured" className="absolute inset-0 w-full h-full object-cover" />
+      ) : (
+        <video
+          ref={videoRef}
+          playsInline
+          muted
+          className={`absolute inset-0 w-full h-full object-cover ${
+            facingMode === "user" ? "[transform:scaleX(-1)]" : ""
+          } ${state === "live" || state === "countdown" ? "block" : "hidden"}`}
+        />
+      )}
 
-      <div className="relative w-full aspect-[9/16] rounded-2xl overflow-hidden bg-ink/90 flex items-center justify-center">
-        {state === "captured" && previewUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={previewUrl} alt="Captured" className="w-full h-full object-cover" />
+      {/* Top bar: cancel, short label, flip — overlaid, doesn't push the video down. */}
+      <div
+        className="absolute top-0 inset-x-0 flex items-center justify-between px-4 pb-3"
+        style={{ paddingTop: "calc(env(safe-area-inset-top) + 12px)" }}
+      >
+        {onCancel ? (
+          <button
+            type="button"
+            onClick={onCancel}
+            aria-label="Cancel"
+            className="w-9 h-9 rounded-full bg-black/45 flex items-center justify-center"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M6 6l12 12M18 6 6 18" stroke="#ffffff" strokeWidth={1.8} strokeLinecap="round" />
+            </svg>
+          </button>
         ) : (
-          <video
-            ref={videoRef}
-            playsInline
-            muted
-            className={`w-full h-full object-cover ${facingMode === "user" ? "[transform:scaleX(-1)]" : ""} ${
-              state === "live" || state === "countdown" ? "block" : "hidden"
-            }`}
-          />
+          <span />
         )}
 
-        {(state === "live" || state === "countdown") && (
+        <span className="text-white text-xs font-medium bg-black/45 px-3 py-1.5 rounded-full">{label}</span>
+
+        {state === "live" || state === "countdown" ? (
           <button
             type="button"
             onClick={flipCamera}
             aria-label="Flip camera"
-            className="absolute top-3 right-3 h-9 pl-2.5 pr-3 rounded-full bg-black/45 flex items-center gap-1.5"
+            className="h-9 pl-2.5 pr-3 rounded-full bg-black/45 flex items-center gap-1.5"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M17 2.5 20 5.5 17 8.5"
-                stroke="#ffffff"
-                strokeWidth={1.8}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M20 5.5H8a5.5 5.5 0 0 0-5.5 5.5v1"
-                stroke="#ffffff"
-                strokeWidth={1.8}
-                strokeLinecap="round"
-              />
-              <path
-                d="M7 21.5 4 18.5 7 15.5"
-                stroke="#ffffff"
-                strokeWidth={1.8}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M4 18.5h12a5.5 5.5 0 0 0 5.5-5.5v-1"
-                stroke="#ffffff"
-                strokeWidth={1.8}
-                strokeLinecap="round"
-              />
+              <path d="M17 2.5 20 5.5 17 8.5" stroke="#ffffff" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M20 5.5H8a5.5 5.5 0 0 0-5.5 5.5v1" stroke="#ffffff" strokeWidth={1.8} strokeLinecap="round" />
+              <path d="M7 21.5 4 18.5 7 15.5" stroke="#ffffff" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M4 18.5h12a5.5 5.5 0 0 0 5.5-5.5v-1" stroke="#ffffff" strokeWidth={1.8} strokeLinecap="round" />
             </svg>
             <span className="text-white text-xs font-medium">Flip</span>
           </button>
+        ) : (
+          <span className="w-9" />
         )}
+      </div>
 
-        {state === "idle" && (
-          <button
-            type="button"
-            onClick={() => startCamera()}
-            className="px-5 py-2.5 rounded-full bg-paper text-ink text-sm font-medium"
-          >
-            Enable Camera
-          </button>
-        )}
+      {error && (
+        <div
+          className="absolute inset-x-4 flex justify-center"
+          style={{ top: "calc(env(safe-area-inset-top) + 56px)" }}
+        >
+          <p className="text-xs text-white bg-red-600/90 rounded-xl px-3 py-2 text-center max-w-sm">{error}</p>
+        </div>
+      )}
 
-        {state === "requesting" && <p className="text-paper text-sm">Requesting camera access…</p>}
+      {state === "requesting" && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <p className="text-white text-sm">Requesting camera access…</p>
+        </div>
+      )}
 
-        {(state === "denied" || state === "unsupported") && (
-          <div className="text-center px-6">
-            <p className="text-paper text-sm mb-3">
+      {(state === "denied" || state === "unsupported") && (
+        <div className="absolute inset-0 flex items-center justify-center px-8">
+          <div className="text-center">
+            <p className="text-white text-sm mb-4">
               {state === "denied"
-                ? "Camera access was denied. You can allow it in your browser settings, or upload a photo instead."
+                ? "Camera access was denied. Allow it in your browser settings, or upload a photo instead."
                 : "Camera isn't available here — upload a photo instead."}
             </p>
-            <label className="inline-block px-5 py-2.5 rounded-full bg-paper text-ink text-sm font-medium cursor-pointer">
+            <label className="inline-block px-5 py-2.5 rounded-full bg-white text-black text-sm font-medium cursor-pointer">
               Upload Photo
               <input
                 ref={fileInputRef}
@@ -235,69 +256,81 @@ export default function TimedCameraCapture({
               />
             </label>
           </div>
-        )}
+        </div>
+      )}
 
-        {state === "countdown" && secondsLeft !== null && secondsLeft > 0 && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-            <span
-              className="font-display text-8xl leading-none"
-              style={{ color: "#ffffff", fontWeight: 800, textShadow: "0 2px 12px rgba(0,0,0,0.65)" }}
+      {state === "countdown" && secondsLeft !== null && secondsLeft > 0 && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+          <span
+            className="font-display text-8xl leading-none"
+            style={{ color: "#ffffff", fontWeight: 800, textShadow: "0 2px 12px rgba(0,0,0,0.65)" }}
+          >
+            {secondsLeft}
+          </span>
+        </div>
+      )}
+
+      {/* Bottom bar: timer pills + shutter — overlaid over the video, not pushed below it. */}
+      <div
+        className="absolute bottom-0 inset-x-0 flex flex-col items-center gap-4 px-5"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 20px)", paddingTop: "24px" }}
+      >
+        {state === "live" && (
+          <>
+            <div className="flex items-center gap-2">
+              {TIMER_OPTIONS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setSeconds(s)}
+                  className={`w-12 h-9 rounded-full text-xs font-semibold ${
+                    seconds === s ? "bg-white text-black" : "bg-black/45 text-white"
+                  }`}
+                >
+                  {s}s
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={beginCountdown}
+              aria-label={`Start ${seconds}s timer`}
+              className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center"
             >
-              {secondsLeft}
-            </span>
-          </div>
+              <span className="w-16 h-16 rounded-full bg-white" />
+            </button>
+            {onSkip && (
+              <button type="button" onClick={onSkip} className="text-white text-sm underline">
+                {skipLabel ?? "Skip"}
+              </button>
+            )}
+          </>
         )}
 
-      </div>
-
-      {error && <p className="text-xs text-red-600">{error}</p>}
-
-      {state === "live" && (
-        <>
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-xs text-muted mr-1">Timer</span>
-            {TIMER_OPTIONS.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setSeconds(s)}
-                className={`w-11 h-9 rounded-full text-xs font-medium ${
-                  seconds === s ? "bg-ink text-paper" : "bg-paper-raised text-ink"
-                }`}
-              >
-                {s}s
-              </button>
-            ))}
-          </div>
+        {state === "countdown" && (
           <button
             type="button"
-            onClick={beginCountdown}
-            className="w-full h-12 rounded-full bg-ink text-paper text-sm font-semibold"
+            onClick={() => {
+              if (countdownRef.current) clearInterval(countdownRef.current);
+              setState("live");
+              setSecondsLeft(null);
+            }}
+            className="h-11 px-6 rounded-full bg-black/45 text-white text-sm font-medium"
           >
-            Start {seconds}s Timer
+            Cancel
           </button>
-        </>
-      )}
+        )}
 
-      {state === "countdown" && (
-        <button
-          type="button"
-          onClick={() => {
-            if (countdownRef.current) clearInterval(countdownRef.current);
-            setState("live");
-            setSecondsLeft(null);
-          }}
-          className="w-full h-12 rounded-full border border-ink/15 text-sm font-medium"
-        >
-          Cancel
-        </button>
-      )}
-
-      {state === "captured" && (
-        <button type="button" onClick={retake} className="w-full h-12 rounded-full border border-ink/15 text-sm font-medium">
-          Retake
-        </button>
-      )}
+        {state === "captured" && (
+          <button
+            type="button"
+            onClick={retake}
+            className="h-11 px-6 rounded-full bg-black/45 text-white text-sm font-medium"
+          >
+            Retake
+          </button>
+        )}
+      </div>
 
       <canvas ref={canvasRef} className="hidden" />
     </div>
