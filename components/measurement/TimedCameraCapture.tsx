@@ -169,24 +169,38 @@ export default function TimedCameraCapture({
           <button
             type="button"
             onClick={flipCamera}
-            aria-label="Switch camera"
-            className="absolute top-3 right-3 w-10 h-10 rounded-full bg-black/40 flex items-center justify-center"
+            aria-label="Flip camera"
+            className="absolute top-3 right-3 h-9 pl-2.5 pr-3 rounded-full bg-black/45 flex items-center gap-1.5"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
               <path
-                d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z"
+                d="M17 2.5 20 5.5 17 8.5"
                 stroke="#ffffff"
-                strokeWidth={1.6}
+                strokeWidth={1.8}
+                strokeLinecap="round"
                 strokeLinejoin="round"
               />
-              <path d="M9 12a3 3 0 1 0 6 0 3 3 0 0 0-6 0Z" stroke="#ffffff" strokeWidth={1.6} />
               <path
-                d="M14 4.5 16 6.5M20 4.5 18 6.5"
+                d="M20 5.5H8a5.5 5.5 0 0 0-5.5 5.5v1"
                 stroke="#ffffff"
-                strokeWidth={1.6}
+                strokeWidth={1.8}
+                strokeLinecap="round"
+              />
+              <path
+                d="M7 21.5 4 18.5 7 15.5"
+                stroke="#ffffff"
+                strokeWidth={1.8}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M4 18.5h12a5.5 5.5 0 0 0 5.5-5.5v-1"
+                stroke="#ffffff"
+                strokeWidth={1.8}
                 strokeLinecap="round"
               />
             </svg>
+            <span className="text-white text-xs font-medium">Flip</span>
           </button>
         )}
 
