@@ -64,7 +64,7 @@ const ACTIONS = [
 // Shown on Home, Shop, Lookbook, and Product surfaces — kept as an
 // allowlist of prefixes rather than a blocklist so new routes default to
 // NOT showing the FAB unless explicitly added here.
-const VISIBLE_PREFIXES = ["/", "/catalog", "/look", "/product", "/try-on"];
+const VISIBLE_PREFIXES = ["/", "/catalog", "/look", "/product"];
 
 export function shouldShowConciergeFAB(pathname: string) {
   if (pathname === "/") return true;

@@ -3,12 +3,20 @@
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
-import { estimateMeasurements, type EstimatedMeasurements, type PoseLandmark } from "@/lib/poseMeasurements";
 import TimedCameraCapture from "@/components/measurement/TimedCameraCapture";
 
-type Step = "intro" | "capture-front" | "processing" | "capture-side" | "review" | "saved";
+type Step = "intro" | "capture-front" | "capture-side" | "processing" | "review" | "saved";
 
-const FIELD_LABELS: Record<keyof EstimatedMeasurements, string> = {
+type Measurements = {
+  shoulderCm: number;
+  chestCm: number;
+  waistCm: number;
+  hipCm: number;
+  armLengthCm: number;
+  inseamCm: number;
+};
+
+const FIELD_LABELS: Record<keyof Measurements, string> = {
   shoulderCm: "Shoulder width",
   chestCm: "Chest",
   waistCm: "Waist",
@@ -18,10 +26,14 @@ const FIELD_LABELS: Record<keyof EstimatedMeasurements, string> = {
 };
 
 // Only these two are direct pixel-distance measurements (high confidence).
-// Everything else is a circumference estimate from a 2D front photo — the
-// review screen labels them differently so the customer knows which
-// numbers to trust more and which to double-check.
-const HIGH_CONFIDENCE_FIELDS = new Set<keyof EstimatedMeasurements>(["shoulderCm", "armLengthCm"]);
+// Everything else is a circumference estimate — the review screen labels
+// them differently so the customer knows which numbers to trust more and
+// which to double-check.
+const HIGH_CONFIDENCE_FIELDS = new Set<keyof Measurements>(["shoulderCm", "armLengthCm"]);
+
+function cmToDisplay(cm: number, unit: "cm" | "in") {
+  return unit === "cm" ? `${cm} cm` : `${(cm / 2.54).toFixed(1)} in`;
+}
 
 export default function MeasurementsFlow() {
   const router = useRouter();
@@ -29,43 +41,53 @@ export default function MeasurementsFlow() {
 
   const [step, setStep] = useState<Step>("intro");
   const [heightCm, setHeightCm] = useState("170");
+  const [unit, setUnit] = useState<"cm" | "in">("cm");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [sideImageUrl, setSideImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [values, setValues] = useState<EstimatedMeasurements | null>(null);
+  const [values, setValues] = useState<Measurements | null>(null);
   const [saving, setSaving] = useState(false);
 
-  async function handleFrontCapture(dataUrl: string) {
-    setError(null);
-    setImageUrl(dataUrl);
+  async function handleAnalyze(frontUrl: string, sideUrl: string | null) {
     setStep("processing");
-
+    setError(null);
     try {
-      const img = await loadImage(dataUrl);
-      const landmarks = await detectPose(img);
-      if (!landmarks) {
-        setError("Couldn't get a clear read on that photo — stand facing the camera, full body in frame, arms slightly away from your sides, then try again.");
+      const res = await fetch("/api/ai/measure", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          frontImage: frontUrl,
+          sideImage: sideUrl,
+          heightCm: parseFloat(heightCm) || 0,
+        }),
+      });
+
+      let data: { measurements?: Measurements; anatomicalPass?: boolean; developerNotes?: string; error?: string } = {};
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error("Received an unexpected response — please try again.");
+      }
+
+      if (!res.ok || data.error) throw new Error(data.error || "Something went wrong analyzing those photos.");
+
+      if (!data.anatomicalPass || !data.measurements) {
+        setError(data.developerNotes || "Couldn't get reliable measurements from those photos — try again with better lighting and your full body in frame.");
         setStep("capture-front");
         return;
       }
-      const h = parseFloat(heightCm);
-      const anklesVisible =
-        (landmarks[27]?.visibility ?? 1) >= 0.4 && (landmarks[28]?.visibility ?? 1) >= 0.4;
-      if (!anklesVisible) {
-        setError("Your feet weren't fully visible — step further back from the camera so your whole body, ankles included, fits in frame, then try again.");
-        setStep("capture-front");
-        return;
-      }
-      const result = estimateMeasurements(landmarks, h, img.naturalWidth, img.naturalHeight);
-      if (!result) {
-        setError("Couldn't estimate from that photo — try again with better lighting and your full body visible.");
-        setStep("capture-front");
-        return;
-      }
-      setValues(result);
-      setStep("capture-side");
-    } catch {
-      setError("Something went wrong analyzing that photo. Try again.");
+
+      setValues(data.measurements);
+      setStep("review");
+    } catch (err) {
+      const isNetworkError = err instanceof TypeError;
+      setError(
+        isNetworkError
+          ? "Couldn't reach the server — check your connection and try again."
+          : err instanceof Error
+          ? err.message
+          : "Something went wrong analyzing those photos."
+      );
       setStep("capture-front");
     }
   }
@@ -137,7 +159,10 @@ export default function MeasurementsFlow() {
       <TimedCameraCapture
         label="Front"
         error={error}
-        onCapture={handleFrontCapture}
+        onCapture={(dataUrl) => {
+          setImageUrl(dataUrl);
+          setStep("capture-side");
+        }}
         onCancel={() => setStep("intro")}
       />
     );
@@ -149,10 +174,12 @@ export default function MeasurementsFlow() {
         label="Side (optional)"
         onCapture={(dataUrl) => {
           setSideImageUrl(dataUrl);
-          setStep("review");
+          if (imageUrl) handleAnalyze(imageUrl, dataUrl);
         }}
-        onCancel={() => setStep("review")}
-        onSkip={() => setStep("review")}
+        onCancel={() => setStep("capture-front")}
+        onSkip={() => {
+          if (imageUrl) handleAnalyze(imageUrl, null);
+        }}
         skipLabel="Skip this step"
       />
     );
@@ -165,7 +192,7 @@ export default function MeasurementsFlow() {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imageUrl} alt="" className="w-32 rounded-2xl opacity-60" />
         )}
-        <p className="text-sm text-muted">Reading your photo…</p>
+        <p className="text-sm text-muted">Reading your photos…</p>
       </div>
     );
   }
@@ -173,19 +200,37 @@ export default function MeasurementsFlow() {
   if (step === "review" && values) {
     return (
       <div className="flex flex-col gap-5">
-        <p className="text-xs text-muted">
-          These are estimates. Adjust anything that doesn&apos;t feel right —
-          especially chest, waist, and hip, which are the least certain from
-          a single photo{sideImageUrl ? ", though your side photo is on file for future accuracy improvements" : ""}.
-        </p>
-        {(Object.keys(values) as (keyof EstimatedMeasurements)[]).map((key) => (
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted flex-1 pr-3">
+            These are estimates. Adjust anything that doesn&apos;t feel right —
+            especially chest, waist, and hip, which are the least certain from
+            a photo{sideImageUrl ? " pair" : ""}.
+          </p>
+          <div className="flex shrink-0 rounded-full bg-paper-raised p-0.5">
+            <button
+              type="button"
+              onClick={() => setUnit("cm")}
+              className={`px-3 py-1 rounded-full text-xs font-medium ${unit === "cm" ? "bg-ink text-paper" : "text-ink"}`}
+            >
+              cm
+            </button>
+            <button
+              type="button"
+              onClick={() => setUnit("in")}
+              className={`px-3 py-1 rounded-full text-xs font-medium ${unit === "in" ? "bg-ink text-paper" : "text-ink"}`}
+            >
+              in
+            </button>
+          </div>
+        </div>
+        {(Object.keys(values) as (keyof Measurements)[]).map((key) => (
           <div key={key} className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between text-sm">
               <span className="font-medium">
                 {FIELD_LABELS[key]}
                 {!HIGH_CONFIDENCE_FIELDS.has(key) && <span className="text-muted"> · estimate</span>}
               </span>
-              <span className="text-muted">{values[key]} cm</span>
+              <span className="text-muted">{cmToDisplay(values[key], unit)}</span>
             </div>
             <input
               type="range"
@@ -232,43 +277,4 @@ export default function MeasurementsFlow() {
   }
 
   return null;
-}
-
-function loadImage(url: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = url;
-  });
-}
-
-// Loaded once per page session (module-level cache), since the wasm +
-// model download is the slow part — no reason to redo it on a retake.
-let landmarkerPromise: Promise<import("@mediapipe/tasks-vision").PoseLandmarker> | null = null;
-
-async function getLandmarker() {
-  if (!landmarkerPromise) {
-    landmarkerPromise = (async () => {
-      const { FilesetResolver, PoseLandmarker } = await import("@mediapipe/tasks-vision");
-      const vision = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm"
-      );
-      return PoseLandmarker.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath:
-            "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
-        },
-        runningMode: "IMAGE",
-        numPoses: 1,
-      });
-    })();
-  }
-  return landmarkerPromise;
-}
-
-async function detectPose(img: HTMLImageElement): Promise<PoseLandmark[] | null> {
-  const landmarker = await getLandmarker();
-  const result = landmarker.detect(img);
-  return result.landmarks?.[0] ?? null;
 }

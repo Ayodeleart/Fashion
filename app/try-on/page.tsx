@@ -1,4 +1,3 @@
-import TopBar from "@/components/TopBar";
 import TryOnFlow from "@/components/TryOnFlow";
 import { getSupabase } from "@/lib/supabase";
 
@@ -46,8 +45,7 @@ export default async function TryOnPage({
 
   return (
     <main>
-      <TopBar hideAria />
-      <div className="px-5 pb-10">
+      <div className="px-5 pt-4 pb-10">
         <h1 className="text-lg font-semibold mb-1">Try On</h1>
         <p className="text-sm text-muted mb-5">
           AI-generated — a fit and style preview, not a guarantee of exact real-world appearance.
