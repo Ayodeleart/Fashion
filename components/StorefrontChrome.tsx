@@ -47,7 +47,8 @@ function readTheme(): Theme {
 export default function StorefrontChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isHome = isHomePath(pathname);
-  const isImmersive = pathname.startsWith("/reels/") || pathname === "/aria" || pathname === "/account/measurements";
+  const hideTopSafeArea = pathname.startsWith("/reels/") || pathname === "/aria";
+  const hideBottomChrome = hideTopSafeArea || pathname === "/account/measurements";
   const hasFloatingBottomBar = pathname.startsWith("/product") || pathname.startsWith("/try-on");
   const [theme, setTheme] = useState<Theme>("light");
   const [installed, setInstalled] = useState(false);
@@ -173,20 +174,20 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
             <SavedProvider>
               <QuickAddProvider>
                 <div
-                  className={`w-full min-h-screen ${isImmersive ? "" : "pb-28"}`}
-                  style={{ paddingTop: isImmersive ? undefined : "env(safe-area-inset-top)" }}
+                  className={`w-full min-h-screen ${hideBottomChrome ? "" : "pb-28"}`}
+                  style={{ paddingTop: hideTopSafeArea ? undefined : "env(safe-area-inset-top)" }}
                 >
                   {children}
                 </div>
-                {!isImmersive && (
+                {!hideTopSafeArea && (
                   <div
                     className="fixed top-0 left-0 right-0 z-30 bg-paper pointer-events-none"
                     style={{ height: "env(safe-area-inset-top)" }}
                     aria-hidden="true"
                   />
                 )}
-                {!isImmersive && <BottomNav />}
-                {!isImmersive && <PromoBannerPopup />}
+                {!hideBottomChrome && <BottomNav />}
+                {!hideBottomChrome && <PromoBannerPopup />}
               </QuickAddProvider>
             </SavedProvider>
           </CartProvider>

@@ -25,6 +25,7 @@ export default function TimedCameraCapture({
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [state, setState] = useState<CameraState>("idle");
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const [seconds, setSeconds] = useState<3 | 5 | 10>(5);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -42,16 +43,21 @@ export default function TimedCameraCapture({
     streamRef.current = null;
   }
 
-  async function startCamera() {
+  async function startCamera(mode: "user" | "environment" = facingMode) {
     setError(null);
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       setState("unsupported");
       return;
     }
     setState("requesting");
+    stopStream();
     try {
+      // Deliberately loose: only facingMode + a soft width hint. Locking
+      // both width AND height (or adding an explicit aspectRatio) made
+      // iOS Safari pick a tightly-cropped, heavily zoomed-in sensor mode
+      // to satisfy the exact numbers instead of its normal full-FOV feed.
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: { ideal: 1080 }, height: { ideal: 1920 }, aspectRatio: { ideal: 9 / 16 } },
+        video: { facingMode: mode, width: { ideal: 1080 } },
         audio: false,
       });
       streamRef.current = stream;
@@ -59,6 +65,7 @@ export default function TimedCameraCapture({
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
       }
+      setFacingMode(mode);
       setState("live");
     } catch (err) {
       const name = err instanceof DOMException ? err.name : "";
@@ -71,6 +78,10 @@ export default function TimedCameraCapture({
         setState("unsupported");
       }
     }
+  }
+
+  function flipCamera() {
+    startCamera(facingMode === "user" ? "environment" : "user");
   }
 
   function beginCountdown() {
@@ -98,10 +109,12 @@ export default function TimedCameraCapture({
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    // Mirror horizontally so the saved photo matches what the user saw
-    // in the front-camera preview, not a flipped version of themselves.
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
+    if (facingMode === "user") {
+      // Mirror horizontally so the saved photo matches what the user saw
+      // in the front-camera preview, not a flipped version of themselves.
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+    }
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
     stopStream();
@@ -114,7 +127,7 @@ export default function TimedCameraCapture({
     onRetakeStart?.();
     setPreviewUrl(null);
     setSecondsLeft(null);
-    startCamera();
+    startCamera(facingMode);
   }
 
   async function handleFileFallback(e: React.ChangeEvent<HTMLInputElement>) {
@@ -146,16 +159,41 @@ export default function TimedCameraCapture({
             ref={videoRef}
             playsInline
             muted
-            className={`w-full h-full object-cover [transform:scaleX(-1)] ${
+            className={`w-full h-full object-cover ${facingMode === "user" ? "[transform:scaleX(-1)]" : ""} ${
               state === "live" || state === "countdown" ? "block" : "hidden"
             }`}
           />
         )}
 
+        {(state === "live" || state === "countdown") && (
+          <button
+            type="button"
+            onClick={flipCamera}
+            aria-label="Switch camera"
+            className="absolute top-3 right-3 w-10 h-10 rounded-full bg-black/40 flex items-center justify-center"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z"
+                stroke="#ffffff"
+                strokeWidth={1.6}
+                strokeLinejoin="round"
+              />
+              <path d="M9 12a3 3 0 1 0 6 0 3 3 0 0 0-6 0Z" stroke="#ffffff" strokeWidth={1.6} />
+              <path
+                d="M14 4.5 16 6.5M20 4.5 18 6.5"
+                stroke="#ffffff"
+                strokeWidth={1.6}
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+        )}
+
         {state === "idle" && (
           <button
             type="button"
-            onClick={startCamera}
+            onClick={() => startCamera()}
             className="px-5 py-2.5 rounded-full bg-paper text-ink text-sm font-medium"
           >
             Enable Camera
@@ -196,24 +234,6 @@ export default function TimedCameraCapture({
           </div>
         )}
 
-        {/* Full-body silhouette guide — only shown while framing, not during countdown or once captured. */}
-        {state === "live" && (
-          <svg
-            aria-hidden
-            viewBox="0 0 512.00 512.00"
-            className="absolute inset-0 w-full h-full opacity-35 pointer-events-none py-6"
-            preserveAspectRatio="xMidYMid meet"
-            fill="none"
-          >
-            <circle stroke="#ffffff" strokeMiterlimit="10" strokeWidth="5.632" cx="256" cy="56" r="40" />
-            <path
-              stroke="#ffffff"
-              strokeMiterlimit="10"
-              strokeWidth="5.632"
-              d="M199.3,295.62h0l-30.4,172.2a24,24,0,0,0,19.5,27.8,23.76,23.76,0,0,0,27.6-19.5l21-119.9v.2s5.2-32.5,17.5-32.5h3.1c12.5,0,17.5,32.5,17.5,32.5v-.1l21,119.9a23.92,23.92,0,1,0,47.1-8.4l-30.4-172.2-4.9-29.7c-2.9-18.1-4.2-47.6.5-59.7,4-10.4,14.13-14.2,23.2-14.2H424a24,24,0,0,0,0-48H88a24,24,0,0,0,0,48h92.5c9.23,0,19.2,3.8,23.2,14.2,4.7,12.1,3.4,41.6.5,59.7Z"
-            />
-          </svg>
-        )}
       </div>
 
       {error && <p className="text-xs text-red-600">{error}</p>}
