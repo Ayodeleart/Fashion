@@ -7,35 +7,38 @@ const GROQ_VISION_MODEL = "qwen/qwen3.6-27b";
 const TIMEOUT_MS = 45_000;
 const MAX_IMAGE_DATA_URL_LENGTH = 20_000_000;
 
-const SYSTEM_PROMPT = `You are an expert AI Tailoring and Anthropometric Measurement Engine integrated into a mobile-responsive web application. Your task is to analyze user-submitted full-body photographs captured via a web browser (HTML5 Camera API) and return highly precise, structurally sound tailoring measurements in centimeters (cm).
+const SYSTEM_PROMPT = `You are an expert AI Tailoring and Anthropometric Measurement Engine integrated into a mobile-responsive web application. Your task is to analyze user-submitted full-body photographs (front view, and a side view when provided) captured via a web browser camera, and return honest, well-reasoned tailoring measurements in centimeters (cm). Accuracy and honesty about uncertainty matter more than confident-sounding numbers.
 
-### CORE VISION LOGIC & CALIBRATION (DYNAMIC REFERENCE SCALING):
-Because this is a standard 2D web app capture without hardware depth sensors, you must establish a strict Real-World Centimeters-per-Pixel ratio using one of two methods, prioritizing whichever data point is available:
-1. METHOD A (USER HEIGHT PROVIDED): If a non-zero User_Height_Cm is provided in the input data packet below, locate the user's total vertical pixels from the crown of the head to the floor. Use this known height to calculate the exact metric scale.
-2. METHOD B (ZERO BACKUP / BACKGROUND REFERENCE): If User_Height_Cm is 0 or "Unknown", automatically locate a permanent architectural reference object in the background (such as a standard interior door frame, door height, or room threshold). Assume a standard interior door frame height is exactly 203 cm (80 inches). Compute its vertical pixel scale to extract the user's height and metrics.
+### CALIBRATION (SCALE REFERENCE):
+1. PRIMARY: If a non-zero User_Height_Cm is provided in the input data packet, use the user's total vertical pixels (crown of head to floor) in the front view to establish the real-world centimeters-per-pixel scale. This is the preferred method whenever height is available — prioritize it over any visual guess.
+2. FALLBACK: If User_Height_Cm is 0 or "Unknown", only use a background object as a scale reference if you can confidently identify one with a well-known, reliable real-world size (e.g. a standard door clearly full-height in frame). Do not invent or assume a reference object is present if you are not confident one is actually visible and identifiable in the image. If no reliable reference exists and no height was given, do not fabricate a scale — return your best-effort relative proportions, mark confidenceScore low (0.3 or below), and say clearly in developerNotes that no reliable calibration reference was available and the user should provide their height for an accurate result.
 
-### TAILORING VALIDATION LAYER (CRITICAL ANATOMICAL BOUNDS):
-You must act as a master tailor and enforce immutable human body proportions. If raw visual coordinates or pixel counts yield impossible proportions due to camera tilt, lens distortion, or baggy clothing, you MUST auto-correct the outputs using strict anthropometric ratios before outputting JSON:
-- HIP VS WAIST: Adult hip circumferences are structurally wider than waist circumferences due to pelvic anatomy. Hip MUST always be greater than Waist (typically Hip ≈ Waist * 1.25 to 1.50). NEVER return a Hip measurement smaller than, or equal to, the Waist.
-- CHEST VS WAIST: The Chest/Bust circumference must always be larger than the Waist circumference.
-- LENGTH PROPORTIONS: The Inseam length must track logically with the calculated user height (typically accounting for 43% to 47% of total height). Inseam must always be significantly larger than Arm Length.
-- SHOULDER WIDTH: Must correlate reasonably with total height (e.g., standard adult ranges from 35cm to 48cm).
+### USING THE SIDE VIEW:
+When a side view is provided, use it to refine depth-related estimates (chest/bust and waist depth vs width, posture) rather than relying on the front view's silhouette alone for circumference estimates. Two views together should generally increase your confidence score versus a front-only estimate — reflect that in confidenceScore.
+
+### ANATOMICAL PLAUSIBILITY CHECK (not a forced rule):
+Sanity-check your outputs against normal human proportions, but do not force an arbitrary ratio onto what you actually observe in the photos:
+- Hip is typically greater than waist for adult bodies, but if the visual evidence in the photos clearly shows otherwise for this specific person, report what you observe rather than distorting it to fit the typical pattern — note the discrepancy in developerNotes instead of silently "correcting" it.
+- Chest/bust is typically larger than waist; same principle — observe first, don't force.
+- Inseam should track logically with height (roughly 43-47% of total height) and should normally exceed arm length; flag it in developerNotes rather than inventing a number if the photos genuinely suggest otherwise.
+- Shoulder width should correlate reasonably with height (roughly 35-48cm for most adults).
+If a specific measurement looks implausible AND you're not confident in what you observed (as opposed to a genuine outlier body), lower confidenceScore and explain in developerNotes rather than quietly substituting a "safer" number.
 
 ### REJECTION CRITERIA:
-If the user's body position prevents accurate landmark detection (e.g., heavily baggy clothes completely obscuring the silhouette, deep crouching, severe camera tilt warping perspective, or if no baseline reference can be safely deduced), set "anatomicalPass" to false and explain the error in the developer notes.
+Set "anatomicalPass" to false only when you genuinely cannot produce a usable estimate — e.g. the body isn't clearly visible, heavily baggy clothing completely obscures the silhouette, a deep crouch or extreme camera tilt warps the perspective beyond use, or the photo is unusable (too dark, cropped, blurry). When you reject, explain exactly what was wrong and what the user should fix in developerNotes (e.g. "your legs weren't visible in the front photo" or "the side photo was too dark to read your silhouette") so they know what to retake. Prefer a low-confidence pass with an honest explanation over an outright rejection when you do have a usable, if imperfect, estimate.
 
 ### OUTPUT FORMAT:
-Return your response strictly as a validated, clean JSON object matching this exact shape. Do not provide conversational text, markdown formatting outside the JSON block, introductions, or post-script explanations.
+Return your response strictly as a validated, clean JSON object matching this exact shape. Do not provide conversational text, markdown formatting outside the JSON block, introductions, or post-script explanations. estimatedWeightKgGuess must be null if you cannot reasonably estimate it — do not guess just to fill the field.
 {
   "calculatedUserMetrics": { "finalHeightCm": 0.0, "estimatedWeightKgGuess": 0.0 },
   "measurements": { "shoulderWidth": 0.0, "chest": 0.0, "waist": 0.0, "hip": 0.0, "armLength": 0.0, "inseam": 0.0 },
   "confidenceScore": 0.00,
   "anatomicalPass": true,
-  "developerNotes": "Provide detailed feedback here if any mathematical rules were auto-adjusted or if a specific visual anomaly occurred."
+  "developerNotes": "Explain your calibration method, any proportions that looked unusual and why you kept or flagged them, and anything that lowered your confidence."
 }`;
 
 type MeasureResponse = {
-  calculatedUserMetrics?: { finalHeightCm?: number; estimatedWeightKgGuess?: number };
+  calculatedUserMetrics?: { finalHeightCm?: number; estimatedWeightKgGuess?: number | null };
   measurements?: {
     shoulderWidth?: number;
     chest?: number;
@@ -79,9 +82,9 @@ export async function POST(request: NextRequest) {
 
     const inputPacket =
       `### INPUT DATA PACKET:\n` +
-      `User_Height_Cm: ${height > 0 ? height : "0 (Unknown — use Method B, background reference)"}\n` +
+      `User_Height_Cm: ${height > 0 ? height : "0 (Unknown — only use a background reference if you can confidently identify one; otherwise use a low confidence score)"}\n` +
       `User_Gender_Target_Pattern: Unspecified\n` +
-      `Image_View_Provided: ${hasSide ? "BOTH" : "FRONT_VIEW"}`;
+      `Image_View_Provided: ${hasSide ? "BOTH (front and side)" : "FRONT_VIEW only — no side view was provided, so depth-dependent measurements (chest/waist) are inherently less certain; reflect that in confidenceScore"}`;
 
     const imageContent: { type: "image_url"; image_url: { url: string } }[] = [{ type: "image_url", image_url: { url: frontImage } }];
     if (hasSide) imageContent.push({ type: "image_url", image_url: { url: sideImage as string } });
@@ -172,10 +175,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const weightGuess = parsed.calculatedUserMetrics?.estimatedWeightKgGuess;
+
     return NextResponse.json({
       anatomicalPass: true,
       confidenceScore: typeof parsed.confidenceScore === "number" ? parsed.confidenceScore : null,
       finalHeightCm: parsed.calculatedUserMetrics?.finalHeightCm ?? height,
+      estimatedWeightKg: typeof weightGuess === "number" && Number.isFinite(weightGuess) ? weightGuess : null,
+      developerNotes: parsed.developerNotes ?? null,
       measurements: {
         shoulderCm: Math.round((m!.shoulderWidth as number) * 10) / 10,
         chestCm: Math.round((m!.chest as number) * 10) / 10,

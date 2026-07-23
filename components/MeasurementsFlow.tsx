@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
 import TimedCameraCapture from "@/components/measurement/TimedCameraCapture";
@@ -31,6 +31,12 @@ const FIELD_LABELS: Record<keyof Measurements, string> = {
 // which to double-check.
 const HIGH_CONFIDENCE_FIELDS = new Set<keyof Measurements>(["shoulderCm", "armLengthCm"]);
 
+const PROCESSING_MESSAGES = [
+  "Analyzing your measurements…",
+  "Checking body proportions…",
+  "Calculating your fit…",
+];
+
 function cmToDisplay(cm: number, unit: "cm" | "in") {
   return unit === "cm" ? `${cm} cm` : `${(cm / 2.54).toFixed(1)} in`;
 }
@@ -46,9 +52,24 @@ export default function MeasurementsFlow() {
   const [sideImageUrl, setSideImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [values, setValues] = useState<Measurements | null>(null);
+  const [confidence, setConfidence] = useState<number | null>(null);
+  const [notes, setNotes] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [processingMessage, setProcessingMessage] = useState(PROCESSING_MESSAGES[0]);
+
+  // Cycles the processing-screen copy while the AI call is in flight.
+  useEffect(() => {
+    if (step !== "processing") return;
+    let i = 0;
+    const id = setInterval(() => {
+      i = (i + 1) % PROCESSING_MESSAGES.length;
+      setProcessingMessage(PROCESSING_MESSAGES[i]);
+    }, 1600);
+    return () => clearInterval(id);
+  }, [step]);
 
   async function handleAnalyze(frontUrl: string, sideUrl: string | null) {
+    setProcessingMessage(PROCESSING_MESSAGES[0]);
     setStep("processing");
     setError(null);
     try {
@@ -62,7 +83,13 @@ export default function MeasurementsFlow() {
         }),
       });
 
-      let data: { measurements?: Measurements; anatomicalPass?: boolean; developerNotes?: string; error?: string } = {};
+      let data: {
+        measurements?: Measurements;
+        anatomicalPass?: boolean;
+        developerNotes?: string;
+        confidenceScore?: number | null;
+        error?: string;
+      } = {};
       try {
         data = await res.json();
       } catch {
@@ -72,15 +99,25 @@ export default function MeasurementsFlow() {
       if (!res.ok || data.error) throw new Error(data.error || "Something went wrong analyzing those photos.");
 
       if (!data.anatomicalPass || !data.measurements) {
+        // We can't attribute the rejection to one specific photo — the AI
+        // evaluates both together — so both are cleared and the user
+        // retakes front (then side) again, with the model's own reason
+        // for the rejection shown up front.
+        setImageUrl(null);
+        setSideImageUrl(null);
         setError(data.developerNotes || "Couldn't get reliable measurements from those photos — try again with better lighting and your full body in frame.");
         setStep("capture-front");
         return;
       }
 
       setValues(data.measurements);
+      setConfidence(typeof data.confidenceScore === "number" ? data.confidenceScore : null);
+      setNotes(data.developerNotes ?? null);
       setStep("review");
     } catch (err) {
       const isNetworkError = err instanceof TypeError;
+      setImageUrl(null);
+      setSideImageUrl(null);
       setError(
         isNetworkError
           ? "Couldn't reach the server — check your connection and try again."
@@ -131,10 +168,11 @@ export default function MeasurementsFlow() {
     return (
       <div className="flex flex-col gap-4">
         <p className="text-sm text-muted">
-          Two things: your height, and one full-body photo facing the camera
-          (plain background, arms slightly away from your sides). We estimate
-          your measurements from that — no tape measure needed. You&apos;ll get a
-          chance to fine-tune every number before it&apos;s saved.
+          Three things make this accurate: your height, a front photo, and a
+          side photo — all facing the camera, plain background if possible,
+          arms slightly away from your sides. We estimate your measurements
+          from those — no tape measure needed. You&apos;ll get a chance to
+          fine-tune every number before it&apos;s saved.
         </p>
         <label className="text-sm font-medium">Height (cm)</label>
         <input
@@ -157,9 +195,16 @@ export default function MeasurementsFlow() {
   if (step === "capture-front") {
     return (
       <TimedCameraCapture
+        // Distinct key from the side-capture step below is required — without
+        // it React reuses the same component instance across steps instead of
+        // mounting a fresh one, so its internal state (and the camera-start
+        // effect) never resets. That was the root cause of the flow getting
+        // stuck after the first photo.
+        key="front-capture"
         label="Front"
         error={error}
-        onCapture={(dataUrl) => {
+        onConfirm={(dataUrl) => {
+          setError(null);
           setImageUrl(dataUrl);
           setStep("capture-side");
         }}
@@ -171,8 +216,9 @@ export default function MeasurementsFlow() {
   if (step === "capture-side") {
     return (
       <TimedCameraCapture
-        label="Side (optional)"
-        onCapture={(dataUrl) => {
+        key="side-capture"
+        label="Side"
+        onConfirm={(dataUrl) => {
           setSideImageUrl(dataUrl);
           if (imageUrl) handleAnalyze(imageUrl, dataUrl);
         }}
@@ -180,19 +226,16 @@ export default function MeasurementsFlow() {
         onSkip={() => {
           if (imageUrl) handleAnalyze(imageUrl, null);
         }}
-        skipLabel="Skip this step"
+        skipLabel="Skip side photo"
       />
     );
   }
 
   if (step === "processing") {
     return (
-      <div className="flex flex-col items-center gap-4 py-10">
-        {imageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt="" className="w-32 rounded-2xl opacity-60" />
-        )}
-        <p className="text-sm text-muted">Reading your photos…</p>
+      <div className="fixed inset-0 z-50 bg-ink flex flex-col items-center justify-center gap-4 px-8">
+        <div className="w-10 h-10 rounded-full border-2 border-brass border-t-transparent animate-spin" />
+        <p className="text-paper text-sm text-center">{processingMessage}</p>
       </div>
     );
   }
@@ -223,6 +266,14 @@ export default function MeasurementsFlow() {
             </button>
           </div>
         </div>
+
+        {confidence !== null && confidence < 0.5 && (
+          <p className="text-xs text-red-600 bg-red-600/10 rounded-lg px-3 py-2">
+            Low confidence on this read{!sideImageUrl ? " (no side photo was provided)" : ""} — worth double-checking these against your own measurements.
+            {notes ? ` ${notes}` : ""}
+          </p>
+        )}
+
         {(Object.keys(values) as (keyof Measurements)[]).map((key) => (
           <div key={key} className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between text-sm">
@@ -259,7 +310,7 @@ export default function MeasurementsFlow() {
           }}
           className="text-sm text-muted underline"
         >
-          Retake photo
+          Retake photos
         </button>
       </div>
     );
