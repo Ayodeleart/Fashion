@@ -1,15 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-// Edit this list directly — no table for it, it's just copy.
-const MESSAGES = [
-  "New Luxury Collection Available",
-  "AI Measurement Now Available",
-  "Free Consultation For Bespoke Orders",
-  "Wedding Season Collection",
-  "New Celebrity Looks",
-];
+import { getSupabase } from "@/lib/supabase";
 
 const ROTATE_MS = 4200;
 const DISMISS_KEY = "home-announcement-dismissed";
@@ -17,6 +9,7 @@ const DISMISS_KEY = "home-announcement-dismissed";
 export default function AnnouncementBar() {
   const [dismissed, setDismissed] = useState(true); // start hidden, avoid flash before sessionStorage check
   const [index, setIndex] = useState(0);
+  const [messages, setMessages] = useState<string[]>([]);
 
   useEffect(() => {
     // Reading external storage (sessionStorage) on mount to sync the
@@ -24,22 +17,31 @@ export default function AnnouncementBar() {
     // can safely do here without risking a server/client hydration mismatch.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setDismissed(sessionStorage.getItem(DISMISS_KEY) === "1");
+
+    getSupabase()
+      .from("ariana_announcements")
+      .select("message")
+      .eq("enabled", true)
+      .order("position", { ascending: true })
+      .then(({ data }) => {
+        setMessages((data ?? []).map((row) => row.message));
+      });
   }, []);
 
   useEffect(() => {
-    if (dismissed) return;
+    if (dismissed || messages.length === 0) return;
     const interval = setInterval(() => {
-      setIndex((i) => (i + 1) % MESSAGES.length);
+      setIndex((i) => (i + 1) % messages.length);
     }, ROTATE_MS);
     return () => clearInterval(interval);
-  }, [dismissed]);
+  }, [dismissed, messages.length]);
 
-  if (dismissed) return null;
+  if (dismissed || messages.length === 0) return null;
 
   return (
     <div className="relative h-[34px] bg-ink text-paper overflow-hidden flex items-center justify-center">
       <div className="relative w-full h-full flex items-center justify-center px-8">
-        {MESSAGES.map((message, i) => (
+        {messages.map((message, i) => (
           <span
             key={message}
             className="absolute inset-0 flex items-center justify-center text-[11px] tracking-[0.08em] uppercase font-body transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"

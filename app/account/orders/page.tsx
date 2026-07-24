@@ -27,22 +27,41 @@ export default function OrderHistoryPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     const supabase = getSupabase();
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) {
-        router.replace("/account/login?next=/account/orders");
-        return;
+
+    async function load() {
+      try {
+        const { data, error: userErr } = await supabase.auth.getUser();
+        if (userErr) throw userErr;
+        if (!data.user) {
+          router.replace("/account/login?next=/account/orders");
+          return;
+        }
+        if (cancelled) return;
+
+        const { data: rows, error: ordersErr } = await supabase
+          .from("ariana_orders")
+          .select("id, status, total, currency, created_at")
+          .eq("user_id", data.user.id)
+          .order("created_at", { ascending: false });
+        if (ordersErr) throw ordersErr;
+
+        if (!cancelled) setOrders(rows ?? []);
+      } catch (err) {
+        if (!cancelled) setLoadError(err instanceof Error ? err.message : "Could not load your orders.");
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      const { data: rows } = await supabase
-        .from("ariana_orders")
-        .select("id, status, total, currency, created_at")
-        .eq("user_id", data.user.id)
-        .order("created_at", { ascending: false });
-      setOrders(rows ?? []);
-      setLoading(false);
-    });
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   return (
@@ -51,6 +70,16 @@ export default function OrderHistoryPage() {
 
       {loading ? (
         <p className="text-sm text-muted">Loading…</p>
+      ) : loadError ? (
+        <div className="text-center py-16">
+          <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-3 mb-4 inline-block">{loadError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="block mx-auto bg-ink text-paper rounded-full px-5 py-2.5 text-sm font-medium"
+          >
+            Try again
+          </button>
+        </div>
       ) : orders.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-sm text-muted mb-6">No orders yet.</p>

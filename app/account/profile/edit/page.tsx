@@ -18,23 +18,42 @@ export default function EditProfilePage() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     const supabase = getSupabase();
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) {
-        router.replace("/account/login?next=/account/profile/edit");
-        return;
+
+    async function load() {
+      try {
+        const { data, error: userErr } = await supabase.auth.getUser();
+        if (userErr) throw userErr;
+        if (!data.user) {
+          router.replace("/account/login?next=/account/profile/edit");
+          return;
+        }
+        if (cancelled) return;
+        setUser(data.user);
+
+        const { data: profile, error: profileErr } = await supabase
+          .from("ariana_customer_profiles")
+          .select("display_name, avatar_url, phone")
+          .eq("user_id", data.user.id)
+          .maybeSingle();
+        if (profileErr) throw profileErr;
+
+        if (cancelled) return;
+        setDisplayName(profile?.display_name ?? data.user.email?.split("@")[0] ?? "");
+        setPhone(profile?.phone ?? "");
+        setAvatarUrl(profile?.avatar_url ?? null);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Could not load your profile.");
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setUser(data.user);
-      const { data: profile } = await supabase
-        .from("ariana_customer_profiles")
-        .select("display_name, avatar_url, phone")
-        .eq("user_id", data.user.id)
-        .maybeSingle();
-      setDisplayName(profile?.display_name ?? data.user.email?.split("@")[0] ?? "");
-      setPhone(profile?.phone ?? "");
-      setAvatarUrl(profile?.avatar_url ?? null);
-      setLoading(false);
-    });
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {

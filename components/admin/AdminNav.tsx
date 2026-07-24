@@ -17,6 +17,7 @@ const links = [
   { href: "/admin/messages", label: "Messages" },
   { href: "/admin/notifications", label: "Notifications" },
   { href: "/admin/promo-banner", label: "Promo Banner" },
+  { href: "/admin/announcements", label: "Announcement Bar" },
   { href: "/admin/login-background", label: "Login Background" },
 ];
 

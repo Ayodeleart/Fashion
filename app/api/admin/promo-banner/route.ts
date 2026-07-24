@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase-admin";
 
 export async function POST(request: NextRequest) {
   try {
-    const { enabled, title, message, ctaText, ctaHref } = await request.json();
+    const { enabled, title, message, ctaText, ctaHref, imageUrl } = await request.json();
     const admin = createAdminClient();
     const { error } = await admin
       .from("ariana_promo_banner")
@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
         message: message ?? "",
         cta_text: ctaText || "Shop now",
         cta_href: ctaHref || "/catalog",
+        image_url: imageUrl || null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", 1);

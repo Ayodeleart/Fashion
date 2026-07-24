@@ -90,26 +90,51 @@ export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     const supabase = getSupabase();
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) {
-        router.replace("/account/login?next=/account/profile");
-        return;
+
+    async function load() {
+      try {
+        const { data, error: userErr } = await supabase.auth.getUser();
+        if (userErr) throw userErr;
+        if (!data.user) {
+          router.replace("/account/login?next=/account/profile");
+          return;
+        }
+        if (cancelled) return;
+        setUser(data.user);
+
+        const { data: profile, error: profileErr } = await supabase
+          .from("ariana_customer_profiles")
+          .select("display_name, avatar_url")
+          .eq("user_id", data.user.id)
+          .maybeSingle();
+        // A missing table/column shows up here as a Postgrest error, not
+        // a thrown exception — surface it instead of leaving the page
+        // stuck on the display name fallback with no explanation.
+        if (profileErr) throw profileErr;
+
+        if (cancelled) return;
+        setDisplayName(profile?.display_name ?? data.user.email?.split("@")[0] ?? "");
+        setAvatarUrl(profile?.avatar_url ?? null);
+      } catch (err) {
+        if (!cancelled) {
+          setLoadError(err instanceof Error ? err.message : "Could not load your profile.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setUser(data.user);
-      const { data: profile } = await supabase
-        .from("ariana_customer_profiles")
-        .select("display_name, avatar_url")
-        .eq("user_id", data.user.id)
-        .maybeSingle();
-      setDisplayName(profile?.display_name ?? data.user.email?.split("@")[0] ?? "");
-      setAvatarUrl(profile?.avatar_url ?? null);
-      setLoading(false);
-    });
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   async function handleSignOut() {
@@ -121,6 +146,22 @@ export default function ProfilePage() {
     return (
       <main className="min-h-screen flex items-center justify-center">
         <p className="text-sm text-muted">Loading…</p>
+      </main>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <main className="min-h-screen flex items-center justify-center px-6 text-center">
+        <div className="max-w-sm">
+          <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-3 mb-4">{loadError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-ink text-paper rounded-full px-5 py-2.5 text-sm font-medium"
+          >
+            Try again
+          </button>
+        </div>
       </main>
     );
   }

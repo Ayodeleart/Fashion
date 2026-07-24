@@ -12,6 +12,7 @@ import InstallGate from "@/components/InstallGate";
 import DesktopHeader from "@/components/DesktopHeader";
 import DesktopFooter from "@/components/DesktopFooter";
 import MobileInstallPrompt from "@/components/MobileInstallPrompt";
+import AutoPushPrompt from "@/components/AutoPushPrompt";
 import { isStandalone } from "@/lib/pwa-standalone";
 import { THEME_COOKIE_NAME, type Theme } from "@/lib/theme-shared";
 
@@ -104,6 +105,7 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
                 <BottomNav />
                 <ConciergeFAB bottomOffsetClass="bottom-[calc(5rem+env(safe-area-inset-bottom))]" />
               </div>
+              <AutoPushPrompt />
             </QuickAddProvider>
           </SavedProvider>
         </CartProvider>
@@ -144,6 +146,7 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
                       aria-hidden="true"
                     />
                     {!hasFloatingBottomBar && <BottomNav />}
+                    <AutoPushPrompt />
                     <ConciergeFAB
                       bottomOffsetClass={
                         hasFloatingBottomBar
@@ -188,6 +191,7 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
                 )}
                 {!hideBottomChrome && <BottomNav />}
                 {!hideBottomChrome && <PromoBannerPopup />}
+                <AutoPushPrompt />
               </QuickAddProvider>
             </SavedProvider>
           </CartProvider>

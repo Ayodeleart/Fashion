@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getSupabase } from "@/lib/supabase";
 
 type Banner = {
   enabled: boolean;
@@ -8,7 +9,26 @@ type Banner = {
   message: string;
   cta_text: string;
   cta_href: string;
+  image_url: string | null;
 } | null;
+
+async function uploadImage(file: File): Promise<string> {
+  const ext = file.name.split(".").pop() || "jpg";
+  const signRes = await fetch("/api/admin/promo-banner/sign-upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ext }),
+  });
+  const signed = await signRes.json();
+  if (signed.error) throw new Error(signed.error);
+
+  const supabase = getSupabase();
+  const { error } = await supabase.storage.from("promo-banner").uploadToSignedUrl(signed.path, signed.token, file);
+  if (error) throw new Error(error.message);
+
+  const { data } = supabase.storage.from("promo-banner").getPublicUrl(signed.path);
+  return data.publicUrl;
+}
 
 export default function PromoBannerForm({ initial }: { initial: Banner }) {
   const [enabled, setEnabled] = useState(initial?.enabled ?? false);
@@ -16,7 +36,10 @@ export default function PromoBannerForm({ initial }: { initial: Banner }) {
   const [message, setMessage] = useState(initial?.message ?? "");
   const [ctaText, setCtaText] = useState(initial?.cta_text ?? "Shop now");
   const [ctaHref, setCtaHref] = useState(initial?.cta_href ?? "/catalog");
+  const [imageUrl, setImageUrl] = useState(initial?.image_url ?? "");
+  const [file, setFile] = useState<File | null>(null);
   const [pending, setPending] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,19 +49,29 @@ export default function PromoBannerForm({ initial }: { initial: Banner }) {
     setError(null);
     setSuccess(false);
     try {
+      let finalImageUrl = imageUrl;
+      if (file) {
+        setStatus("Uploading image…");
+        finalImageUrl = await uploadImage(file);
+        setImageUrl(finalImageUrl);
+      }
+
+      setStatus("Saving…");
       const res = await fetch("/api/admin/promo-banner", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ enabled, title, message, ctaText, ctaHref }),
+        body: JSON.stringify({ enabled, title, message, ctaText, ctaHref, imageUrl: finalImageUrl }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setSuccess(true);
+      setFile(null);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed.");
     } finally {
       setPending(false);
+      setStatus(null);
     }
   }
 
@@ -51,6 +84,28 @@ export default function PromoBannerForm({ initial }: { initial: Banner }) {
         <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
         Show this banner
       </label>
+
+      <div>
+        <label className="block text-sm mb-1">Image (optional — portrait works best, ~4:5)</label>
+        <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="text-sm" />
+        {(file || imageUrl) && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={file ? URL.createObjectURL(file) : imageUrl}
+            alt=""
+            className="w-24 h-30 rounded-lg object-cover border border-ink/10 mt-3"
+          />
+        )}
+        {imageUrl && !file && (
+          <button
+            type="button"
+            onClick={() => setImageUrl("")}
+            className="block text-xs text-red-700 mt-2 underline"
+          >
+            Remove image
+          </button>
+        )}
+      </div>
 
       <div>
         <label className="block text-sm mb-1">Title</label>
@@ -88,7 +143,7 @@ export default function PromoBannerForm({ initial }: { initial: Banner }) {
         />
       </div>
       <button type="submit" disabled={pending} className="bg-ink text-white text-sm rounded px-5 py-2.5 disabled:opacity-50">
-        {pending ? "Saving…" : "Save"}
+        {pending ? status ?? "Saving…" : "Save"}
       </button>
     </form>
   );

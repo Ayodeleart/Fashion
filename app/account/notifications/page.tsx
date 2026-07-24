@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getSupabase } from "@/lib/supabase";
-import { VAPID_PUBLIC_KEY, urlBase64ToUint8Array } from "@/lib/webpush-public";
+import { subscribeToPush } from "@/lib/push-subscribe";
 
 function Toggle({ on, onClick, disabled }: { on: boolean; onClick: () => void; disabled?: boolean }) {
   return (
@@ -63,23 +63,12 @@ export default function NotificationsPage() {
         return;
       }
 
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        setBusy(false);
-        return;
+      const result = await subscribeToPush(userId);
+      if (result === "subscribed") {
+        setSubscribed(true);
+      } else if (result === "unsupported") {
+        alert("Push notifications aren't supported on this browser.");
       }
-
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
-      });
-      const json = sub.toJSON();
-      await fetch("/api/push/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ endpoint: json.endpoint, keys: json.keys, userId }),
-      });
-      setSubscribed(true);
     } finally {
       setBusy(false);
     }

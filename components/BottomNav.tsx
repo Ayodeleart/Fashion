@@ -129,8 +129,9 @@ export default function BottomNav() {
     // LAST element in the DOM so it paints on top of the bar and floats
     // above it via a negative top offset. No cutout/notch shape — that
     // was causing the bar's own fill to visually intrude on the button.
-    <nav className="fixed bottom-0 left-0 right-0 z-30 bg-paper border-t border-ink/10">
-      <div ref={containerRef} className="max-w-md mx-auto relative flex items-center justify-between px-6 h-16">
+    <nav className="fixed bottom-0 left-0 right-0 z-30 px-3 pb-3">
+      <div className="max-w-md mx-auto liquid-glass rounded-[28px]">
+        <div ref={containerRef} className="relative flex items-center justify-between px-6 h-16">
         {/* Liquid indicator — a soft pill that slides + slightly stretches
             to the active tab. Never rendered behind the middle Shop
             button (that one isn't in allItems, so pill is null there
@@ -195,6 +196,7 @@ export default function BottomNav() {
           <ShopIcon />
           <span className="text-[9px] leading-none">Shop</span>
         </Link>
+        </div>
       </div>
     </nav>
   );

@@ -20,25 +20,45 @@ export default function AddressBookPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [address, setAddress] = useState<Address>(empty);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     const supabase = getSupabase();
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) {
-        router.replace("/account/login?next=/account/addresses");
-        return;
+
+    async function load() {
+      try {
+        const { data, error: userErr } = await supabase.auth.getUser();
+        if (userErr) throw userErr;
+        if (!data.user) {
+          router.replace("/account/login?next=/account/addresses");
+          return;
+        }
+        if (cancelled) return;
+        setUserId(data.user.id);
+
+        const { data: profile, error: profileErr } = await supabase
+          .from("ariana_customer_profiles")
+          .select("address")
+          .eq("user_id", data.user.id)
+          .maybeSingle();
+        if (profileErr) throw profileErr;
+
+        if (cancelled) return;
+        if (profile?.address) setAddress({ ...empty, ...(profile.address as Partial<Address>) });
+      } catch (err) {
+        if (!cancelled) setLoadError(err instanceof Error ? err.message : "Could not load your address.");
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setUserId(data.user.id);
-      const { data: profile } = await supabase
-        .from("ariana_customer_profiles")
-        .select("address")
-        .eq("user_id", data.user.id)
-        .maybeSingle();
-      if (profile?.address) setAddress({ ...empty, ...(profile.address as Partial<Address>) });
-      setLoading(false);
-    });
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   async function handleSave(e: React.FormEvent) {
@@ -67,6 +87,22 @@ export default function AddressBookPage() {
     return (
       <main className="min-h-screen flex items-center justify-center">
         <p className="text-sm text-muted">Loading…</p>
+      </main>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <main className="min-h-screen flex items-center justify-center px-6 text-center">
+        <div className="max-w-sm">
+          <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-3 mb-4">{loadError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-ink text-paper rounded-full px-5 py-2.5 text-sm font-medium"
+          >
+            Try again
+          </button>
+        </div>
       </main>
     );
   }
