@@ -8,23 +8,27 @@ const TIMER_OPTIONS = [3, 5, 10] as const;
 
 export default function TimedCameraCapture({
   label,
+  guideHint,
+  pose = "front",
   error: externalError,
   onConfirm,
+  onRetakeStart,
   onCancel,
-  onSkip,
-  skipLabel,
 }: {
   /** Short tag shown top-center, e.g. "Front" or "Side" — not a full instructions paragraph. */
   label: string;
+  /** One-line instruction shown under the position guide, e.g. "Face the camera, arms slightly out". */
+  guideHint?: string;
+  /** Which body-position overlay to draw — front (facing camera) or side (profile). */
+  pose?: "front" | "side";
   /** Error from the parent (e.g. "couldn't detect a full body") to surface over the camera. */
   error?: string | null;
-  /** Called only when the user explicitly confirms with "Use Photo". */
+  /** Called only once the user taps "Use Photo" on the review screen — the confirmed shot to send onward. */
   onConfirm: (dataUrl: string) => void;
+  /** Called when the user starts a fresh capture after already having one — lets the parent clear its own captured state. */
+  onRetakeStart?: () => void;
   /** Renders an X button top-left that backs out of the camera entirely. */
   onCancel?: () => void;
-  /** Renders a "Skip" text link at the bottom, only offered while live (not after a photo is captured). */
-  onSkip?: () => void;
-  skipLabel?: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -91,11 +95,7 @@ export default function TimedCameraCapture({
   }
 
   // Auto-start on mount — no "Enable Camera" tap needed, matches a native
-  // camera opening straight into the live view. Runs every time this
-  // component mounts, which is guaranteed to happen fresh for each capture
-  // step because the parent gives it a distinct `key` (see MeasurementsFlow) —
-  // without that key, React would reuse the same instance across steps and
-  // this effect would never re-fire.
+  // camera opening straight into the live view.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     startCamera();
@@ -142,18 +142,18 @@ export default function TimedCameraCapture({
     stopStream();
     setPreviewUrl(dataUrl);
     setState("captured");
-    // Deliberately NOT calling onConfirm here — the user reviews the photo
-    // first and explicitly taps "Use Photo" or "Retake" below.
+  }
+
+  function confirmPhoto() {
+    if (!previewUrl) return;
+    onConfirm(previewUrl);
   }
 
   function retake() {
+    onRetakeStart?.();
     setPreviewUrl(null);
     setSecondsLeft(null);
     startCamera(facingMode);
-  }
-
-  function usePhoto() {
-    if (previewUrl) onConfirm(previewUrl);
   }
 
   async function handleFileFallback(e: React.ChangeEvent<HTMLInputElement>) {
@@ -184,25 +184,39 @@ export default function TimedCameraCapture({
         />
       )}
 
-      {/* Body-position guide: a plain standing silhouette, arms at the
-          sides — not arms-spread, which doesn't fit a 9:16 portrait frame. */}
-      {state === "live" && (
-        <svg
-          aria-hidden
-          viewBox="0 0 200 400"
-          className="absolute inset-x-0 pointer-events-none opacity-30"
-          style={{ top: "8%", height: "78%", left: "50%", transform: "translateX(-50%)" }}
-          preserveAspectRatio="xMidYMid meet"
-          fill="none"
+      {(state === "live" || state === "countdown") && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <svg viewBox="0 0 200 400" className="h-[78%] opacity-50" fill="none">
+            {pose === "front" ? (
+              <path
+                d="M100 18 a17 17 0 1 1 -0.1 0 M75 55 q25 -12 50 0 l10 60 -8 4 q-6 60 2 110 l6 90 -16 4 -8 -95 -11 0 -8 95 -16 -4 6 -90 q10 -50 2 -110 l-8 -4 Z"
+                stroke="#ffffff"
+                strokeWidth={2.5}
+                strokeLinejoin="round"
+                strokeDasharray="6 5"
+              />
+            ) : (
+              <path
+                d="M108 20 a16 16 0 1 1 -0.1 0 M96 52 q18 -6 26 4 l6 55 q10 12 6 40 l10 100 -14 5 -10 -85 -6 0 2 88 -14 3 -6 -105 q-8 -30 0 -60 Z"
+                stroke="#ffffff"
+                strokeWidth={2.5}
+                strokeLinejoin="round"
+                strokeDasharray="6 5"
+              />
+            )}
+          </svg>
+        </div>
+      )}
+
+      {(state === "live" || state === "countdown") && (
+        <div
+          className="absolute inset-x-0 flex justify-center px-6"
+          style={{ top: "calc(env(safe-area-inset-top) + 56px)" }}
         >
-          <ellipse cx="100" cy="35" rx="26" ry="32" stroke="#ffffff" strokeWidth={3} />
-          <path
-            d="M100 67 L100 210 M100 90 L72 205 M100 90 L128 205 M100 210 L78 392 M100 210 L122 392"
-            stroke="#ffffff"
-            strokeWidth={3}
-            strokeLinecap="round"
-          />
-        </svg>
+          <p className="text-xs text-white bg-black/45 rounded-full px-3 py-1.5 text-center">
+            {guideHint ?? (pose === "front" ? "Face the camera, arms slightly away from your sides" : "Turn 90°, stand in profile, arms relaxed")}
+          </p>
+        </div>
       )}
 
       {/* Top bar: cancel, short label, flip — overlaid, doesn't push the video down. */}
@@ -296,7 +310,7 @@ export default function TimedCameraCapture({
         </div>
       )}
 
-      {/* Bottom bar: timer pills + shutter, or Retake/Use Photo once captured — overlaid over the video, not pushed below it. */}
+      {/* Bottom bar: timer pills + shutter — overlaid over the video, not pushed below it. */}
       <div
         className="absolute bottom-0 inset-x-0 flex flex-col items-center gap-4 px-5"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 20px)", paddingTop: "24px" }}
@@ -325,11 +339,6 @@ export default function TimedCameraCapture({
             >
               <span className="w-16 h-16 rounded-full bg-white" />
             </button>
-            {onSkip && (
-              <button type="button" onClick={onSkip} className="text-white text-sm underline">
-                {skipLabel ?? "Skip"}
-              </button>
-            )}
           </>
         )}
 
@@ -348,18 +357,18 @@ export default function TimedCameraCapture({
         )}
 
         {state === "captured" && (
-          <div className="flex items-center gap-3 w-full max-w-sm">
+          <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={retake}
-              className="flex-1 h-12 rounded-full bg-black/45 text-white text-sm font-medium"
+              className="h-11 px-6 rounded-full bg-black/45 text-white text-sm font-medium"
             >
               Retake
             </button>
             <button
               type="button"
-              onClick={usePhoto}
-              className="flex-1 h-12 rounded-full bg-white text-black text-sm font-semibold"
+              onClick={confirmPhoto}
+              className="h-11 px-6 rounded-full bg-white text-black text-sm font-semibold"
             >
               Use Photo
             </button>

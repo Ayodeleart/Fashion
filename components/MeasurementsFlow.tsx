@@ -16,6 +16,15 @@ type Measurements = {
   inseamCm: number;
 };
 
+type AnalyzeResponse = {
+  measurements?: Measurements;
+  weightKg?: number | null;
+  confidenceScore?: number | null;
+  anatomicalPass?: boolean;
+  developerNotes?: string;
+  error?: string;
+};
+
 const FIELD_LABELS: Record<keyof Measurements, string> = {
   shoulderCm: "Shoulder width",
   chestCm: "Chest",
@@ -32,9 +41,9 @@ const FIELD_LABELS: Record<keyof Measurements, string> = {
 const HIGH_CONFIDENCE_FIELDS = new Set<keyof Measurements>(["shoulderCm", "armLengthCm"]);
 
 const PROCESSING_MESSAGES = [
-  "Analyzing your measurements…",
-  "Checking body proportions…",
-  "Calculating your fit…",
+  "Analyzing your measurements...",
+  "Checking body proportions...",
+  "Calculating your fit...",
 ];
 
 function cmToDisplay(cm: number, unit: "cm" | "in") {
@@ -52,24 +61,25 @@ export default function MeasurementsFlow() {
   const [sideImageUrl, setSideImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [values, setValues] = useState<Measurements | null>(null);
-  const [confidence, setConfidence] = useState<number | null>(null);
+  const [weightKg, setWeightKg] = useState<number | null>(null);
+  const [confidenceScore, setConfidenceScore] = useState<number | null>(null);
   const [notes, setNotes] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [processingMessage, setProcessingMessage] = useState(PROCESSING_MESSAGES[0]);
+  const [processingMessageIndex, setProcessingMessageIndex] = useState(0);
 
-  // Cycles the processing-screen copy while the AI call is in flight.
+  // Cycle the processing copy so the wait doesn't feel frozen — purely
+  // cosmetic, doesn't gate anything on the actual request.
   useEffect(() => {
     if (step !== "processing") return;
-    let i = 0;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setProcessingMessageIndex(0);
     const id = setInterval(() => {
-      i = (i + 1) % PROCESSING_MESSAGES.length;
-      setProcessingMessage(PROCESSING_MESSAGES[i]);
-    }, 1600);
+      setProcessingMessageIndex((i) => (i + 1) % PROCESSING_MESSAGES.length);
+    }, 1800);
     return () => clearInterval(id);
   }, [step]);
 
-  async function handleAnalyze(frontUrl: string, sideUrl: string | null) {
-    setProcessingMessage(PROCESSING_MESSAGES[0]);
+  async function handleAnalyze(frontUrl: string, sideUrl: string) {
     setStep("processing");
     setError(null);
     try {
@@ -83,13 +93,7 @@ export default function MeasurementsFlow() {
         }),
       });
 
-      let data: {
-        measurements?: Measurements;
-        anatomicalPass?: boolean;
-        developerNotes?: string;
-        confidenceScore?: number | null;
-        error?: string;
-      } = {};
+      let data: AnalyzeResponse = {};
       try {
         data = await res.json();
       } catch {
@@ -99,25 +103,26 @@ export default function MeasurementsFlow() {
       if (!res.ok || data.error) throw new Error(data.error || "Something went wrong analyzing those photos.");
 
       if (!data.anatomicalPass || !data.measurements) {
-        // We can't attribute the rejection to one specific photo — the AI
-        // evaluates both together — so both are cleared and the user
-        // retakes front (then side) again, with the model's own reason
-        // for the rejection shown up front.
+        // The AI couldn't confidently read the photos — send the user back
+        // to the start of capture (front) with a clear reason and a chance
+        // to retake, rather than stranding them on the processing screen.
+        setError(
+          data.developerNotes ||
+            "Couldn't get reliable measurements from those photos — make sure your full body is visible, in good lighting, against a plain background, then retake both photos."
+        );
         setImageUrl(null);
         setSideImageUrl(null);
-        setError(data.developerNotes || "Couldn't get reliable measurements from those photos — try again with better lighting and your full body in frame.");
         setStep("capture-front");
         return;
       }
 
       setValues(data.measurements);
-      setConfidence(typeof data.confidenceScore === "number" ? data.confidenceScore : null);
+      setWeightKg(data.weightKg ?? null);
+      setConfidenceScore(typeof data.confidenceScore === "number" ? data.confidenceScore : null);
       setNotes(data.developerNotes ?? null);
       setStep("review");
     } catch (err) {
       const isNetworkError = err instanceof TypeError;
-      setImageUrl(null);
-      setSideImageUrl(null);
       setError(
         isNetworkError
           ? "Couldn't reach the server — check your connection and try again."
@@ -125,6 +130,8 @@ export default function MeasurementsFlow() {
           ? err.message
           : "Something went wrong analyzing those photos."
       );
+      setImageUrl(null);
+      setSideImageUrl(null);
       setStep("capture-front");
     }
   }
@@ -168,11 +175,11 @@ export default function MeasurementsFlow() {
     return (
       <div className="flex flex-col gap-4">
         <p className="text-sm text-muted">
-          Three things make this accurate: your height, a front photo, and a
-          side photo — all facing the camera, plain background if possible,
-          arms slightly away from your sides. We estimate your measurements
-          from those — no tape measure needed. You&apos;ll get a chance to
-          fine-tune every number before it&apos;s saved.
+          Accurate measurements need three things: your height, a front-facing
+          photo, and a side-profile photo (plain background, arms slightly
+          away from your sides). We estimate your measurements from that pair
+          — no tape measure needed. You&apos;ll get a chance to fine-tune
+          every number before it&apos;s saved.
         </p>
         <label className="text-sm font-medium">Height (cm)</label>
         <input
@@ -195,19 +202,23 @@ export default function MeasurementsFlow() {
   if (step === "capture-front") {
     return (
       <TimedCameraCapture
-        // Distinct key from the side-capture step below is required — without
-        // it React reuses the same component instance across steps instead of
-        // mounting a fresh one, so its internal state (and the camera-start
-        // effect) never resets. That was the root cause of the flow getting
-        // stuck after the first photo.
+        // A distinct key per step is required: both branches render the same
+        // component type at the same tree position, so without a key React
+        // reuses one instance across the front->side transition instead of
+        // remounting it — the mount-only camera-start effect then never
+        // re-fires for the side step, and stale internal state (e.g. still
+        // "captured" from the front photo) carries over. That reuse was the
+        // actual root cause of the flow getting stuck after the first photo.
         key="front-capture"
         label="Front"
+        pose="front"
         error={error}
         onConfirm={(dataUrl) => {
           setError(null);
           setImageUrl(dataUrl);
           setStep("capture-side");
         }}
+        onRetakeStart={() => setError(null)}
         onCancel={() => setStep("intro")}
       />
     );
@@ -218,24 +229,30 @@ export default function MeasurementsFlow() {
       <TimedCameraCapture
         key="side-capture"
         label="Side"
+        pose="side"
         onConfirm={(dataUrl) => {
           setSideImageUrl(dataUrl);
           if (imageUrl) handleAnalyze(imageUrl, dataUrl);
         }}
         onCancel={() => setStep("capture-front")}
-        onSkip={() => {
-          if (imageUrl) handleAnalyze(imageUrl, null);
-        }}
-        skipLabel="Skip side photo"
       />
     );
   }
 
   if (step === "processing") {
     return (
-      <div className="fixed inset-0 z-50 bg-ink flex flex-col items-center justify-center gap-4 px-8">
-        <div className="w-10 h-10 rounded-full border-2 border-brass border-t-transparent animate-spin" />
-        <p className="text-paper text-sm text-center">{processingMessage}</p>
+      <div className="flex flex-col items-center gap-4 py-10">
+        <div className="flex items-center gap-3">
+          {imageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={imageUrl} alt="" className="w-24 rounded-2xl opacity-60" />
+          )}
+          {sideImageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={sideImageUrl} alt="" className="w-24 rounded-2xl opacity-60" />
+          )}
+        </div>
+        <p className="text-sm text-muted">{PROCESSING_MESSAGES[processingMessageIndex]}</p>
       </div>
     );
   }
@@ -247,7 +264,7 @@ export default function MeasurementsFlow() {
           <p className="text-xs text-muted flex-1 pr-3">
             These are estimates. Adjust anything that doesn&apos;t feel right —
             especially chest, waist, and hip, which are the least certain from
-            a photo{sideImageUrl ? " pair" : ""}.
+            a photo pair.
           </p>
           <div className="flex shrink-0 rounded-full bg-paper-raised p-0.5">
             <button
@@ -267,10 +284,10 @@ export default function MeasurementsFlow() {
           </div>
         </div>
 
-        {confidence !== null && confidence < 0.5 && (
-          <p className="text-xs text-red-600 bg-red-600/10 rounded-lg px-3 py-2">
-            Low confidence on this read{!sideImageUrl ? " (no side photo was provided)" : ""} — worth double-checking these against your own measurements.
-            {notes ? ` ${notes}` : ""}
+        {confidenceScore !== null && (
+          <p className="text-xs text-muted">
+            Confidence: {Math.round(confidenceScore * 100)}%
+            {confidenceScore < 0.6 ? " — treat these as rough estimates and double-check before ordering." : ""}
           </p>
         )}
 
@@ -294,7 +311,17 @@ export default function MeasurementsFlow() {
             />
           </div>
         ))}
+
+        {weightKg !== null && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-medium text-muted">Estimated weight</span>
+            <span className="text-muted">{weightKg} kg</span>
+          </div>
+        )}
+
+        {notes && <p className="text-xs text-muted">{notes}</p>}
         {error && <p className="text-xs text-red-600">{error}</p>}
+
         <button
           onClick={handleSave}
           disabled={saving}
