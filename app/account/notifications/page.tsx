@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getSupabase } from "@/lib/supabase";
 import { subscribeToPush } from "@/lib/push-subscribe";
+import AccountShell from "@/components/AccountShell";
 
 function Toggle({ on, onClick, disabled }: { on: boolean; onClick: () => void; disabled?: boolean }) {
   return (
@@ -81,10 +82,11 @@ export default function NotificationsPage() {
   ];
 
   return (
+    <AccountShell>
     <main className="px-5 py-6">
       <h1 className="font-display text-2xl mb-6">Notifications</h1>
 
-      <div className="bg-paper-raised rounded-2xl mb-4">
+      <div className="liquid-glass-light rounded-2xl mb-4">
         <div className="flex items-center justify-between px-4 py-3.5">
           <div>
             <p className="text-sm">Push notifications</p>
@@ -96,7 +98,7 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      <div className="bg-paper-raised rounded-2xl divide-y divide-ink/5">
+      <div className="liquid-glass-light rounded-2xl divide-y divide-ink/5">
         {preferenceRows.map((row) => (
           <div key={row.label} className="flex items-center justify-between px-4 py-3.5">
             <span className="text-sm">{row.label}</span>
@@ -105,5 +107,6 @@ export default function NotificationsPage() {
         ))}
       </div>
     </main>
+    </AccountShell>
   );
 }

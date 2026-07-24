@@ -1,5 +1,8 @@
+import AccountShell from "@/components/AccountShell";
+
 export default function PrivacyPage() {
   return (
+    <AccountShell>
     <main className="px-5 py-6 pb-16">
       <h1 className="font-display text-2xl mb-4">Privacy Policy</h1>
       <div className="text-sm text-muted space-y-4 leading-relaxed">
@@ -9,5 +12,6 @@ export default function PrivacyPage() {
         <p>For any questions about your data, reach out via the Contact Us page.</p>
       </div>
     </main>
+  </AccountShell>
   );
 }

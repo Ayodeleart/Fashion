@@ -1,8 +1,11 @@
+import AccountShell from "@/components/AccountShell";
+
 export default function ContactPage() {
   return (
+    <AccountShell>
     <main className="px-5 py-6">
       <h1 className="font-display text-2xl mb-6">Contact Us</h1>
-      <div className="bg-paper-raised rounded-2xl divide-y divide-ink/5">
+      <div className="liquid-glass-light rounded-2xl divide-y divide-ink/5">
         <a href="mailto:hello@ayodelegold.com" className="flex items-center justify-between px-4 py-3.5">
           <span className="text-sm">Email</span>
           <span className="text-sm text-muted">hello@ayodelegold.com</span>
@@ -17,5 +20,6 @@ export default function ContactPage() {
         </div>
       </div>
     </main>
+  </AccountShell>
   );
 }

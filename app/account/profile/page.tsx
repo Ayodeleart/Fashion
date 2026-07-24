@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { getSupabase } from "@/lib/supabase";
 import ProfilePlaceholderIcon from "@/components/ProfilePlaceholderIcon";
+import AccountShell from "@/components/AccountShell";
 
 function ChevronRight() {
   return (
@@ -167,10 +168,11 @@ export default function ProfilePage() {
   }
 
   return (
+    <AccountShell>
     <main className="px-5 py-6">
       <h1 className="font-display text-2xl mb-5">Profile</h1>
 
-      <div className="flex items-center gap-3 bg-paper-raised rounded-2xl p-4 mb-6">
+      <div className="flex items-center gap-3 liquid-glass-light rounded-2xl p-4 mb-6">
         <div className="w-14 h-14 rounded-full bg-paper border border-ink/10 overflow-hidden flex items-center justify-center text-muted shrink-0">
           {avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -192,7 +194,7 @@ export default function ProfilePage() {
         </a>
       </div>
 
-      <div className="bg-paper-raised rounded-2xl divide-y divide-ink/5 mb-6">
+      <div className="liquid-glass-light rounded-2xl divide-y divide-ink/5 mb-6">
         <Row href="/account/addresses" icon={icons.address} title="Address Book" subtitle="Manage your saved addresses" />
         <Row href="/account/orders" icon={icons.order} title="Order History" subtitle="View your past orders" />
         <Row href="/account/settings" icon={icons.gear} title="Settings" subtitle="Currency & appearance" />
@@ -200,7 +202,7 @@ export default function ProfilePage() {
         <Row href="/account/notifications" icon={icons.bell} title="Notifications" />
       </div>
 
-      <div className="bg-paper-raised rounded-2xl divide-y divide-ink/5 mb-8">
+      <div className="liquid-glass-light rounded-2xl divide-y divide-ink/5 mb-8">
         <Row href="/account/contact" icon={icons.phone} title="Contact Us" />
         <Row href="/account/help" icon={icons.help} title="Get Help" />
         <Row href="/account/privacy" icon={icons.shield} title="Privacy Policy" />
@@ -214,5 +216,6 @@ export default function ProfilePage() {
         Sign out
       </button>
     </main>
+    </AccountShell>
   );
 }

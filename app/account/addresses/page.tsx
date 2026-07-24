@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
+import AccountShell from "@/components/AccountShell";
 
 type Address = {
   fullName: string;
@@ -108,18 +109,19 @@ export default function AddressBookPage() {
   }
 
   return (
+    <AccountShell>
     <main className="px-5 py-6">
       <h1 className="font-display text-2xl mb-1">Address Book</h1>
       <p className="text-sm text-muted mb-6">Used to pre-fill your delivery details at checkout.</p>
 
       <form onSubmit={handleSave} className="space-y-3">
-        <input {...field("fullName")} placeholder="Full name" className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-paper" />
-        <input {...field("phone")} placeholder="Phone number" className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-paper" />
-        <input {...field("line1")} placeholder="Address line 1" className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-paper" />
-        <input {...field("line2")} placeholder="Address line 2 (optional)" className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-paper" />
+        <input {...field("fullName")} placeholder="Full name" className="w-full liquid-glass-light rounded-full px-4 py-3 text-sm" />
+        <input {...field("phone")} placeholder="Phone number" className="w-full liquid-glass-light rounded-full px-4 py-3 text-sm" />
+        <input {...field("line1")} placeholder="Address line 1" className="w-full liquid-glass-light rounded-full px-4 py-3 text-sm" />
+        <input {...field("line2")} placeholder="Address line 2 (optional)" className="w-full liquid-glass-light rounded-full px-4 py-3 text-sm" />
         <div className="flex gap-3">
-          <input {...field("city")} placeholder="City" className="flex-1 border border-ink/20 rounded-full px-4 py-3 text-sm bg-paper" />
-          <input {...field("state")} placeholder="State" className="flex-1 border border-ink/20 rounded-full px-4 py-3 text-sm bg-paper" />
+          <input {...field("city")} placeholder="City" className="flex-1 liquid-glass-light rounded-full px-4 py-3 text-sm" />
+          <input {...field("state")} placeholder="State" className="flex-1 liquid-glass-light rounded-full px-4 py-3 text-sm" />
         </div>
         <button
           type="submit"
@@ -130,5 +132,6 @@ export default function AddressBookPage() {
         </button>
       </form>
     </main>
+    </AccountShell>
   );
 }

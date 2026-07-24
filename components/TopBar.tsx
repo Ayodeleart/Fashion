@@ -12,7 +12,7 @@ export default function TopBar({ hideAria }: { hideAria?: boolean } = {}) {
       <Link
         href="/search"
         aria-label="Search"
-        className="w-10 h-10 rounded-full bg-paper-raised flex items-center justify-center shrink-0"
+        className="w-10 h-10 rounded-full liquid-glass-light flex items-center justify-center shrink-0"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-ink">
           <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth={1.6} />
@@ -33,7 +33,7 @@ export default function TopBar({ hideAria }: { hideAria?: boolean } = {}) {
         <Link
           href="/cart"
           aria-label={`Cart${count > 0 ? `, ${count} item${count === 1 ? "" : "s"}` : ""}`}
-          className="relative w-10 h-10 rounded-full bg-paper-raised flex items-center justify-center shrink-0"
+          className="relative w-10 h-10 rounded-full liquid-glass-light flex items-center justify-center shrink-0"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-ink">
             <path

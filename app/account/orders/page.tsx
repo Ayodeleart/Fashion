@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
+import AccountShell from "@/components/AccountShell";
 
 type Order = {
   id: string;
@@ -65,6 +66,7 @@ export default function OrderHistoryPage() {
   }, [router]);
 
   return (
+    <AccountShell>
     <main className="px-5 py-6">
       <h1 className="font-display text-2xl mb-6">Order History</h1>
 
@@ -90,7 +92,7 @@ export default function OrderHistoryPage() {
       ) : (
         <ul className="space-y-3">
           {orders.map((order) => (
-            <li key={order.id} className="bg-paper-raised rounded-2xl p-4">
+            <li key={order.id} className="liquid-glass-light rounded-2xl p-4">
               <div className="flex items-center justify-between mb-1">
                 <p className="text-sm font-medium">Order #{order.id.slice(0, 8)}</p>
                 <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${statusStyles[order.status] ?? "bg-paper text-muted"}`}>
@@ -106,5 +108,6 @@ export default function OrderHistoryPage() {
         </ul>
       )}
     </main>
+    </AccountShell>
   );
 }

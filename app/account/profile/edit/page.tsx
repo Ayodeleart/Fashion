@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { getSupabase } from "@/lib/supabase";
 import ProfilePlaceholderIcon from "@/components/ProfilePlaceholderIcon";
+import AccountShell from "@/components/AccountShell";
 
 export default function EditProfilePage() {
   const router = useRouter();
@@ -120,6 +121,7 @@ export default function EditProfilePage() {
   }
 
   return (
+    <AccountShell>
     <main className="px-5 py-6 max-w-sm mx-auto">
       <h1 className="font-display text-2xl mb-6">Edit profile</h1>
 
@@ -133,7 +135,7 @@ export default function EditProfilePage() {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={avatarUrl} alt="" className="w-24 h-24 rounded-full object-cover border border-ink/10" />
           ) : (
-            <div className="w-24 h-24 rounded-full bg-paper-raised border border-ink/10 flex items-center justify-center text-muted">
+            <div className="w-24 h-24 rounded-full liquid-glass-light flex items-center justify-center text-muted">
               <ProfilePlaceholderIcon className="w-10 h-10" />
             </div>
           )}
@@ -151,7 +153,7 @@ export default function EditProfilePage() {
           <input
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-paper"
+            className="w-full liquid-glass-light rounded-full px-4 py-3 text-sm"
           />
         </div>
         <div>
@@ -160,7 +162,7 @@ export default function EditProfilePage() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="Used for delivery updates"
-            className="w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-paper"
+            className="w-full liquid-glass-light rounded-full px-4 py-3 text-sm"
           />
         </div>
         <button
@@ -172,5 +174,6 @@ export default function EditProfilePage() {
         </button>
       </form>
     </main>
+    </AccountShell>
   );
 }
