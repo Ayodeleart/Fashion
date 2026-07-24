@@ -7,6 +7,7 @@ import { getSupabase } from "@/lib/supabase";
 import { getCategories, type Category } from "@/lib/categories";
 import AddToCartButton from "@/components/AddToCartButton";
 import SmartBackButton from "@/components/SmartBackButton";
+import AccountShell from "@/components/AccountShell";
 
 type Row = {
   id: string;
@@ -95,17 +96,18 @@ function SearchInner() {
   const trending = categories.slice(half);
 
   return (
+    <AccountShell>
     <main className="px-5 py-4">
       <div className="flex items-center gap-3 mb-6">
         <SmartBackButton
           fallbackHref="/"
-          className="w-9 h-9 rounded-full bg-paper-raised flex items-center justify-center shrink-0"
+          className="w-9 h-9 rounded-full liquid-glass-light flex items-center justify-center shrink-0"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
             <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </SmartBackButton>
-        <div className="flex-1 flex items-center gap-3 bg-paper-raised rounded-full px-4 py-3">
+        <div className="flex-1 flex items-center gap-3 liquid-glass-light rounded-full px-4 py-3">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-muted shrink-0">
             <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth={1.6} />
             <path d="m20 20-3.5-3.5" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" />
@@ -130,7 +132,7 @@ function SearchInner() {
                   key={term}
                   type="button"
                   onClick={() => setQuery(term)}
-                  className="px-4 py-2 rounded-full bg-paper-raised text-sm text-ink"
+                  className="px-4 py-2 rounded-full liquid-glass-light text-sm text-ink"
                 >
                   {term}
                 </button>
@@ -174,6 +176,7 @@ function SearchInner() {
         </div>
       )}
     </main>
+    </AccountShell>
   );
 }
 

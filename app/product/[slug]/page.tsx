@@ -111,7 +111,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <div className="px-5 pt-5 md:px-0 md:pt-0 flex items-center justify-between">
         <SmartBackButton
           fallbackHref={product.category ? `/catalog?category=${encodeURIComponent(product.category)}` : "/catalog"}
-          className="w-10 h-10 rounded-full bg-paper-raised border border-ink/10 flex items-center justify-center shrink-0"
+          className="w-10 h-10 rounded-full liquid-glass-light flex items-center justify-center shrink-0"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />

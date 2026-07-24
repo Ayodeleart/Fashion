@@ -6,6 +6,7 @@ import { useSaved } from "@/components/SavedProvider";
 import { getSupabase } from "@/lib/supabase";
 import AddToCartButton from "@/components/AddToCartButton";
 import SaveButton from "@/components/SaveButton";
+import AccountShell from "@/components/AccountShell";
 
 function formatPrice(price: number, currency: string) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(price);
@@ -87,35 +88,36 @@ export default function SavedPage() {
 
   if (loading) {
     return (
-      <main className="px-5 py-16 text-center">
+      <AccountShell><main className="px-5 py-16 text-center">
         <p className="text-sm text-muted">Loading…</p>
-      </main>
+      </main></AccountShell>
     );
   }
 
   if (!signedIn) {
     return (
-      <main className="px-5 py-8">
+      <AccountShell><main className="px-5 py-8">
         <h1 className="font-display text-2xl mb-2">Saved</h1>
         <p className="text-sm text-muted mb-6">
           <a href={`/account/login?next=${encodeURIComponent("/saved")}`} className="text-ink underline">Sign in</a> to save items across your devices — here's what people are loving right now.
         </p>
         <RecommendationsGrid title="Recommended for you" />
-      </main>
+      </main></AccountShell>
     );
   }
 
   if (items.length === 0) {
     return (
-      <main className="px-5 py-8">
+      <AccountShell><main className="px-5 py-8">
         <h1 className="font-display text-2xl mb-2">Saved</h1>
         <p className="text-sm text-muted mb-6">Nothing saved yet — tap the heart on anything you love.</p>
         <RecommendationsGrid title="Recommended for you" />
-      </main>
+      </main></AccountShell>
     );
   }
 
   return (
+    <AccountShell>
     <main className="px-5 py-8 space-y-10">
       <section>
         <h1 className="font-display text-2xl mb-6">Saved</h1>
@@ -153,5 +155,6 @@ export default function SavedPage() {
 
       <RecommendationsGrid title="You might also like" />
     </main>
+    </AccountShell>
   );
 }

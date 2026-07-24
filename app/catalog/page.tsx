@@ -7,6 +7,7 @@ import TopBar from "@/components/TopBar";
 import CategoryRow from "@/components/CategoryRow";
 import FilterSortRow from "@/components/FilterSortRow";
 import CatalogGrid from "@/components/CatalogGrid";
+import AccountShell from "@/components/AccountShell";
 
 // This is the e-commerce shop home (the mobile app screen). "/" is the
 // separate editorial Home feed (Pinterest-style lookbook) — this is
@@ -55,12 +56,13 @@ export default async function CatalogPage({
   ]);
 
   return (
+    <AccountShell>
     <main>
       <TopBar hideAria />
 
       <div
-        className="sticky z-20 bg-paper shadow-[0_4px_16px_rgba(0,0,0,0.10)] md:hidden"
-        style={{ top: "env(safe-area-inset-top)" }}
+        className="sticky z-20 liquid-glass-light md:hidden"
+        style={{ top: "env(safe-area-inset-top)", borderRadius: 0 }}
       >
         <CategoryRow categories={categories} />
         <Suspense fallback={null}>
@@ -100,5 +102,6 @@ export default async function CatalogPage({
         )}
       </section>
     </main>
+    </AccountShell>
   );
 }

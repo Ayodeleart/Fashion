@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
 import { getSupabase } from "@/lib/supabase";
 import RecommendationsTabs from "@/components/RecommendationsTabs";
+import AccountShell from "@/components/AccountShell";
 
 function formatPrice(price: number, currency: string) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(price);
@@ -102,6 +103,7 @@ export default function CartPage() {
   }
 
   return (
+    <AccountShell>
     <main className="px-5 md:px-10 py-8 md:py-12 md:max-w-5xl md:mx-auto md:grid md:grid-cols-3 md:gap-10">
       <div className="md:col-span-2">
         <h1 className="font-display text-2xl md:text-3xl mb-6">Your cart</h1>
@@ -151,7 +153,7 @@ export default function CartPage() {
 
       {/* Order summary — sidebar on desktop, inline block on mobile
           (same content, just repositioned by the grid at md+). */}
-      <div className="md:sticky md:top-8 md:self-start md:bg-paper-raised md:rounded-2xl md:p-6">
+      <div className="md:sticky md:top-8 md:self-start md:liquid-glass-light md:rounded-2xl md:p-6">
         <div className="flex items-center justify-between mb-4 text-sm">
           <span className="text-muted">Total</span>
           <span className="font-medium">{formatPrice(total, items[0]?.currency ?? "NGN")}</span>
@@ -166,5 +168,6 @@ export default function CartPage() {
         </button>
       </div>
     </main>
+    </AccountShell>
   );
 }
