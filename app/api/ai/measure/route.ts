@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// If the Vercel plan supports it (Hobby is hard-capped at 10s regardless
+// of this value), give the Groq vision call real headroom — analyzing
+// two full-body photos is not a sub-second operation.
+export const maxDuration = 60;
+
+
 // Groq's current vision-capable model (see console.groq.com/docs/vision).
 // Same GROQ_API_KEY as /api/ai/design and /api/ai/compose — one provider,
 // one cost profile, no extra key to configure.

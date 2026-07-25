@@ -123,12 +123,22 @@ export default function TimedCameraCapture({
     }, 1000);
   }
 
+  const MAX_DIMENSION = 1280;
+
   function capture() {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+
+    // Cap the longer side at MAX_DIMENSION before encoding. A raw phone
+    // camera frame at full sensor resolution, as a base64 JPEG, can run
+    // several MB per photo — two of those in one POST body risks tripping
+    // Vercel's hard 4.5MB serverless function request limit, which fails
+    // as a network-level error on the client (exactly the "couldn't reach
+    // the server" symptom), not a clean HTTP error we could show properly.
+    const scale = Math.min(1, MAX_DIMENSION / Math.max(video.videoWidth, video.videoHeight));
+    canvas.width = Math.round(video.videoWidth * scale);
+    canvas.height = Math.round(video.videoHeight * scale);
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     if (facingMode === "user") {
@@ -138,7 +148,7 @@ export default function TimedCameraCapture({
       ctx.scale(-1, 1);
     }
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
     stopStream();
     setPreviewUrl(dataUrl);
     setState("captured");
@@ -159,13 +169,32 @@ export default function TimedCameraCapture({
   async function handleFileFallback(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      setPreviewUrl(dataUrl);
+
+    // Route through the same canvas-resize path as the live capture —
+    // an uploaded phone photo can be several MB straight off the camera
+    // roll, and was previously read via FileReader with zero compression.
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext("2d");
+      if (!canvas || !ctx) {
+        URL.revokeObjectURL(objectUrl);
+        return;
+      }
+      const scale = Math.min(1, MAX_DIMENSION / Math.max(img.width, img.height));
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      setPreviewUrl(canvas.toDataURL("image/jpeg", 0.82));
       setState("captured");
+      URL.revokeObjectURL(objectUrl);
     };
-    reader.readAsDataURL(file);
+    img.onerror = () => {
+      setCameraError("Couldn't read that photo — try a different one.");
+      URL.revokeObjectURL(objectUrl);
+    };
+    img.src = objectUrl;
   }
 
   return (
@@ -186,24 +215,23 @@ export default function TimedCameraCapture({
 
       {(state === "live" || state === "countdown") && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <svg viewBox="0 0 200 400" className="h-[78%] opacity-50" fill="none">
-            {pose === "front" ? (
-              <path
-                d="M100 18 a17 17 0 1 1 -0.1 0 M75 55 q25 -12 50 0 l10 60 -8 4 q-6 60 2 110 l6 90 -16 4 -8 -95 -11 0 -8 95 -16 -4 6 -90 q10 -50 2 -110 l-8 -4 Z"
-                stroke="#ffffff"
-                strokeWidth={2.5}
-                strokeLinejoin="round"
-                strokeDasharray="6 5"
-              />
-            ) : (
-              <path
-                d="M108 20 a16 16 0 1 1 -0.1 0 M96 52 q18 -6 26 4 l6 55 q10 12 6 40 l10 100 -14 5 -10 -85 -6 0 2 88 -14 3 -6 -105 q-8 -30 0 -60 Z"
-                stroke="#ffffff"
-                strokeWidth={2.5}
-                strokeLinejoin="round"
-                strokeDasharray="6 5"
-              />
-            )}
+          {/* A humanoid silhouette outline is genuinely hard to get right
+              without visual iteration, and a wrong one reads as broken
+              rather than helpful. A simple frame + head-line guide can't
+              look "wrong" — same purpose (stand here, this tall), no risk
+              of a lopsided figure. */}
+          <svg viewBox="0 0 200 400" className="h-[80%] opacity-60" fill="none">
+            <rect
+              x={pose === "front" ? 38 : 46}
+              y="14"
+              width={pose === "front" ? 124 : 108}
+              height="372"
+              rx="30"
+              stroke="#ffffff"
+              strokeWidth={2}
+              strokeDasharray="7 6"
+            />
+            <line x1="70" y1="46" x2="130" y2="46" stroke="#ffffff" strokeWidth={1.5} strokeDasharray="4 4" />
           </svg>
         </div>
       )}
