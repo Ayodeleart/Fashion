@@ -215,24 +215,29 @@ export default function TimedCameraCapture({
 
       {(state === "live" || state === "countdown") && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          {/* A humanoid silhouette outline is genuinely hard to get right
-              without visual iteration, and a wrong one reads as broken
-              rather than helpful. A simple frame + head-line guide can't
-              look "wrong" — same purpose (stand here, this tall), no risk
-              of a lopsided figure. */}
-          <svg viewBox="0 0 200 400" className="h-[80%] opacity-60" fill="none">
-            <rect
-              x={pose === "front" ? 38 : 46}
-              y="14"
-              width={pose === "front" ? 124 : 108}
-              height="372"
-              rx="30"
-              stroke="#ffffff"
-              strokeWidth={2}
-              strokeDasharray="7 6"
+          {pose === "front" ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src="/measure-guides/front.png"
+              alt=""
+              className="h-[80%] opacity-70"
+              style={{ mixBlendMode: "multiply", filter: "drop-shadow(0 0 1px rgba(255,255,255,0.5))" }}
             />
-            <line x1="70" y1="46" x2="130" y2="46" stroke="#ffffff" strokeWidth={1.5} strokeDasharray="4 4" />
-          </svg>
+          ) : (
+            <svg viewBox="0 0 200 400" className="h-[80%] opacity-60" fill="none">
+              <rect
+                x="46"
+                y="14"
+                width="108"
+                height="372"
+                rx="30"
+                stroke="#ffffff"
+                strokeWidth={2}
+                strokeDasharray="7 6"
+              />
+              <line x1="70" y1="46" x2="130" y2="46" stroke="#ffffff" strokeWidth={1.5} strokeDasharray="4 4" />
+            </svg>
+          )}
         </div>
       )}
 
