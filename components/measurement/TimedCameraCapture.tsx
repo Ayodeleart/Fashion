@@ -123,7 +123,7 @@ export default function TimedCameraCapture({
     }, 1000);
   }
 
-  const MAX_DIMENSION = 1280;
+  const MAX_DIMENSION = 1000;
 
   function capture() {
     const video = videoRef.current;
@@ -220,7 +220,7 @@ export default function TimedCameraCapture({
             <img
               src="/measure-guides/front.png"
               alt=""
-              className="h-[80%] opacity-70"
+              className="max-h-[75%] max-w-[55%] w-auto h-auto object-contain opacity-70"
               style={{ mixBlendMode: "multiply", filter: "drop-shadow(0 0 1px rgba(255,255,255,0.5))" }}
             />
           ) : (
