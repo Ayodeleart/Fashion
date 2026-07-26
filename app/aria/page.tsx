@@ -11,6 +11,7 @@ import AriaDesignCard from "@/components/aria/AriaDesignCard";
 import AriaAppointmentCard from "@/components/aria/AriaAppointmentCard";
 import AriaLiveTalkCard from "@/components/aria/AriaLiveTalkCard";
 import ConciergeContactForm from "@/components/ConciergeContactForm";
+import RequireAuth from "@/components/RequireAuth";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 type Panel = "chat" | "appointment" | "handoff";
@@ -98,6 +99,7 @@ export default function AriaPage() {
         </div>
       </header>
 
+      <RequireAuth feature="Aria">
       {panel === "chat" && (
         <>
           {/* Services — horizontal scroll of colorful illustrated cards,
@@ -197,6 +199,7 @@ export default function AriaPage() {
           />
         </div>
       )}
+      </RequireAuth>
     </div>
   );
 }

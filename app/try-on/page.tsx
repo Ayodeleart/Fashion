@@ -1,4 +1,5 @@
 import TryOnFlow from "@/components/TryOnFlow";
+import RequireAuth from "@/components/RequireAuth";
 import { getSupabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -50,7 +51,9 @@ export default async function TryOnPage({
         <p className="text-sm text-muted mb-5">
           AI-generated — a fit and style preview, not a guarantee of exact real-world appearance.
         </p>
-        <TryOnFlow target={target} />
+        <RequireAuth feature="AI Try-On">
+          <TryOnFlow target={target} />
+        </RequireAuth>
       </div>
     </main>
   );
