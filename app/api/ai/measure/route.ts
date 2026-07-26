@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// If the Vercel plan supports it (Hobby is hard-capped at 10s regardless
-// of this value), give the Groq vision call real headroom — analyzing
-// two full-body photos is not a sub-second operation.
+// Vercel's Hobby plan defaults to a hard 10s serverless function timeout,
+// but that's raised well past this by enabling Fluid Compute in Project
+// Settings -> Functions — Fluid Compute is free on Hobby, not a Pro-only
+// feature. Without it enabled, this maxDuration value has no effect and
+// Vercel kills the function at 10s regardless of what's set here.
 export const maxDuration = 60;
 
 
@@ -12,16 +14,17 @@ export const maxDuration = 60;
 const GROQ_VISION_MODEL = "qwen/qwen3.6-27b";
 const TIMEOUT_MS = 45_000;
 const MAX_IMAGE_DATA_URL_LENGTH = 20_000_000;
+const MAX_COMPLETION_TOKENS = 450;
 
-const SYSTEM_PROMPT = `You are an expert AI Tailoring and Anthropometric Measurement Engine integrated into a mobile-responsive web application. Your task is to analyze user-submitted front-view and side-view full-body photographs captured via a web browser (HTML5 Camera API) and return honest, best-effort tailoring measurements in centimeters (cm). A 2D photograph cannot guarantee exact body measurements — never fabricate false precision. Prefer a lower confidence score or a rejected measurement over an invented number.
+const SYSTEM_PROMPT = `You are an expert AI Tailoring and Anthropometric Measurement Engine integrated into a mobile-responsive web application. You will be given ONE image containing two stacked photos of the same person, one directly above the other: the TOP half is a front-view full-body photo, the BOTTOM half is a side-profile full-body photo. Treat them as two separate views of the same person, analyzed together — do not treat the boundary between them as part of either photo. Your task is to return honest, best-effort tailoring measurements in centimeters (cm). A 2D photograph cannot guarantee exact body measurements — never fabricate false precision. Prefer a lower confidence score or a rejected measurement over an invented number.
 
 ### CORE VISION LOGIC & CALIBRATION:
 Because this is a standard 2D web app capture without hardware depth sensors, establish a Real-World Centimeters-per-Pixel scale using one of two methods:
-1. METHOD A (USER HEIGHT PROVIDED — preferred): If a non-zero User_Height_Cm is provided in the input data packet below, locate the user's total vertical pixels from the crown of the head to the floor and use this known height as the calibration reference.
+1. METHOD A (USER HEIGHT PROVIDED — preferred): If a non-zero User_Height_Cm is provided in the input data packet below, locate the person's total vertical pixels from the crown of the head to the floor in the TOP (front-view) photo and use this known height as the calibration reference.
 2. METHOD B (NO HEIGHT PROVIDED): If User_Height_Cm is 0 or "Unknown", only fall back to a background reference object (e.g. a door frame) if you can confidently and specifically identify one in the actual photo with a well-known standard size — do not assume one exists. If no reliable reference is visible, do NOT guess a height or fabricate a scale: set "anatomicalPass" to false, or return the measurements with a low confidenceScore (below 0.4) and clearly say in developerNotes that height was not provided and no reliable reference object was found, so the user should retake with their height entered or a labeled reference in frame.
 
 ### USE BOTH VIEWS:
-Use the front view for shoulder width, chest/bust, waist, hip, and overall proportions. Use the side view to estimate body depth and distinguish depth from width (this materially improves circumference estimates over a front photo alone). Cross-check both views together.
+Use the TOP (front) photo for shoulder width, chest/bust, waist, hip, and overall proportions. Use the BOTTOM (side) photo to estimate body depth and distinguish depth from width (this materially improves circumference estimates over a front photo alone). Cross-check both together as the same person.
 
 ### ANATOMICAL CONSISTENCY CHECK (DO NOT FORCE RATIOS):
 Check plausibility, but let the visual evidence win:
@@ -29,7 +32,7 @@ Check plausibility, but let the visual evidence win:
 - Inseam should track logically with total height and leg proportions; arm length should track with overall body proportions and be checked against inseam and shoulder width; shoulder width should correlate with height. Flag (lower confidence, note in developerNotes) rather than silently "correct" any measurement that looks anatomically implausible given clothing, pose, camera angle, occlusion, or image quality.
 
 ### REJECTION CRITERIA:
-If clothing, pose, crouching, severe camera tilt, occlusion, poor lighting, or image quality prevents a reasonably reliable read of the body, set "anatomicalPass" to false and clearly explain why in developerNotes (calling out which photo — front or side — is the problem, if you can tell) so the app can prompt the user to retake the relevant photo.
+If clothing, pose, crouching, severe camera tilt, occlusion, poor lighting, or image quality prevents a reasonably reliable read of the body, set "anatomicalPass" to false and clearly explain why in developerNotes (calling out whether the top/front or bottom/side half is the problem, if you can tell) so the app can prompt the user to retake the relevant photo.
 
 ### WEIGHT:
 Only include an estimated weight in "estimatedWeightKgGuess" if you can reasonably estimate it from build and proportions; otherwise return null for it. Do not guess a number just to fill the field.
@@ -67,19 +70,15 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json({ error: "Malformed request." }, { status: 400 });
     }
-    const { frontImage, sideImage, heightCm } = (body ?? {}) as {
-      frontImage?: unknown;
-      sideImage?: unknown;
+    const { combinedImage, heightCm } = (body ?? {}) as {
+      combinedImage?: unknown;
       heightCm?: unknown;
     };
 
-    if (typeof frontImage !== "string" || !frontImage) {
-      return NextResponse.json({ error: "A front photo is required." }, { status: 400 });
+    if (typeof combinedImage !== "string" || !combinedImage) {
+      return NextResponse.json({ error: "Both photos are required." }, { status: 400 });
     }
-    if (typeof sideImage !== "string" || !sideImage) {
-      return NextResponse.json({ error: "A side photo is required." }, { status: 400 });
-    }
-    if (frontImage.length > MAX_IMAGE_DATA_URL_LENGTH || sideImage.length > MAX_IMAGE_DATA_URL_LENGTH) {
+    if (combinedImage.length > MAX_IMAGE_DATA_URL_LENGTH) {
       return NextResponse.json({ error: "That photo is too large — try a smaller or lower-resolution image." }, { status: 413 });
     }
     const height = typeof heightCm === "number" && heightCm > 0 ? heightCm : 0;
@@ -93,11 +92,10 @@ export async function POST(request: NextRequest) {
       `### INPUT DATA PACKET:\n` +
       `User_Height_Cm: ${height > 0 ? height : "0 (Unknown — do not guess a scale unless a reliable reference object is visible)"}\n` +
       `User_Gender_Target_Pattern: Unspecified\n` +
-      `Image_View_Provided: BOTH (front and side)`;
+      `Image_View_Provided: BOTH (one image, front-view on top, side-view on bottom)`;
 
     const imageContent: { type: "image_url"; image_url: { url: string } }[] = [
-      { type: "image_url", image_url: { url: frontImage } },
-      { type: "image_url", image_url: { url: sideImage } },
+      { type: "image_url", image_url: { url: combinedImage } },
     ];
 
     const controller = new AbortController();
@@ -121,7 +119,7 @@ export async function POST(request: NextRequest) {
             },
           ],
           temperature: 0.2,
-          max_completion_tokens: 700,
+          max_completion_tokens: MAX_COMPLETION_TOKENS,
           response_format: { type: "json_object" },
         }),
         signal: controller.signal,

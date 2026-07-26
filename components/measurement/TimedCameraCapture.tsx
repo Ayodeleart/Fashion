@@ -75,6 +75,21 @@ export default function TimedCameraCapture({
         audio: false,
       });
       streamRef.current = stream;
+
+      // Some multi-lens phones default the granted track to a zoomed-in
+      // lens/crop rather than the standard 1x field of view — force it
+      // back to 1x when the browser exposes that capability. Best-effort:
+      // not all devices/browsers support the "zoom" constraint at all.
+      const [track] = stream.getVideoTracks();
+      const capabilities = track?.getCapabilities?.() as (MediaTrackCapabilities & { zoom?: { min: number; max: number } }) | undefined;
+      if (capabilities?.zoom) {
+        try {
+          await track.applyConstraints({ advanced: [{ zoom: capabilities.zoom.min } as MediaTrackConstraintSet] });
+        } catch {
+          // Non-fatal — camera still works, just can't confirm 1x zoom.
+        }
+      }
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();

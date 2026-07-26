@@ -50,6 +50,38 @@ function cmToDisplay(cm: number, unit: "cm" | "in") {
   return unit === "cm" ? `${cm} cm` : `${(cm / 2.54).toFixed(1)} in`;
 }
 
+function loadImageEl(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Couldn't process one of those photos — please retake and try again."));
+    img.src = url;
+  });
+}
+
+// Stacks the front and side captures into a single JPEG (front on top,
+// side on bottom) so the AI only has to process one image instead of two.
+async function compositeImages(frontUrl: string, sideUrl: string): Promise<string> {
+  const [front, side] = await Promise.all([loadImageEl(frontUrl), loadImageEl(sideUrl)]);
+  const targetWidth = 640;
+  const frontHeight = Math.round(front.height * (targetWidth / front.width));
+  const sideHeight = Math.round(side.height * (targetWidth / side.width));
+  const gap = 6;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = targetWidth;
+  canvas.height = frontHeight + gap + sideHeight;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Couldn't process those photos — please try again.");
+
+  ctx.fillStyle = "#000000";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(front, 0, 0, targetWidth, frontHeight);
+  ctx.drawImage(side, 0, frontHeight + gap, targetWidth, sideHeight);
+
+  return canvas.toDataURL("image/jpeg", 0.85);
+}
+
 export default function MeasurementsFlow() {
   const router = useRouter();
   const pathname = usePathname();
@@ -83,12 +115,18 @@ export default function MeasurementsFlow() {
     setStep("processing");
     setError(null);
     try {
+      // Stack front+side into one image client-side before sending. Two
+      // separate image_url entries means Groq's vision pipeline processes
+      // two images (roughly double the preprocessing + image tokens); one
+      // combined image is meaningfully faster to analyze, which matters a
+      // lot on a platform with a hard function-duration ceiling.
+      const combinedImage = await compositeImages(frontUrl, sideUrl);
+
       const res = await fetch("/api/ai/measure", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          frontImage: frontUrl,
-          sideImage: sideUrl,
+          combinedImage,
           heightCm: parseFloat(heightCm) || 0,
         }),
       });
