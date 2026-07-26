@@ -102,7 +102,12 @@ export default function ProfilePage() {
     async function load() {
       try {
         const { data, error: userErr } = await supabase.auth.getUser();
-        if (userErr) throw userErr;
+        // getUser() rejects with AuthSessionMissingError rather than just
+        // returning data.user: null when there's no session at all — the
+        // normal, common state for a logged-out visitor, not a real error.
+        // Only throw for anything else; this case falls through to the
+        // !data.user login redirect below like it should.
+        if (userErr && userErr.name !== "AuthSessionMissingError") throw userErr;
         if (!data.user) {
           router.replace("/account/login?next=/account/profile");
           return;

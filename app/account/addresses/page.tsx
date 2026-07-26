@@ -32,7 +32,7 @@ export default function AddressBookPage() {
     async function load() {
       try {
         const { data, error: userErr } = await supabase.auth.getUser();
-        if (userErr) throw userErr;
+        if (userErr && userErr.name !== "AuthSessionMissingError") throw userErr;
         if (!data.user) {
           router.replace("/account/login?next=/account/addresses");
           return;
