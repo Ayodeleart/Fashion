@@ -121,6 +121,10 @@ export default function MeasurementsFlow() {
       // combined image is meaningfully faster to analyze, which matters a
       // lot on a platform with a hard function-duration ceiling.
       const combinedImage = await compositeImages(frontUrl, sideUrl);
+      const approxBytes = (combinedImage.length * 3) / 4;
+      if (approxBytes > 3_500_000) {
+        throw new Error("That photo came out too large to send — try retaking in better light or standing a bit farther back.");
+      }
 
       const res = await fetch("/api/ai/measure", {
         method: "POST",
@@ -160,7 +164,12 @@ export default function MeasurementsFlow() {
       setNotes(data.developerNotes ?? null);
       setStep("review");
     } catch (err) {
-      const isNetworkError = err instanceof TypeError;
+      // A real fetch-level failure (offline, DNS, request never reached a
+      // server) throws a TypeError with "Failed to fetch" as the message.
+      // Any other TypeError was previously mislabeled as a connection
+      // problem, hiding the actual bug — narrow this so real errors surface.
+      const isNetworkError = err instanceof TypeError && /failed to fetch/i.test(err.message);
+      console.error("[measure] analyze failed:", err);
       setError(
         isNetworkError
           ? "Couldn't reach the server — check your connection and try again."
