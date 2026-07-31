@@ -170,9 +170,25 @@ h1, h2, h3, .font-display {
    the card (e.g. BottomNav's Shop button, which floats above the bar
    via a negative top offset), cutting it off. The pseudo-element
    approach clips only the blur, never the actual content. */
-.liquid-glass {
+/* position: relative + isolation: isolate are needed on every glass
+   class below so their ::before blur layer positions correctly — but
+   NOT as a plain class rule. .liquid-glass-button { position: relative }
+   compiles well after Tailwind's own utilities (this file's plain CSS
+   comes after the @tailwind utilities directive), so on any element
+   that also has Tailwind's `absolute` or `fixed` class, the later,
+   equal-specificity glass rule was silently winning and overriding it
+   back to relative — exactly what broke BottomNav's Shop button
+   (positioned via `absolute ... -top-7` to float above the bar; once
+   forced back to `relative` it rendered in-flow instead, in the wrong
+   place entirely). :where() contributes zero specificity, so Tailwind's
+   utility classes (specificity 0,0,1,0) always beat it regardless of
+   which order the classes appear in the stylesheet or the className. */
+:where(.liquid-glass, .liquid-glass-button, .liquid-glass-button-ghost, .liquid-glass-light) {
   position: relative;
   isolation: isolate;
+}
+
+.liquid-glass {
   border: 1px solid rgba(255, 255, 255, 0.35);
   box-shadow:
     inset 0 1px 1px rgba(255, 255, 255, 0.55),
@@ -208,8 +224,6 @@ h1, h2, h3, .font-display {
    rather than a flat solid color. Uses --ink so it inverts correctly in
    dark mode. */
 .liquid-glass-button {
-  position: relative;
-  isolation: isolate;
   color: rgb(var(--paper));
   border: 1px solid rgba(255, 255, 255, 0.18);
 }
@@ -229,8 +243,6 @@ h1, h2, h3, .font-display {
    glass, ink-colored text, for buttons that sit on the ambient background
    rather than needing the strong dark CTA treatment. */
 .liquid-glass-button-ghost {
-  position: relative;
-  isolation: isolate;
   color: rgb(var(--ink));
   border: 1px solid rgba(255, 255, 255, 0.35);
 }
@@ -267,8 +279,6 @@ h1, h2, h3, .font-display {
    normal ink-colored text legible (unlike .liquid-glass, which assumes
    white text over a photo). */
 .liquid-glass-light {
-  position: relative;
-  isolation: isolate;
   border: 1px solid rgba(255, 255, 255, 0.35);
   box-shadow:
     inset 0 1px 1px rgba(255, 255, 255, 0.45),
