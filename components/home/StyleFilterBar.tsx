@@ -27,8 +27,7 @@ export default function StyleFilterBar({
 }) {
   return (
     <div
-      className="sticky z-10 bg-paper shadow-[0_4px_16px_rgba(0,0,0,0.10)]"
-      style={{ top: "env(safe-area-inset-top)" }}
+      className="sticky top-0 z-10 bg-paper shadow-[0_4px_16px_rgba(0,0,0,0.10)]"
     >
       <div className="flex gap-2 overflow-x-auto px-3 md:px-6 py-3 no-scrollbar">
         {FILTERS.map((filter) => {

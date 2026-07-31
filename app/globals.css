@@ -194,12 +194,23 @@ h1, h2, h3, .font-display {
   );
   backdrop-filter: blur(18px) saturate(200%) brightness(1.05);
   -webkit-backdrop-filter: blur(18px) saturate(200%) brightness(1.05);
+  /* Real Liquid Glass isn't a uniform blur wash — the center stays
+     genuinely clear and the refraction/blur concentrates at the rim.
+     Masking the blur layer itself (fading to fully transparent toward
+     the middle) reproduces that: the masked-out center shows the raw,
+     unblurred backdrop straight through. */
+  mask-image: radial-gradient(ellipse at center, transparent 38%, rgba(0, 0, 0, 0.55) 68%, black 100%);
+  -webkit-mask-image: radial-gradient(ellipse at center, transparent 38%, rgba(0, 0, 0, 0.55) 68%, black 100%);
 }
 
 .liquid-glass-input {
-  background: rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  /* Deliberately NO backdrop-filter here. This sits inside .liquid-glass
+     (which already has its own backdrop-filter blur), and Safari/WebKit
+     renders nested/stacked backdrop-filter blurs incorrectly — instead
+     of a clean blur you get blotchy, uneven color smearing. A flat tint
+     on top of the already-blurred parent gives the same visual result
+     without the bug. */
+  background: rgba(255, 255, 255, 0.22);
   border: 1px solid rgba(255, 255, 255, 0.35);
   color: #fff;
 }
@@ -230,6 +241,11 @@ h1, h2, h3, .font-display {
   background: rgba(var(--paper), 0.22);
   backdrop-filter: blur(18px) saturate(180%) brightness(1.03);
   -webkit-backdrop-filter: blur(18px) saturate(180%) brightness(1.03);
+  /* Milder than .liquid-glass's mask — these cards hold real body text,
+     so the center keeps more tint for legibility while the rim still
+     gets the stronger glass/blur read. */
+  mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.45) 45%, black 100%);
+  -webkit-mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.45) 45%, black 100%);
 }
 [data-theme="dark"] .liquid-glass-light {
   border-color: rgba(255, 255, 255, 0.12);

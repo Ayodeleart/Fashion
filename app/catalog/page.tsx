@@ -61,8 +61,8 @@ export default async function CatalogPage({
       <TopBar hideAria />
 
       <div
-        className="sticky z-20 liquid-glass-light md:hidden"
-        style={{ top: "env(safe-area-inset-top)", borderRadius: 0 }}
+        className="sticky top-0 z-20 liquid-glass-light md:hidden"
+        style={{ borderRadius: 0 }}
       >
         <CategoryRow categories={categories} />
         <Suspense fallback={null}>
