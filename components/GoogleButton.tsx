@@ -31,7 +31,7 @@ export default function GoogleButton() {
         type="button"
         onClick={handleClick}
         disabled={pending}
-        className="w-full flex items-center justify-center gap-3 bg-ink text-paper rounded-full px-4 py-3 text-sm font-medium hover:bg-ink/90 transition-colors disabled:opacity-50"
+        className="w-full flex items-center justify-center gap-3 liquid-glass-button rounded-full px-4 py-3 text-sm font-medium transition-colors disabled:opacity-50"
       >
         <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
           <path

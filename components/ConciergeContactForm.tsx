@@ -50,7 +50,7 @@ export default function ConciergeContactForm({
   }
 
   if (sent) {
-    return <p className="text-sm bg-paper-raised rounded-2xl px-4 py-4">Got it — we'll be in touch shortly.</p>;
+    return <p className="text-sm liquid-glass-light rounded-2xl px-4 py-4">Got it — we'll be in touch shortly.</p>;
   }
 
   return (
@@ -60,7 +60,7 @@ export default function ConciergeContactForm({
         onChange={(e) => setName(e.target.value)}
         placeholder="Your name"
         required
-        className="bg-paper-raised rounded-full px-4 py-3 text-sm outline-none placeholder:text-muted"
+        className="liquid-glass-light rounded-full px-4 py-3 text-sm outline-none placeholder:text-muted"
       />
       <input
         value={email}
@@ -68,7 +68,7 @@ export default function ConciergeContactForm({
         type="email"
         placeholder="Email"
         required
-        className="bg-paper-raised rounded-full px-4 py-3 text-sm outline-none placeholder:text-muted"
+        className="liquid-glass-light rounded-full px-4 py-3 text-sm outline-none placeholder:text-muted"
       />
       <textarea
         value={message}
@@ -76,13 +76,13 @@ export default function ConciergeContactForm({
         placeholder={placeholder}
         required
         rows={3}
-        className="bg-paper-raised rounded-2xl px-4 py-3 text-sm outline-none placeholder:text-muted resize-none"
+        className="liquid-glass-light rounded-2xl px-4 py-3 text-sm outline-none placeholder:text-muted resize-none"
       />
       {error && <p className="text-xs text-red-600">{error}</p>}
       <button
         type="submit"
         disabled={loading}
-        className="bg-ink text-paper rounded-full py-3 text-sm font-medium disabled:opacity-50"
+        className="liquid-glass-button rounded-full py-3 text-sm font-medium disabled:opacity-50"
       >
         {loading ? "Sending…" : "Send"}
       </button>

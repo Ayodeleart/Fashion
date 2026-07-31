@@ -82,7 +82,7 @@ export default function CartPage() {
         <p className="text-sm text-muted mb-6">Your cart is tied to your account, not this device.</p>
         <a
           href={`/account/login?next=${encodeURIComponent("/cart")}`}
-          className="inline-block bg-ink text-paper text-sm rounded-full px-5 py-2.5"
+          className="inline-block liquid-glass-button text-sm rounded-full px-5 py-2.5"
         >
           Sign in
         </a>
@@ -95,7 +95,7 @@ export default function CartPage() {
       <main className="px-5 py-16 text-center">
         <h1 className="font-display text-2xl mb-2">Your cart is empty</h1>
         <p className="text-sm text-muted mb-6">Add something you love from the catalog.</p>
-        <a href="/catalog" className="inline-block bg-ink text-paper text-sm rounded-full px-5 py-2.5">
+        <a href="/catalog" className="inline-block liquid-glass-button text-sm rounded-full px-5 py-2.5">
           Browse catalog
         </a>
       </main>
@@ -115,7 +115,7 @@ export default function CartPage() {
         <ul className="space-y-4 mb-8 md:mb-0">
           {items.map((item) => (
             <li key={`${item.productId}-${item.variantId ?? "none"}`} className="flex gap-3 md:gap-4 md:pb-4 md:border-b md:border-ink/10">
-              <div className="relative w-16 h-20 md:w-20 md:h-24 rounded-xl overflow-hidden bg-paper-raised shrink-0">
+              <div className="relative w-16 h-20 md:w-20 md:h-24 rounded-xl overflow-hidden liquid-glass-light shrink-0">
                 {item.image && <Image src={item.image} alt={item.name} fill className="object-cover" sizes="80px" />}
               </div>
               <div className="flex-1 min-w-0">
@@ -162,7 +162,7 @@ export default function CartPage() {
         <button
           onClick={handleCheckout}
           disabled={pending}
-          className="w-full bg-ink text-paper rounded-full px-4 py-3 text-sm font-medium hover:bg-ink/90 transition-colors disabled:opacity-50"
+          className="w-full liquid-glass-button rounded-full px-4 py-3 text-sm font-medium transition-colors disabled:opacity-50"
         >
           {pending ? "Redirecting to Paystack…" : "Checkout with Paystack"}
         </button>

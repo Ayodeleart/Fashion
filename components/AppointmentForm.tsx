@@ -84,7 +84,7 @@ export default function AppointmentForm({
           onChange={(e) => setName(e.target.value)}
           placeholder="Full name"
           required
-          className="w-full bg-paper-raised border border-ink/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-ink/40"
+          className="w-full liquid-glass-light border border-ink/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-ink/40"
         />
         <div className="grid grid-cols-2 gap-3">
           <input
@@ -93,14 +93,14 @@ export default function AppointmentForm({
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
             required
-            className="w-full bg-paper-raised border border-ink/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-ink/40"
+            className="w-full liquid-glass-light border border-ink/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-ink/40"
           />
           <input
             type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="Phone"
-            className="w-full bg-paper-raised border border-ink/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-ink/40"
+            className="w-full liquid-glass-light border border-ink/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-ink/40"
           />
         </div>
 
@@ -108,7 +108,7 @@ export default function AppointmentForm({
           value={serviceType}
           onChange={(e) => setServiceType(e.target.value)}
           required
-          className="w-full bg-paper-raised border border-ink/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-ink/40 text-ink"
+          className="w-full liquid-glass-light border border-ink/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-ink/40 text-ink"
         >
           <option value="">What&apos;s this for?</option>
           {allServices.map((s) => (
@@ -121,13 +121,13 @@ export default function AppointmentForm({
             type="date"
             value={preferredDate}
             onChange={(e) => setPreferredDate(e.target.value)}
-            className="w-full bg-paper-raised border border-ink/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-ink/40"
+            className="w-full liquid-glass-light border border-ink/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-ink/40"
           />
           <input
             type="time"
             value={preferredTime}
             onChange={(e) => setPreferredTime(e.target.value)}
-            className="w-full bg-paper-raised border border-ink/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-ink/40"
+            className="w-full liquid-glass-light border border-ink/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-ink/40"
           />
         </div>
 
@@ -137,13 +137,13 @@ export default function AppointmentForm({
           placeholder="Anything else we should know?"
           rows={4}
           required
-          className="w-full bg-paper-raised border border-ink/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-ink/40 resize-none"
+          className="w-full liquid-glass-light border border-ink/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-ink/40 resize-none"
         />
 
         <button
           type="submit"
           disabled={status === "sending"}
-          className="w-full h-12 rounded-full bg-ink text-paper text-sm font-medium disabled:opacity-50"
+          className="w-full h-12 rounded-full liquid-glass-button text-sm font-medium disabled:opacity-50"
         >
           {status === "sending" ? "Sending…" : "Request appointment"}
         </button>

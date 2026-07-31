@@ -76,7 +76,7 @@ export default function StickyAddBar({
       }`}
       style={{ paddingTop: "calc(env(safe-area-inset-top) + 0.625rem)" }}
     >
-      <div className="relative w-11 h-14 rounded-lg overflow-hidden bg-paper-raised shrink-0">
+      <div className="relative w-11 h-14 rounded-lg overflow-hidden liquid-glass-light shrink-0">
         {image && <Image src={image} alt={name} fill className="object-cover" sizes="44px" />}
       </div>
       <div className="flex-1 min-w-0">
@@ -93,7 +93,7 @@ export default function StickyAddBar({
         image={image}
         disabled={disabled}
         onAdded={onAdded}
-        className="shrink-0 text-xs px-4 py-2.5 rounded-full bg-ink text-paper hover:bg-ink/90 transition-colors disabled:opacity-40"
+        className="shrink-0 text-xs px-4 py-2.5 rounded-full liquid-glass-button transition-colors disabled:opacity-40"
         label="Add to Bag"
       />
     </div>

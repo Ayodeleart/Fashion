@@ -39,7 +39,7 @@ export default function AnnouncementBar() {
   if (dismissed || messages.length === 0) return null;
 
   return (
-    <div className="relative h-[34px] bg-ink text-paper overflow-hidden flex items-center justify-center">
+    <div className="relative h-[34px] liquid-glass-button overflow-hidden flex items-center justify-center">
       <div className="relative w-full h-full flex items-center justify-center px-8">
         {messages.map((message, i) => (
           <span

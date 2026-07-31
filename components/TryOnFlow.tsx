@@ -133,7 +133,7 @@ export default function TryOnFlow({ target: initialTarget }: { target: Target })
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-3 rounded-2xl border border-ink/10 p-3">
-        <div className="relative w-14 h-18 rounded-lg overflow-hidden bg-paper-raised shrink-0">
+        <div className="relative w-14 h-18 rounded-lg overflow-hidden liquid-glass-light shrink-0">
           <Image src={target.image} alt={target.name} fill className="object-cover" sizes="56px" />
         </div>
         <div className="flex-1 min-w-0">
@@ -196,7 +196,7 @@ export default function TryOnFlow({ target: initialTarget }: { target: Target })
             <button
               type="button"
               onClick={handleGenerate}
-              className="w-full h-12 rounded-full bg-ink text-paper text-sm font-semibold"
+              className="w-full h-12 rounded-full liquid-glass-button text-sm font-semibold"
             >
               Generate My Look
             </button>
@@ -236,7 +236,7 @@ export default function TryOnFlow({ target: initialTarget }: { target: Target })
           </div>
           <Link
             href={target.href}
-            className="w-full h-12 rounded-full bg-ink text-paper text-sm font-semibold flex items-center justify-center"
+            className="w-full h-12 rounded-full liquid-glass-button text-sm font-semibold flex items-center justify-center"
           >
             Shop This Look
           </Link>
@@ -249,7 +249,7 @@ export default function TryOnFlow({ target: initialTarget }: { target: Target })
           <button
             type="button"
             onClick={() => setStep("ready")}
-            className="w-full h-12 rounded-full bg-ink text-paper text-sm font-semibold"
+            className="w-full h-12 rounded-full liquid-glass-button text-sm font-semibold"
           >
             Try Again
           </button>

@@ -99,7 +99,7 @@ export default function AddressBookPage() {
           <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-3 mb-4">{loadError}</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-ink text-paper rounded-full px-5 py-2.5 text-sm font-medium"
+            className="liquid-glass-button rounded-full px-5 py-2.5 text-sm font-medium"
           >
             Try again
           </button>
@@ -126,7 +126,7 @@ export default function AddressBookPage() {
         <button
           type="submit"
           disabled={pending}
-          className="w-full bg-ink text-paper rounded-full px-4 py-3 text-sm font-medium hover:bg-ink/90 transition-colors disabled:opacity-50"
+          className="w-full liquid-glass-button rounded-full px-4 py-3 text-sm font-medium transition-colors disabled:opacity-50"
         >
           {saved ? "Saved ✓" : pending ? "Saving…" : "Save address"}
         </button>

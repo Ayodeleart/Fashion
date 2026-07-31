@@ -139,7 +139,7 @@ export default function EditProfilePage() {
               <ProfilePlaceholderIcon className="w-10 h-10" />
             </div>
           )}
-          <label className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-ink text-paper flex items-center justify-center text-xs cursor-pointer">
+          <label className="absolute bottom-0 right-0 w-8 h-8 rounded-full liquid-glass-button flex items-center justify-center text-xs cursor-pointer">
             ✎
             <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={pending} />
           </label>
@@ -168,7 +168,7 @@ export default function EditProfilePage() {
         <button
           type="submit"
           disabled={pending}
-          className="w-full bg-ink text-paper rounded-full px-4 py-3 text-sm font-medium hover:bg-ink/90 transition-colors disabled:opacity-50"
+          className="w-full liquid-glass-button rounded-full px-4 py-3 text-sm font-medium transition-colors disabled:opacity-50"
         >
           {saved ? "Saved ✓" : pending ? "Saving…" : "Save changes"}
         </button>

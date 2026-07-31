@@ -59,9 +59,9 @@ export default function AiComposeChat({
   }
 
   return (
-    <div className="border border-ink/10 rounded-2xl bg-paper-raised flex flex-col h-full min-h-[360px] md:min-h-[440px]">
+    <div className="border border-ink/10 rounded-2xl liquid-glass-light flex flex-col h-full min-h-[360px] md:min-h-[440px]">
       <div className="px-4 py-3 border-b border-ink/10 flex items-center gap-2">
-        <span className="w-7 h-7 rounded-full bg-ink text-paper flex items-center justify-center text-[11px] font-display shrink-0">AI</span>
+        <span className="w-7 h-7 rounded-full liquid-glass-button flex items-center justify-center text-[11px] font-display shrink-0">AI</span>
         <p className="text-sm font-medium">Write it with AI</p>
       </div>
 
@@ -70,7 +70,7 @@ export default function AiComposeChat({
           <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
               className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${
-                m.role === "user" ? "bg-ink text-paper" : "bg-paper border border-ink/10 text-ink"
+                m.role === "user" ? "liquid-glass-button" : "liquid-glass-light text-ink"
               }`}
             >
               {m.content.replace(/DRAFT:\s*[\s\S]+$/i, "").trim() || m.content}
@@ -83,13 +83,13 @@ export default function AiComposeChat({
 
       {latestDraft && (
         <div className="px-4 pb-2">
-          <div className="border border-ink/15 rounded-xl p-3 bg-paper">
+          <div className="liquid-glass-light rounded-xl p-3">
             <p className="text-[11px] uppercase tracking-wide text-muted mb-1">Draft message</p>
             <p className="text-sm mb-2">{latestDraft}</p>
             <button
               type="button"
               onClick={() => onUseDraft(latestDraft)}
-              className="text-xs font-medium bg-ink text-paper rounded-full px-3.5 py-1.5"
+              className="text-xs font-medium liquid-glass-button rounded-full px-3.5 py-1.5"
             >
               Use this message
             </button>
@@ -116,7 +116,7 @@ export default function AiComposeChat({
           onClick={send}
           disabled={sending || !input.trim()}
           aria-label="Send"
-          className="shrink-0 w-10 h-10 rounded-full bg-ink text-paper flex items-center justify-center disabled:opacity-40"
+          className="shrink-0 w-10 h-10 rounded-full liquid-glass-button flex items-center justify-center disabled:opacity-40"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <path d="M22 2 11 13" />

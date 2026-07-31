@@ -10,7 +10,7 @@ export default function CategoryRow({ categories }: { categories: Category[] }) 
         {categories.map((cat) => (
           <Link key={cat.id} href={`/catalog?category=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center gap-1.5 shrink-0 w-14">
             <div className="w-14 h-14 rounded-full p-[2px] bg-gradient-to-tr from-brass via-ink/60 to-brass">
-              <div className="w-full h-full rounded-full overflow-hidden border-2 border-paper bg-paper-raised">
+              <div className="w-full h-full rounded-full overflow-hidden border-2 border-paper liquid-glass-light">
                 {cat.thumbnailUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={cat.thumbnailUrl} alt="" className="w-full h-full object-cover" />

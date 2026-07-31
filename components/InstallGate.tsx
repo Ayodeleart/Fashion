@@ -35,7 +35,7 @@ export default function InstallGate({ children }: { children: React.ReactNode })
       {/* Desktop: this route was built mobile-only, point them to a phone instead */}
       <div className="hidden md:flex min-h-screen items-center justify-center px-6 bg-paper text-center">
         <div className="max-w-sm">
-          <div className="w-14 h-14 rounded-2xl bg-ink text-paper flex items-center justify-center mx-auto mb-6 font-display text-xl">
+          <div className="w-14 h-14 rounded-2xl liquid-glass-button flex items-center justify-center mx-auto mb-6 font-display text-xl">
             AG
           </div>
           <h1 className="font-display text-2xl mb-2">Open this on your phone</h1>

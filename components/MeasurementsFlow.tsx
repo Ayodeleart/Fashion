@@ -233,12 +233,12 @@ export default function MeasurementsFlow() {
           type="number"
           value={heightCm}
           onChange={(e) => setHeightCm(e.target.value)}
-          className="bg-paper-raised rounded-full px-4 py-3 text-sm outline-none"
+          className="liquid-glass-light rounded-full px-4 py-3 text-sm outline-none"
         />
         <button
           onClick={() => setStep("capture-front")}
           disabled={!heightCm || parseFloat(heightCm) <= 0}
-          className="bg-ink text-paper rounded-full py-3 text-sm font-medium disabled:opacity-50"
+          className="liquid-glass-button rounded-full py-3 text-sm font-medium disabled:opacity-50"
         >
           Continue
         </button>
@@ -313,18 +313,18 @@ export default function MeasurementsFlow() {
             especially chest, waist, and hip, which are the least certain from
             a photo pair.
           </p>
-          <div className="flex shrink-0 rounded-full bg-paper-raised p-0.5">
+          <div className="flex shrink-0 rounded-full liquid-glass-light p-0.5">
             <button
               type="button"
               onClick={() => setUnit("cm")}
-              className={`px-3 py-1 rounded-full text-xs font-medium ${unit === "cm" ? "bg-ink text-paper" : "text-ink"}`}
+              className={`px-3 py-1 rounded-full text-xs font-medium ${unit === "cm" ? "liquid-glass-button" : "text-ink"}`}
             >
               cm
             </button>
             <button
               type="button"
               onClick={() => setUnit("in")}
-              className={`px-3 py-1 rounded-full text-xs font-medium ${unit === "in" ? "bg-ink text-paper" : "text-ink"}`}
+              className={`px-3 py-1 rounded-full text-xs font-medium ${unit === "in" ? "liquid-glass-button" : "text-ink"}`}
             >
               in
             </button>
@@ -372,7 +372,7 @@ export default function MeasurementsFlow() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="bg-ink text-paper rounded-full py-3 text-sm font-medium disabled:opacity-50"
+          className="liquid-glass-button rounded-full py-3 text-sm font-medium disabled:opacity-50"
         >
           {saving ? "Saving…" : "Save measurements"}
         </button>
@@ -394,7 +394,7 @@ export default function MeasurementsFlow() {
     return (
       <div className="flex flex-col gap-4">
         <p className="text-sm">Saved. These will be used automatically at checkout for made-to-order pieces.</p>
-        <button onClick={() => router.push("/catalog")} className="bg-ink text-paper rounded-full py-3 text-sm font-medium">
+        <button onClick={() => router.push("/catalog")} className="liquid-glass-button rounded-full py-3 text-sm font-medium">
           Back to shop
         </button>
       </div>

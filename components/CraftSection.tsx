@@ -19,7 +19,7 @@ export default function CraftSection({
   return (
     <section
       ref={ref}
-      className="bg-paper-raised px-6 md:px-10 py-20 md:py-28 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center"
+      className="liquid-glass-light px-6 md:px-10 py-20 md:py-28 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center"
     >
       <div data-reveal="image" className="relative aspect-[4/5] overflow-hidden order-2 md:order-1">
         <Image src={image} alt="" fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />

@@ -15,7 +15,7 @@ export default function ThemeToggle({ current }: { current: Theme }) {
           key={t}
           onClick={() => setTheme(t)}
           className={`px-3 py-1.5 rounded-full text-xs border transition-colors capitalize ${
-            current === t ? "bg-ink text-paper border-ink" : "border-ink/20 text-muted hover:border-ink/40"
+            current === t ? "liquid-glass-button border-ink" : "border-ink/20 text-muted hover:border-ink/40"
           }`}
         >
           {t}

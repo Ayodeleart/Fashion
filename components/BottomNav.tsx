@@ -190,7 +190,7 @@ export default function BottomNav() {
 
         <Link
           href="/catalog"
-          className="absolute left-1/2 -translate-x-1/2 -top-7 w-14 h-14 rounded-full bg-ink text-paper flex flex-col items-center justify-center shadow-lg z-10 gap-0.5"
+          className="absolute left-1/2 -translate-x-1/2 -top-7 w-14 h-14 rounded-full liquid-glass-button flex flex-col items-center justify-center shadow-lg z-10 gap-0.5"
           aria-label="Shop"
         >
           <ShopIcon />

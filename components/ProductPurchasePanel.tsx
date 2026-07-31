@@ -93,7 +93,7 @@ export default function ProductPurchasePanel({
                   onClick={() => setSelected(v)}
                   className={`w-11 h-11 rounded-full border text-sm flex items-center justify-center transition-colors ${
                     isSelected
-                      ? "bg-ink text-paper border-ink"
+                      ? "liquid-glass-button border-ink"
                       : disabled
                       ? "border-ink/10 text-muted/40 line-through"
                       : "border-ink/20 hover:border-ink/50"
@@ -151,7 +151,7 @@ export default function ProductPurchasePanel({
           disabled={needsSelection || outOfStock}
           fullWidth
           onAdded={handleAdded}
-          className="flex-1 md:flex-none md:px-12 h-14 text-base font-semibold rounded-full bg-ink text-paper hover:bg-ink/90 transition-colors disabled:opacity-40 flex items-center justify-center"
+          className="flex-1 md:flex-none md:px-12 h-14 text-base font-semibold rounded-full liquid-glass-button transition-colors disabled:opacity-40 flex items-center justify-center"
           label="Add to Bag"
         />
         <SaveButton

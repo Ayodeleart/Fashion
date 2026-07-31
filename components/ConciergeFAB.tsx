@@ -122,7 +122,7 @@ export default function ConciergeFAB({ bottomOffsetClass }: { bottomOffsetClass:
   return (
     <div ref={rootRef} className={`fixed right-4 md:right-8 z-40 flex flex-col items-end gap-3 ${bottomOffsetClass}`}>
       {showTooltip && !open && (
-        <div className="mr-1 mb-1 px-3 py-1.5 rounded-full bg-ink text-paper text-xs whitespace-nowrap shadow-lg animate-[fadeIn_0.3s_ease]">
+        <div className="mr-1 mb-1 px-3 py-1.5 rounded-full liquid-glass-button text-xs whitespace-nowrap shadow-lg animate-[fadeIn_0.3s_ease]">
           Your AI Concierge
         </div>
       )}
@@ -138,7 +138,7 @@ export default function ConciergeFAB({ bottomOffsetClass }: { bottomOffsetClass:
               style={{ animation: `fabItemIn 220ms ease ${i * 35}ms both` }}
             >
               <span className="text-sm font-medium whitespace-nowrap">{label}</span>
-              <span className="w-8 h-8 rounded-full bg-paper-raised flex items-center justify-center shrink-0">
+              <span className="w-8 h-8 rounded-full liquid-glass-light flex items-center justify-center shrink-0">
                 <Icon />
               </span>
             </Link>

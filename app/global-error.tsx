@@ -26,7 +26,7 @@ export default function GlobalError({
             <div className="flex gap-3 justify-center">
               <button
                 onClick={reset}
-                className="bg-ink text-paper rounded-full px-5 py-2.5 text-sm font-medium"
+                className="liquid-glass-button rounded-full px-5 py-2.5 text-sm font-medium"
               >
                 Try again
               </button>

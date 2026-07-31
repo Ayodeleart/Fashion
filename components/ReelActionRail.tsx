@@ -186,7 +186,7 @@ function CommentsSheet({ reelId, open, onClose }: { reelId: string; open: boolea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder="Add a comment…"
-              className="flex-1 bg-paper-raised rounded-full px-4 py-2.5 text-sm outline-none placeholder:text-muted"
+              className="flex-1 liquid-glass-light rounded-full px-4 py-2.5 text-sm outline-none placeholder:text-muted"
             />
             <button
               type="submit"

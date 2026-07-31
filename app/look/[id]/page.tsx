@@ -162,7 +162,7 @@ export default async function LookDetailPage({ params }: { params: Promise<{ id:
             {look.designer_name && look.location && <span aria-hidden>·</span>}
             {look.location && <span>{look.location}</span>}
             {look.badge && (
-              <span className="ml-1 px-2.5 py-0.5 rounded-full bg-paper-raised text-ink text-[10px] tracking-wide uppercase">
+              <span className="ml-1 px-2.5 py-0.5 rounded-full liquid-glass-light text-ink text-[10px] tracking-wide uppercase">
                 {look.badge}
               </span>
             )}
@@ -287,13 +287,13 @@ export default async function LookDetailPage({ params }: { params: Promise<{ id:
           <div className="flex items-center gap-2 max-w-md mx-auto md:mx-0 mt-2">
             <Link
               href={`/appointment?${enquiryQuery}`}
-              className="flex-1 flex items-center justify-center h-12 rounded-full bg-ink text-paper text-sm text-center px-3"
+              className="flex-1 flex items-center justify-center h-12 rounded-full liquid-glass-button text-sm text-center px-3"
             >
               Book Appointment
             </Link>
             <Link
               href={`/enquiry?${enquiryQuery}`}
-              className="flex-1 flex items-center justify-center h-12 rounded-full bg-ink text-paper text-sm text-center px-3"
+              className="flex-1 flex items-center justify-center h-12 rounded-full liquid-glass-button text-sm text-center px-3"
             >
               Make Enquiry
             </Link>

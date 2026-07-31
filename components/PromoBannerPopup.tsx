@@ -55,12 +55,12 @@ export default function PromoBannerPopup() {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
       <button aria-label="Dismiss" onClick={dismiss} className="absolute inset-0 bg-ink/50" />
-      <div className="relative bg-paper rounded-3xl overflow-hidden max-w-sm w-full">
+      <div className="relative liquid-glass-light rounded-3xl overflow-hidden max-w-sm w-full">
         <button
           onClick={dismiss}
           aria-label="Close"
           className={`absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center ${
-            banner.image_url ? "bg-black/40 text-white" : "text-muted"
+            banner.image_url ? "liquid-glass text-white" : "text-muted"
           }`}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -79,7 +79,7 @@ export default function PromoBannerPopup() {
           <Link
             href={banner.cta_href}
             onClick={dismiss}
-            className="block text-center bg-ink text-paper rounded-full py-3 text-sm font-medium"
+            className="block text-center liquid-glass-button rounded-full py-3 text-sm font-medium"
           >
             {banner.cta_text}
           </Link>

@@ -176,7 +176,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </p>
             <Link
               href={`/catalog?category=${encodeURIComponent(product.category ?? "")}`}
-              className="text-sm font-medium bg-ink text-paper rounded-full px-5 py-2.5 hover:bg-ink/90 transition-colors shrink-0"
+              className="text-sm font-medium liquid-glass-button rounded-full px-5 py-2.5 transition-colors shrink-0"
             >
               Shop Similar
             </Link>

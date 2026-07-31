@@ -77,7 +77,7 @@ export default function OrderHistoryPage() {
           <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-3 mb-4 inline-block">{loadError}</p>
           <button
             onClick={() => window.location.reload()}
-            className="block mx-auto bg-ink text-paper rounded-full px-5 py-2.5 text-sm font-medium"
+            className="block mx-auto liquid-glass-button rounded-full px-5 py-2.5 text-sm font-medium"
           >
             Try again
           </button>
@@ -85,7 +85,7 @@ export default function OrderHistoryPage() {
       ) : orders.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-sm text-muted mb-6">No orders yet.</p>
-          <a href="/catalog" className="inline-block bg-ink text-paper text-sm rounded-full px-5 py-2.5">
+          <a href="/catalog" className="inline-block liquid-glass-button text-sm rounded-full px-5 py-2.5">
             Start shopping
           </a>
         </div>
@@ -95,7 +95,7 @@ export default function OrderHistoryPage() {
             <li key={order.id} className="liquid-glass-light rounded-2xl p-4">
               <div className="flex items-center justify-between mb-1">
                 <p className="text-sm font-medium">Order #{order.id.slice(0, 8)}</p>
-                <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${statusStyles[order.status] ?? "bg-paper text-muted"}`}>
+                <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${statusStyles[order.status] ?? "liquid-glass-light text-muted"}`}>
                   {order.status}
                 </span>
               </div>

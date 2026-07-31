@@ -48,7 +48,7 @@ export function StyleCard({
     <Link
       href={look.href}
       data-reveal="image"
-      className={`group relative block overflow-hidden bg-paper-raised ${aspectClassName ?? ""}`}
+      className={`group relative block overflow-hidden liquid-glass-light ${aspectClassName ?? ""}`}
     >
       {aspectClassName ? (
         <Image

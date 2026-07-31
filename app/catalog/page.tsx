@@ -77,7 +77,7 @@ export default async function CatalogPage({
           <Link
             href="/catalog"
             className={`text-sm px-4 py-1.5 rounded-full border transition-colors ${
-              !category ? "bg-ink text-paper border-ink" : "border-ink/20 hover:border-ink/40"
+              !category ? "liquid-glass-button border-ink" : "border-ink/20 hover:border-ink/40"
             }`}
           >
             All
@@ -87,7 +87,7 @@ export default async function CatalogPage({
               key={c.id}
               href={`/catalog?category=${encodeURIComponent(c.name)}`}
               className={`text-sm px-4 py-1.5 rounded-full border transition-colors ${
-                category === c.name ? "bg-ink text-paper border-ink" : "border-ink/20 hover:border-ink/40"
+                category === c.name ? "liquid-glass-button border-ink" : "border-ink/20 hover:border-ink/40"
               }`}
             >
               {c.name}

@@ -18,7 +18,7 @@ export default function Sheet({
   return (
     <div className="fixed inset-0 z-50">
       <button aria-label="Close" onClick={onClose} className="absolute inset-0 bg-ink/40" />
-      <div className="absolute bottom-0 left-0 right-0 bg-paper rounded-t-3xl max-w-md mx-auto max-h-[80vh] overflow-y-auto">
+      <div className="absolute bottom-0 left-0 right-0 liquid-glass-light rounded-t-3xl max-w-md mx-auto max-h-[80vh] overflow-y-auto">
         <div className="sticky top-0 bg-paper flex items-center justify-between px-5 pt-5 pb-3">
           <div className="flex items-center gap-2">
             {onBack && (

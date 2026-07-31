@@ -72,7 +72,7 @@ function RecommendationsGrid({ title }: { title: string }) {
                   price={p.price}
                   currency={p.currency}
                   image={image?.url ?? ""}
-                  className="text-[11px] px-2.5 py-1 rounded-full bg-ink text-paper"
+                  className="text-[11px] px-2.5 py-1 rounded-full liquid-glass-button"
                 />
               </div>
             </a>
@@ -141,7 +141,7 @@ export default function SavedPage() {
                     price={item.price}
                     currency={item.currency}
                     image={item.image}
-                    className="text-[11px] px-2.5 py-1 rounded-full bg-ink text-paper"
+                    className="text-[11px] px-2.5 py-1 rounded-full liquid-glass-button"
                   />
                 </div>
               )}

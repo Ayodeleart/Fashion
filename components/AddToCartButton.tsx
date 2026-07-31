@@ -69,7 +69,7 @@ export default function AddToCartButton({
         }}
         className={`${
           className ??
-          "text-xs px-3 py-1.5 rounded-full bg-ink text-paper hover:bg-ink/90 transition-colors disabled:opacity-50"
+          "text-xs px-3 py-1.5 rounded-full liquid-glass-button transition-colors disabled:opacity-50"
         } ${fullWidth ? "w-full md:w-auto" : ""}`}
       >
         {pending ? (

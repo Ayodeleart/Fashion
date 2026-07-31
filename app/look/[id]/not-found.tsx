@@ -12,7 +12,7 @@ export default function LookNotFound() {
       </p>
       <Link
         href="/"
-        className="inline-flex items-center justify-center h-12 px-8 rounded-full bg-ink text-paper text-sm font-medium hover:bg-ink/90 transition-colors"
+        className="inline-flex items-center justify-center h-12 px-8 rounded-full liquid-glass-button text-sm font-medium transition-colors"
       >
         Back to Home
       </Link>

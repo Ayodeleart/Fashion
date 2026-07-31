@@ -40,7 +40,7 @@ export default function RequireAuth({ children, feature }: { children: React.Rea
         <div className="flex gap-3">
           <Link
             href={`/account/login?next=${next}`}
-            className="h-11 px-6 rounded-full bg-ink text-paper text-sm font-medium flex items-center justify-center"
+            className="h-11 px-6 rounded-full liquid-glass-button text-sm font-medium flex items-center justify-center"
           >
             Sign In
           </Link>

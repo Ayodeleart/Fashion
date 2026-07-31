@@ -18,7 +18,7 @@ export default function CurrencyToggle({ current }: { current: Currency }) {
           key={c}
           onClick={() => setCurrency(c)}
           className={`px-2 py-1 rounded-full border transition-colors ${
-            current === c ? "bg-ink text-paper border-ink" : "border-ink/20 text-muted hover:border-ink/40"
+            current === c ? "liquid-glass-button border-ink" : "border-ink/20 text-muted hover:border-ink/40"
           }`}
         >
           {c}

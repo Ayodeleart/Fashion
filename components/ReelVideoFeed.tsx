@@ -73,7 +73,7 @@ function VideoCard({
 
       {showGlimpse && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-16 h-16 rounded-full bg-black/50 flex items-center justify-center text-white transition-opacity">
+          <div className="w-16 h-16 rounded-full liquid-glass flex items-center justify-center text-white transition-opacity">
             {muted ? <SpeakerMutedIcon className="w-8 h-8" /> : <SpeakerOnIcon className="w-8 h-8" />}
           </div>
         </div>
@@ -98,7 +98,7 @@ function VideoCard({
       <button
         onClick={handleTap}
         aria-label={muted ? "Unmute" : "Mute"}
-        className="absolute top-5 right-5 w-9 h-9 rounded-full bg-black/40 flex items-center justify-center text-white"
+        className="absolute top-5 right-5 w-9 h-9 rounded-full liquid-glass flex items-center justify-center text-white"
       >
         {muted ? <SpeakerMutedIcon className="w-4 h-4" /> : <SpeakerOnIcon className="w-4 h-4" />}
       </button>

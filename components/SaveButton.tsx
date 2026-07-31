@@ -42,7 +42,7 @@ export default function SaveButton({ item, className }: { item: SavedItem; class
         </svg>
       </button>
       {error && (
-        <span className="absolute top-full right-0 mt-1 whitespace-nowrap text-[10px] bg-ink text-paper rounded px-2 py-1 z-10">
+        <span className="absolute top-full right-0 mt-1 whitespace-nowrap text-[10px] liquid-glass-button rounded px-2 py-1 z-10">
           {error}
         </span>
       )}

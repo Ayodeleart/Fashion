@@ -156,7 +156,7 @@ export function QuickAddProvider({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="flex gap-3 mb-5">
-              <div className="relative w-16 h-20 rounded-lg overflow-hidden bg-paper-raised shrink-0">
+              <div className="relative w-16 h-20 rounded-lg overflow-hidden liquid-glass-light shrink-0">
                 {product.image && <Image src={product.image} alt={product.name} fill className="object-cover" sizes="64px" />}
               </div>
               <div>
@@ -182,7 +182,7 @@ export function QuickAddProvider({ children }: { children: React.ReactNode }) {
                     const image = [...(p.ariana_product_images ?? [])].sort((a, b) => a.position - b.position)[0];
                     return (
                       <li key={p.id} className="flex items-center gap-3">
-                        <Link href={`/product/${p.slug}`} className="relative w-14 h-16 rounded-lg overflow-hidden bg-paper-raised shrink-0" onClick={close}>
+                        <Link href={`/product/${p.slug}`} className="relative w-14 h-16 rounded-lg overflow-hidden liquid-glass-light shrink-0" onClick={close}>
                           {image && <Image src={image.url} alt={p.name} fill className="object-cover" sizes="56px" />}
                         </Link>
                         <div className="flex-1 min-w-0">
@@ -202,7 +202,7 @@ export function QuickAddProvider({ children }: { children: React.ReactNode }) {
                               category: product.category,
                             })
                           }
-                          className="text-xs px-4 py-1.5 rounded-full bg-ink text-paper shrink-0"
+                          className="text-xs px-4 py-1.5 rounded-full liquid-glass-button shrink-0"
                         >
                           Add
                         </button>

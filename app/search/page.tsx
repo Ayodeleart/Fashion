@@ -36,7 +36,7 @@ function CategoryDiscoveryList({ title, categories }: { title: string; categorie
         {categories.map((cat, i) => (
           <a key={cat.id} href={`/catalog?category=${encodeURIComponent(cat.name)}`} className="flex items-center gap-3">
             <span className="text-sm text-muted w-4 shrink-0">{i + 1}</span>
-            <div className="w-11 h-11 rounded-lg overflow-hidden bg-paper-raised shrink-0">
+            <div className="w-11 h-11 rounded-lg overflow-hidden liquid-glass-light shrink-0">
               {cat.thumbnailUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={cat.thumbnailUrl} alt="" className="w-full h-full object-cover" />
@@ -167,7 +167,7 @@ function SearchInner() {
                     price={p.price}
                     currency={p.currency}
                     image={image?.url ?? ""}
-                    className="text-[11px] px-2.5 py-1 rounded-full bg-ink text-paper"
+                    className="text-[11px] px-2.5 py-1 rounded-full liquid-glass-button"
                   />
                 </div>
               </a>

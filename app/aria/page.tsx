@@ -86,7 +86,7 @@ export default function AriaPage() {
         <button
           onClick={() => router.back()}
           aria-label="Back"
-          className="w-9 h-9 rounded-full bg-paper-raised flex items-center justify-center text-ink shrink-0"
+          className="w-9 h-9 rounded-full liquid-glass-light flex items-center justify-center text-ink shrink-0"
         >
           <BackIcon />
         </button>
@@ -131,14 +131,14 @@ export default function AriaPage() {
               <div
                 key={i}
                 className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${
-                  m.role === "user" ? "self-end bg-ink text-paper" : "self-start bg-paper-raised text-ink"
+                  m.role === "user" ? "self-end liquid-glass-button" : "self-start liquid-glass-light text-ink"
                 }`}
               >
                 {m.content}
               </div>
             ))}
             {loading && (
-              <div className="self-start bg-paper-raised text-muted rounded-2xl px-4 py-3 text-sm">
+              <div className="self-start liquid-glass-light text-muted rounded-2xl px-4 py-3 text-sm">
                 Thinking…
               </div>
             )}
@@ -159,13 +159,13 @@ export default function AriaPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Message Aria..."
-              className="flex-1 min-w-0 bg-paper-raised rounded-full px-4 py-3 text-sm outline-none placeholder:text-muted"
+              className="flex-1 min-w-0 liquid-glass-light rounded-full px-4 py-3 text-sm outline-none placeholder:text-muted"
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
               aria-label="Send"
-              className="w-11 h-11 rounded-full bg-ink text-paper flex items-center justify-center shrink-0 disabled:opacity-50"
+              className="w-11 h-11 rounded-full liquid-glass-button flex items-center justify-center shrink-0 disabled:opacity-50"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path d="M4 12l16-7-6 16-2.5-6.5L4 12z" stroke="currentColor" strokeWidth={1.8} strokeLinejoin="round" strokeLinecap="round" />

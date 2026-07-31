@@ -200,7 +200,7 @@ export default function ProductGallery({
                 <button
                   key={img.url}
                   onClick={() => goTo(i)}
-                  className={`relative w-14 h-16 shrink-0 rounded-md overflow-hidden bg-paper-raised transition-opacity ${
+                  className={`relative w-14 h-16 shrink-0 rounded-md overflow-hidden liquid-glass-light transition-opacity ${
                     i === activeIndex ? "ring-2 ring-ink" : "opacity-50 hover:opacity-80"
                   }`}
                 >

@@ -39,8 +39,8 @@ export default function StyleFilterBar({
               onClick={() => onChange(filter)}
               className={`shrink-0 px-4 py-1.5 rounded-full text-[12px] tracking-wide font-body whitespace-nowrap transition-colors ${
                 isActive
-                  ? "bg-ink text-paper"
-                  : "bg-paper-raised text-muted hover:text-ink"
+                  ? "liquid-glass-button"
+                  : "liquid-glass-light text-muted hover:text-ink"
               }`}
             >
               {filter}

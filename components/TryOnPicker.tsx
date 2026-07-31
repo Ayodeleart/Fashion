@@ -70,7 +70,7 @@ export default function TryOnPicker({ onPick }: { onPick: (target: PickerTarget)
           type="button"
           onClick={() => setTab("products")}
           className={`px-4 py-1.5 rounded-full text-xs font-medium ${
-            tab === "products" ? "bg-ink text-paper" : "bg-paper-raised text-ink"
+            tab === "products" ? "liquid-glass-button" : "liquid-glass-light text-ink"
           }`}
         >
           Products
@@ -79,7 +79,7 @@ export default function TryOnPicker({ onPick }: { onPick: (target: PickerTarget)
           type="button"
           onClick={() => setTab("looks")}
           className={`px-4 py-1.5 rounded-full text-xs font-medium ${
-            tab === "looks" ? "bg-ink text-paper" : "bg-paper-raised text-ink"
+            tab === "looks" ? "liquid-glass-button" : "liquid-glass-light text-ink"
           }`}
         >
           Looks
@@ -91,7 +91,7 @@ export default function TryOnPicker({ onPick }: { onPick: (target: PickerTarget)
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={tab === "products" ? "Search products…" : "Search looks…"}
-        className="w-full bg-paper-raised rounded-full px-4 py-2.5 text-sm outline-none mb-3"
+        className="w-full liquid-glass-light rounded-full px-4 py-2.5 text-sm outline-none mb-3"
       />
 
       {loading && <p className="text-xs text-muted py-6 text-center">Loading…</p>}

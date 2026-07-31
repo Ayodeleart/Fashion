@@ -203,6 +203,49 @@ h1, h2, h3, .font-display {
   -webkit-mask-image: radial-gradient(ellipse at center, transparent 38%, rgba(0, 0, 0, 0.55) 68%, black 100%);
 }
 
+/* Primary buttons/CTAs — needs to read clearly as a tappable element, so
+   more opaque than card glass, but still translucent+blurred material
+   rather than a flat solid color. Uses --ink so it inverts correctly in
+   dark mode. */
+.liquid-glass-button {
+  position: relative;
+  isolation: isolate;
+  color: rgb(var(--paper));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.liquid-glass-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: inherit;
+  background: rgba(var(--ink), 0.82);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+}
+
+/* Secondary/outline buttons (e.g. "Try again", ghost actions) — lighter
+   glass, ink-colored text, for buttons that sit on the ambient background
+   rather than needing the strong dark CTA treatment. */
+.liquid-glass-button-ghost {
+  position: relative;
+  isolation: isolate;
+  color: rgb(var(--ink));
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+.liquid-glass-button-ghost::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: inherit;
+  background: rgba(var(--paper), 0.3);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+}
+
 .liquid-glass-input {
   /* Deliberately NO backdrop-filter here. This sits inside .liquid-glass
      (which already has its own backdrop-filter blur), and Safari/WebKit

@@ -53,7 +53,7 @@ export default function AuthForm({ mode, glass }: { mode: "login" | "signup"; gl
   const labelClass = glass ? "block text-sm mb-1 text-white/90" : "block text-sm mb-1";
   const inputClass = glass
     ? "liquid-glass-input w-full rounded-full px-4 py-3 text-sm outline-none"
-    : "w-full border border-ink/20 rounded-full px-4 py-3 text-sm bg-paper";
+    : "w-full liquid-glass-light rounded-full px-4 py-3 text-sm";
   const dividerClass = glass ? "h-px flex-1 bg-white/25" : "h-px flex-1 bg-ink/10";
   const orTextClass = glass ? "text-xs text-white/70" : "text-xs text-muted";
   const footerTextClass = glass ? "text-sm text-white/80 text-center mt-6" : "text-sm text-muted text-center mt-6";
@@ -66,7 +66,7 @@ export default function AuthForm({ mode, glass }: { mode: "login" | "signup"; gl
           <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-3">{error}</p>
         )}
         {info && (
-          <p className={glass ? "text-sm text-white bg-white/15 border border-white/25 rounded p-3" : "text-sm text-ink bg-paper-raised border border-ink/10 rounded p-3"}>
+          <p className={glass ? "text-sm text-white bg-white/15 border border-white/25 rounded p-3" : "text-sm text-ink liquid-glass-light border border-ink/10 rounded p-3"}>
             {info}
           </p>
         )}
@@ -99,7 +99,7 @@ export default function AuthForm({ mode, glass }: { mode: "login" | "signup"; gl
         <button
           type="submit"
           disabled={pending}
-          className="w-full bg-ink text-paper rounded-full px-4 py-3 text-sm font-medium hover:bg-ink/90 transition-colors disabled:opacity-50"
+          className="w-full liquid-glass-button rounded-full px-4 py-3 text-sm font-medium transition-colors disabled:opacity-50"
         >
           {pending ? "Working…" : mode === "signup" ? "Create account" : "Sign in"}
         </button>
