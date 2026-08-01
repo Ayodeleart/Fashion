@@ -285,20 +285,8 @@ h1, h2, h3, .font-display {
    bleed through instead of being covered. Same :where() rule above
    covers this class's position/isolation too. */
 .liquid-glass-header {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
-}
-.liquid-glass-header::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  overflow: hidden;
-  background: rgba(var(--paper), 0.88);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-}
-[data-theme="dark"] .liquid-glass-header::before {
-  background: rgba(var(--paper), 0.9);
+  background: rgb(var(--paper));
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .liquid-glass-light {

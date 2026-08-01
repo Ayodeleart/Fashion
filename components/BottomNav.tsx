@@ -133,10 +133,10 @@ export default function BottomNav() {
     // contributor to sluggish tap response — removing it isn't just a
     // visual downgrade, it should make the bar itself lighter to render.
     <nav
-      className="fixed bottom-0 left-0 right-0 z-30 bg-paper border-t border-ink/10"
+      className="fixed bottom-0 left-0 right-0 z-30 bg-paper shadow-[0_-2px_12px_rgba(0,0,0,0.07)]"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <div ref={containerRef} className="relative flex items-center justify-between px-6 h-16 max-w-md mx-auto">
+      <div ref={containerRef} className="relative flex items-center justify-between px-6 h-14 max-w-md mx-auto">
         {/* Liquid indicator — a soft pill that slides + slightly stretches
             to the active tab. Never rendered behind the middle Shop
             button (that one isn't in allItems, so pill is null there
@@ -195,11 +195,11 @@ export default function BottomNav() {
 
         <Link
           href="/catalog"
-          className="absolute left-1/2 -translate-x-1/2 -top-7 w-14 h-14 rounded-full bg-ink text-paper flex flex-col items-center justify-center shadow-lg z-10 gap-0.5"
+          className="absolute left-1/2 -translate-x-1/2 -top-6 w-12 h-12 rounded-full bg-ink text-paper flex flex-col items-center justify-center shadow-lg z-10 gap-0.5"
           aria-label="Shop"
         >
           <ShopIcon />
-          <span className="text-[9px] leading-none">Shop</span>
+          <span className="text-[8px] leading-none">Shop</span>
         </Link>
       </div>
     </nav>
