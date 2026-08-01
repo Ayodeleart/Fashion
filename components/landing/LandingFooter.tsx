@@ -1,3 +1,7 @@
+"use client";
+
+import { useScrollReveal } from "@/hooks/useScrollReveal";
+
 const NAV = [
   { label: "Home", href: "#top" },
   { label: "Who dis?", href: "#about" },
@@ -6,8 +10,9 @@ const NAV = [
 ];
 
 export default function LandingFooter() {
+  const ref = useScrollReveal<HTMLElement>(100);
   return (
-    <footer className="bg-ink text-paper pt-16 md:pt-24 overflow-hidden">
+    <footer ref={ref} className="bg-ink text-paper pt-16 md:pt-24 overflow-hidden">
       <div className="max-w-6xl mx-auto px-6 md:px-10">
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2 mb-12 md:mb-16">
           <span className="font-display text-2xl md:text-3xl">Thank You</span>
@@ -17,7 +22,7 @@ export default function LandingFooter() {
           <span className="font-display text-2xl md:text-3xl">For Viewing</span>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-10 pb-12 border-b border-paper/10">
+        <div className="grid md:grid-cols-2 gap-10 pb-12 border-b border-paper/10" data-reveal="paragraph">
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

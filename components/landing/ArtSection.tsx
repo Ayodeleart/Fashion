@@ -1,12 +1,17 @@
+"use client";
+
+import { useScrollReveal } from "@/hooks/useScrollReveal";
+
 type ArtSection = { image_url: string | null; quote_top: string; quote_bottom: string } | null;
 
 export default function ArtSection({ section }: { section: ArtSection }) {
+  const ref = useScrollReveal<HTMLElement>(100);
   const quoteTop = section?.quote_top || "WHERE ELEGANCE AND FASHION BECOMES ART";
   const quoteBottom = section?.quote_bottom || "MEETS ELEGANCE AND FASHION BECOMES ART";
   const imageUrl = section?.image_url;
 
   return (
-    <section className="bg-ink py-16 md:py-24 px-6 flex justify-center">
+    <section ref={ref} className="bg-ink py-16 md:py-24 px-6 flex justify-center" data-reveal="image">
       <div className="relative w-full max-w-md aspect-square">
         <svg viewBox="0 0 400 400" className="absolute inset-0 w-full h-full animate-[spin_40s_linear_infinite]">
           <defs>

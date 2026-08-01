@@ -1,6 +1,7 @@
 import type { HeroBanner } from "@/components/Hero";
 import type { LookbookPanel } from "@/components/Lookbook";
 import type { Product } from "@/components/ProductGrid";
+import { CartProvider } from "@/components/CartProvider";
 import LandingHeader from "@/components/landing/LandingHeader";
 import LandingHero from "@/components/landing/LandingHero";
 import GiftedHandsSection from "@/components/landing/GiftedHandsSection";
@@ -31,15 +32,17 @@ export default function LandingView({
   const heroBanner = mobileBanners[0] ?? desktopBanners[0] ?? null;
 
   return (
-    <main className="bg-paper">
-      <LandingHeader />
-      <LandingHero banner={heroBanner} />
-      <GiftedHandsSection panels={lookbookPanels} />
-      <SkillsSection />
-      <CreationsSection products={newArrivals} />
-      <ArtSection section={artSection ?? null} />
-      <TestimonialsSection />
-      <LandingFooter />
-    </main>
+    <CartProvider>
+      <main className="bg-paper">
+        <LandingHeader />
+        <LandingHero banner={heroBanner} />
+        <GiftedHandsSection panels={lookbookPanels} />
+        <SkillsSection />
+        <CreationsSection products={newArrivals} />
+        <ArtSection section={artSection ?? null} />
+        <TestimonialsSection />
+        <LandingFooter />
+      </main>
+    </CartProvider>
   );
 }

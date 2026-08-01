@@ -1,3 +1,7 @@
+"use client";
+
+import { useScrollReveal } from "@/hooks/useScrollReveal";
+
 function FlowerDot({ size = 40, fill = "#f3f1ec" }: { size?: number; fill?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
@@ -17,10 +21,11 @@ function FlowerDot({ size = 40, fill = "#f3f1ec" }: { size?: number; fill?: stri
 }
 
 export default function SkillsSection() {
+  const ref = useScrollReveal<HTMLElement>(100);
   return (
-    <section className="bg-ink text-paper py-16 md:py-20 px-6 md:px-10">
+    <section ref={ref} className="bg-ink text-paper py-16 md:py-20 px-6 md:px-10">
       <div className="max-w-6xl mx-auto">
-        <p className="eyebrow text-paper/60 mb-8 md:mb-10">Fashion Skills &amp; Expertise</p>
+        <p className="eyebrow text-paper/60 mb-8 md:mb-10" data-reveal="heading">Fashion Skills &amp; Expertise</p>
 
         <div className="flex items-center gap-3 md:gap-4 mb-14 md:mb-16 overflow-x-auto no-scrollbar">
           <div className="h-px w-8 bg-paper/20 shrink-0" />
@@ -36,7 +41,7 @@ export default function SkillsSection() {
           <div className="h-px flex-1 bg-paper/20" />
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-end gap-3 md:gap-8">
+        <div className="flex flex-col md:flex-row md:items-end gap-3 md:gap-8" data-reveal="stat">
           <span
             className="leading-none"
             style={{ fontFamily: "var(--font-landing-display)", fontSize: "clamp(4rem, 14vw, 8rem)", color: "#e7b8c2" }}

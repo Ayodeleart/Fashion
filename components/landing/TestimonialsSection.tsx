@@ -1,3 +1,7 @@
+"use client";
+
+import { useScrollReveal } from "@/hooks/useScrollReveal";
+
 const TESTIMONIALS = [
   {
     name: "Amara Chukwu",
@@ -27,12 +31,14 @@ function Stars() {
 }
 
 export default function TestimonialsSection() {
+  const ref = useScrollReveal<HTMLElement>(120);
   return (
-    <section className="bg-paper py-16 md:py-24 px-6 md:px-10">
+    <section ref={ref} className="bg-paper py-16 md:py-24 px-6 md:px-10">
       <div className="max-w-6xl mx-auto">
         <h2
           className="uppercase leading-none mb-12 md:mb-16 text-center md:text-left"
           style={{ fontFamily: "var(--font-landing-display)", fontSize: "clamp(2.5rem, 7vw, 4.5rem)" }}
+          data-reveal="heading"
         >
           Testimonials
         </h2>
@@ -41,6 +47,7 @@ export default function TestimonialsSection() {
           {TESTIMONIALS.map((t, i) => (
             <div
               key={t.name}
+              data-reveal="card"
               className={`liquid-glass-light p-7 md:p-8 text-center flex flex-col items-center ${
                 i === 1 ? "md:mt-10" : ""
               }`}

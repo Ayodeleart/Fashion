@@ -1,12 +1,16 @@
+"use client";
+
 import type { LookbookPanel } from "@/components/Lookbook";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 export default function GiftedHandsSection({ panels }: { panels: LookbookPanel[] }) {
   const images = panels.slice(0, 4);
+  const ref = useScrollReveal<HTMLElement>(90);
 
   return (
-    <section id="about" className="bg-paper py-16 md:py-24 px-6 md:px-10">
+    <section ref={ref} id="about" className="bg-paper py-16 md:py-24 px-6 md:px-10">
       <div className="max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-[200px_1fr] gap-4 md:gap-10 mb-10 md:mb-16">
+        <div className="grid md:grid-cols-[200px_1fr] gap-4 md:gap-10 mb-10 md:mb-16" data-reveal="paragraph">
           <p className="eyebrow">About Me</p>
           <p className="text-sm md:text-base text-muted max-w-xl leading-relaxed">
             Drawing on more than 5 years of experience in <span className="text-ink font-medium">fashion design</span>,
@@ -19,6 +23,7 @@ export default function GiftedHandsSection({ panels }: { panels: LookbookPanel[]
         <h2
           className="uppercase leading-[0.95] mb-10 md:mb-14"
           style={{ fontFamily: "var(--font-landing-display)", fontSize: "clamp(2.4rem, 6vw, 4.5rem)" }}
+          data-reveal="heading"
         >
           The gifted hands
           <br />
@@ -33,6 +38,7 @@ export default function GiftedHandsSection({ panels }: { panels: LookbookPanel[]
               <a
                 key={panel.id}
                 href={panel.href ?? "/catalog"}
+                data-reveal="card"
                 className={`relative rounded-2xl overflow-hidden bg-paper-raised block ${
                   i % 2 === 1 ? "mt-8 md:mt-14" : ""
                 }`}
