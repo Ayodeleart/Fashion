@@ -61,7 +61,7 @@ export default async function CatalogPage({
       <TopBar hideAria />
 
       <div
-        className="sticky top-0 z-20 liquid-glass-light md:hidden"
+        className="sticky top-0 z-20 liquid-glass-header md:hidden"
         style={{ borderRadius: 0 }}
       >
         <CategoryRow categories={categories} />

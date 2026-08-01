@@ -183,7 +183,7 @@ h1, h2, h3, .font-display {
    place entirely). :where() contributes zero specificity, so Tailwind's
    utility classes (specificity 0,0,1,0) always beat it regardless of
    which order the classes appear in the stylesheet or the className. */
-:where(.liquid-glass, .liquid-glass-button, .liquid-glass-button-ghost, .liquid-glass-light) {
+:where(.liquid-glass, .liquid-glass-button, .liquid-glass-button-ghost, .liquid-glass-light, .liquid-glass-header) {
   position: relative;
   isolation: isolate;
 }
@@ -278,6 +278,29 @@ h1, h2, h3, .font-display {
    partial opacity so it auto-adapts between light/dark mode, keeping
    normal ink-colored text legible (unlike .liquid-glass, which assumes
    white text over a photo). */
+/* Sticky headers need to actually obscure whatever scrolls underneath
+   them, not just tint it — .liquid-glass-light's 22% opacity is right
+   for a card floating over the ambient background, but on a sticky
+   header it reads as barely-there and lets scrolled content visibly
+   bleed through instead of being covered. Same :where() rule above
+   covers this class's position/isolation too. */
+.liquid-glass-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+}
+.liquid-glass-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: rgba(var(--paper), 0.88);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+[data-theme="dark"] .liquid-glass-header::before {
+  background: rgba(var(--paper), 0.9);
+}
+
 .liquid-glass-light {
   border: 1px solid rgba(255, 255, 255, 0.35);
   box-shadow:
