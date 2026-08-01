@@ -1,6 +1,7 @@
 "use client";
 
 import { useScrollReveal } from "@/hooks/useScrollReveal";
+import SignatureCredit from "@/components/SignatureCredit";
 
 const NAV = [
   { label: "Home", href: "#top" },
@@ -48,9 +49,12 @@ export default function LandingFooter() {
           </div>
         </div>
 
-        <p className="text-xs text-paper/40 py-6">
-          {new Date().getFullYear()} Copyright © AyodeleGold. All rights reserved.
-        </p>
+        <div className="flex items-center justify-between py-6">
+          <p className="text-xs text-paper/40">
+            {new Date().getFullYear()} Copyright © AyodeleGold. All rights reserved.
+          </p>
+          <SignatureCredit className="text-xs text-paper/40" />
+        </div>
       </div>
 
       <div className="relative select-none pointer-events-none -mb-4 md:-mb-8">

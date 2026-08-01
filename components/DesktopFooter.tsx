@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SignatureCredit from "@/components/SignatureCredit";
 
 const COLUMNS = [
   {
@@ -57,7 +58,10 @@ export default function DesktopFooter() {
       <div className="border-t border-ink/10">
         <div className="max-w-7xl mx-auto px-8 py-5 flex items-center justify-between text-xs text-muted">
           <p>© {new Date().getFullYear()} AyodeleGold. All rights reserved.</p>
-          <p>Built for those who dress with intention.</p>
+          <div className="flex items-center gap-4">
+            <p>Built for those who dress with intention.</p>
+            <SignatureCredit />
+          </div>
         </div>
       </div>
     </footer>
