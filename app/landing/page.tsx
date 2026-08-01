@@ -95,12 +95,23 @@ async function getNewArrivals(): Promise<Product[]> {
   });
 }
 
+async function getArtSection() {
+  const supabase = getSupabase();
+  const { data } = await supabase
+    .from("ariana_landing_art_section")
+    .select("image_url, quote_top, quote_bottom")
+    .eq("id", 1)
+    .maybeSingle();
+  return data ?? null;
+}
+
 export default async function LandingPage() {
-  const [desktopBanners, mobileBanners, newArrivals, lookbookPanels] = await Promise.all([
+  const [desktopBanners, mobileBanners, newArrivals, lookbookPanels, artSection] = await Promise.all([
     getHeroBanners("desktop"),
     getHeroBanners("mobile"),
     getNewArrivals(),
     getLandingLookbookPanels(),
+    getArtSection(),
   ]);
 
   return (
@@ -109,6 +120,7 @@ export default async function LandingPage() {
       mobileBanners={mobileBanners}
       lookbookPanels={lookbookPanels}
       newArrivals={newArrivals}
+      artSection={artSection}
     />
   );
 }

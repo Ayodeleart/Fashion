@@ -36,14 +36,21 @@ export default function RootLayout({
       <head>
         {/* Clash Display (hero/logo type) + General Sans (UI/body) via Fontshare */}
         <link rel="preconnect" href="https://api.fontshare.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           href="https://api.fontshare.com/v2/css?f[]=clash-display@600,700&f[]=general-sans@400,500,600&display=swap"
+          rel="stylesheet"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Anton&display=swap"
           rel="stylesheet"
         />
         <style>{`
           :root {
             --font-clash: 'Clash Display', ui-sans-serif, system-ui, sans-serif;
             --font-general: 'General Sans', ui-sans-serif, system-ui, sans-serif;
+            --font-landing-display: 'Anton', 'Clash Display', ui-sans-serif, system-ui, sans-serif;
           }
         `}</style>
       </head>

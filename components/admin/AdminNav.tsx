@@ -13,6 +13,7 @@ const links = [
   { href: "/admin/reels", label: "Reels" },
   { href: "/admin/lookbook", label: "Lookbook (Home)" },
   { href: "/admin/landing-lookbook", label: "Lookbook (Landing)" },
+  { href: "/admin/landing-art", label: "Landing: Fashion Becomes Art" },
   { href: "/admin/orders", label: "Orders" },
   { href: "/admin/messages", label: "Messages" },
   { href: "/admin/notifications", label: "Notifications" },
