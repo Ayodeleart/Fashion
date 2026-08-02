@@ -25,7 +25,7 @@ export default function LandingHeader() {
     <header
       id="top"
       className={`sticky top-0 z-40 transition-colors duration-300 ${
-        scrolled ? "liquid-glass-light" : "bg-transparent"
+        scrolled ? "bg-paper shadow-sm" : "bg-transparent"
       }`}
       style={{ borderRadius: 0 }}
     >
@@ -44,7 +44,7 @@ export default function LandingHeader() {
 
         <a
           href="/catalog"
-          className="text-xs md:text-sm liquid-glass-button px-5 py-2.5 rounded-full"
+          className="text-xs md:text-sm bg-ink text-paper hover:bg-ink/90 transition-colors px-5 py-2.5 rounded-full"
         >
           Let&apos;s Link
         </a>

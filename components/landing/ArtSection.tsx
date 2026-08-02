@@ -30,13 +30,14 @@ export default function ArtSection({ section }: { section: ArtSection }) {
           </text>
         </svg>
 
-        <div className="absolute inset-[22%] rounded-full overflow-hidden bg-paper/10">
+        <div className="absolute inset-[22%] rounded-full overflow-hidden bg-paper/10 border border-paper/20">
           {imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={imageUrl} alt="" className="w-full h-full object-cover grayscale" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-paper/40 text-xs text-center px-4">
-              Upload a portrait in admin (Landing: Fashion Becomes Art)
+            <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-paper/50 text-xs text-center px-6">
+              <span className="text-xl">＋</span>
+              <span>Upload a portrait photo in admin<br />(Landing: Fashion Becomes Art)</span>
             </div>
           )}
         </div>

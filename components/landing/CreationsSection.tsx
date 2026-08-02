@@ -39,7 +39,7 @@ function ProductCard({
           currency={product.currency}
           image={product.image}
           label="Bag"
-          className="text-xs px-3 py-1.5 rounded-full liquid-glass-button shrink-0"
+          className="text-xs px-3 py-1.5 rounded-full bg-ink text-paper hover:bg-ink/90 transition-colors shrink-0"
         />
       </div>
     </div>
@@ -51,7 +51,7 @@ function SeeAllCard({ className = "", reveal = false }: { className?: string; re
     <a
       href="/catalog"
       data-reveal={reveal ? "card" : undefined}
-      className={`shrink-0 rounded-2xl liquid-glass-button flex flex-col items-center justify-center text-center p-6 ${className}`}
+      className={`shrink-0 rounded-2xl bg-ink text-paper flex flex-col items-center justify-center text-center p-6 ${className}`}
     >
       <span className="font-display text-xl mb-2">See all our collection</span>
       <span className="text-xs opacity-80">Browse the full shop →</span>
@@ -60,16 +60,17 @@ function SeeAllCard({ className = "", reveal = false }: { className?: string; re
 }
 
 // Alternating vertical offset + slight rotation per card, matching the
-// fanned/staggered card layout in the reference (not a flat uniform row).
+// fanned/staggered card layout in the reference — applied on BOTH desktop
+// and mobile now (previously md:-only, so mobile rendered a flat row).
 const STAGGER = [
-  "md:mt-0 md:-rotate-1",
-  "md:mt-10 md:rotate-1",
-  "md:mt-2 md:-rotate-1",
-  "md:mt-12 md:rotate-2",
-  "md:mt-4 md:-rotate-2",
-  "md:mt-14 md:rotate-1",
-  "md:mt-2 md:-rotate-1",
-  "md:mt-10 md:rotate-2",
+  "-rotate-1",
+  "mt-8 rotate-1",
+  "mt-1 -rotate-1",
+  "mt-9 rotate-2",
+  "mt-3 -rotate-2",
+  "mt-10 rotate-1",
+  "mt-1 -rotate-1",
+  "mt-8 rotate-2",
 ];
 
 const CARD_VH = 85;
@@ -154,7 +155,7 @@ export default function CreationsSection({ products }: { products: Product[] }) 
             <button
               onClick={() => scrollDesktop(-1)}
               aria-label="Scroll left"
-              className="w-11 h-11 rounded-full liquid-glass-light flex items-center justify-center"
+              className="w-11 h-11 rounded-full border border-ink/20 bg-paper flex items-center justify-center hover:border-ink/40 transition-colors"
             >
               ←
             </button>

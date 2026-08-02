@@ -48,7 +48,7 @@ export default function TestimonialsSection() {
             <div
               key={t.name}
               data-reveal="card"
-              className={`liquid-glass-light p-7 md:p-8 text-center flex flex-col items-center ${
+              className={`bg-paper-raised shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-7 md:p-8 text-center flex flex-col items-center ${
                 i === 1 ? "md:mt-10" : ""
               }`}
               style={{ borderRadius: t.blob }}
