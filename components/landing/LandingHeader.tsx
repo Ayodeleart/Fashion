@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 
 const NAV = [
   { label: "Home", href: "#top" },
-  { label: "Who dis?", href: "#about" },
-  { label: "My vibes", href: "#creations" },
-  { label: "Hit me up", href: "/contact" },
+  { label: "About", href: "#about" },
+  { label: "Shop", href: "#creations" },
+  { label: "Contact", href: "/contact" },
 ];
 
 export default function LandingHeader() {
@@ -24,10 +24,9 @@ export default function LandingHeader() {
   return (
     <header
       id="top"
-      className={`sticky top-0 z-40 transition-colors duration-300 ${
-        scrolled ? "bg-paper shadow-sm" : "bg-transparent"
+      className={`fixed top-0 left-0 right-0 z-40 transition-colors duration-300 ${
+        scrolled ? "bg-paper shadow-sm text-ink" : "bg-transparent text-paper"
       }`}
-      style={{ borderRadius: 0 }}
     >
       <div className="max-w-6xl mx-auto flex items-center justify-between px-6 md:px-10 py-4">
         <a href="#top" className="flex items-center gap-2 font-display font-semibold tracking-wide text-sm md:text-base">
@@ -43,10 +42,12 @@ export default function LandingHeader() {
         </nav>
 
         <a
-          href="/catalog"
-          className="text-xs md:text-sm bg-ink text-paper hover:bg-ink/90 transition-colors px-5 py-2.5 rounded-full"
+          href="/appointment"
+          className={`text-xs md:text-sm px-5 py-2.5 rounded-full transition-colors ${
+            scrolled ? "bg-ink text-paper hover:bg-ink/90" : "bg-paper text-ink hover:bg-paper/90"
+          }`}
         >
-          Let&apos;s Link
+          Book Now
         </a>
       </div>
     </header>

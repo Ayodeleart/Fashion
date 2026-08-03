@@ -59,19 +59,12 @@ function SeeAllCard({ className = "", reveal = false }: { className?: string; re
   );
 }
 
-// Alternating vertical offset + slight rotation per card, matching the
-// fanned/staggered card layout in the reference — applied on BOTH desktop
-// and mobile now (previously md:-only, so mobile rendered a flat row).
-const STAGGER = [
-  "-rotate-1",
-  "mt-8 rotate-1",
-  "mt-1 -rotate-1",
-  "mt-9 rotate-2",
-  "mt-3 -rotate-2",
-  "mt-10 rotate-1",
-  "mt-1 -rotate-1",
-  "mt-8 rotate-2",
-];
+// Same staggered arrangement as the "Gifted Hands" lookbook grid —
+// alternating vertical offset, no rotation. Desktop has more vertical
+// room to play with than the mobile scroll-jack's fixed 100vh viewport,
+// so mobile uses a smaller scale to avoid clipping a card off-screen.
+const STAGGER_DESKTOP = ["", "mt-10", "mt-2", "mt-12", "mt-4", "mt-10", "mt-1", "mt-9"];
+const STAGGER_MOBILE = ["", "mt-6", "mt-1", "mt-7", "mt-2", "mt-6", "mt-1", "mt-5"];
 
 const CARD_VH = 85;
 
@@ -147,9 +140,9 @@ export default function CreationsSection({ products }: { products: Product[] }) 
         <div className="hidden md:block">
           <div ref={desktopScrollerRef} className="flex gap-5 overflow-x-auto no-scrollbar scroll-smooth py-4">
             {items.map((p, i) => (
-              <ProductCard key={p.id} product={p} className={`w-72 ${STAGGER[i % STAGGER.length]}`} reveal />
+              <ProductCard key={p.id} product={p} className={`w-72 ${STAGGER_DESKTOP[i % STAGGER_DESKTOP.length]}`} reveal />
             ))}
-            <SeeAllCard className={`w-72 aspect-[3/4] ${STAGGER[items.length % STAGGER.length]}`} reveal />
+            <SeeAllCard className={`w-72 aspect-[3/4] ${STAGGER_DESKTOP[items.length % STAGGER_DESKTOP.length]}`} reveal />
           </div>
           <div className="flex items-center gap-3 mt-10">
             <button
@@ -178,10 +171,10 @@ export default function CreationsSection({ products }: { products: Product[] }) 
             className="flex gap-4 px-6 will-change-transform"
             style={{ transform: `translateX(${translate}px)` }}
           >
-            {items.map((p) => (
-              <ProductCard key={p.id} product={p} className="w-[72vw]" />
+            {items.map((p, i) => (
+              <ProductCard key={p.id} product={p} className={`w-[72vw] ${STAGGER_MOBILE[i % STAGGER_MOBILE.length]}`} />
             ))}
-            <SeeAllCard className="w-[72vw] aspect-[3/4]" />
+            <SeeAllCard className={`w-[72vw] aspect-[3/4] ${STAGGER_MOBILE[items.length % STAGGER_MOBILE.length]}`} />
           </div>
         </div>
       </div>

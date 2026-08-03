@@ -26,16 +26,11 @@ export default function LandingView({
   newArrivals: Product[];
   artSection?: ArtSectionData;
 }) {
-  // The hero is a single photo in this design (not the old carousel) —
-  // mobile banner preferred since this page is mobile-first, falling
-  // back to the first desktop banner if that's all that's set.
-  const heroBanner = mobileBanners[0] ?? desktopBanners[0] ?? null;
-
   return (
     <CartProvider>
       <main className="bg-paper">
         <LandingHeader />
-        <LandingHero banner={heroBanner} />
+        <LandingHero desktopBanner={desktopBanners[0] ?? null} mobileBanner={mobileBanners[0] ?? null} />
         <GiftedHandsSection panels={lookbookPanels} />
         <SkillsSection />
         <CreationsSection products={newArrivals} />

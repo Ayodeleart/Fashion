@@ -5,9 +5,9 @@ import SignatureCredit from "@/components/SignatureCredit";
 
 const NAV = [
   { label: "Home", href: "#top" },
-  { label: "Who dis?", href: "#about" },
-  { label: "My vibes", href: "#creations" },
-  { label: "Hit me up", href: "/contact" },
+  { label: "About", href: "#about" },
+  { label: "Shop", href: "#creations" },
+  { label: "Contact", href: "/contact" },
 ];
 
 export default function LandingFooter() {
@@ -23,30 +23,17 @@ export default function LandingFooter() {
           <span className="font-display text-2xl md:text-3xl">For Viewing</span>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-10 pb-12 border-b border-paper/10" data-reveal="paragraph">
-          <div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/hero-mobile.jpg"
-              alt=""
-              className="w-40 h-52 md:w-48 md:h-64 rounded-2xl object-cover grayscale-0"
-            />
-          </div>
-          <div className="flex flex-col md:items-end justify-between">
-            <nav className="flex flex-col gap-2 text-sm text-paper/70 md:items-end">
-              {NAV.map((item) => (
-                <a key={item.label} href={item.href} className="hover:text-paper transition-colors">
-                  {item.label}
-                </a>
-              ))}
-            </nav>
-            <div className="flex gap-4 mt-6 text-lg">
-              <a href="#" aria-label="Facebook" className="hover:text-brass transition-colors">f</a>
-              <a href="#" aria-label="WhatsApp" className="hover:text-brass transition-colors">w</a>
-              <a href="#" aria-label="Pinterest" className="hover:text-brass transition-colors">p</a>
-              <a href="#" aria-label="Instagram" className="hover:text-brass transition-colors">◎</a>
-            </div>
-          </div>
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 pb-12 border-b border-paper/10" data-reveal="paragraph">
+          <p className="text-sm text-paper/60 max-w-sm">
+            Where fabric meets finesse and creativity meets couture.
+          </p>
+          <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-paper/70">
+            {NAV.map((item) => (
+              <a key={item.label} href={item.href} className="hover:text-paper transition-colors">
+                {item.label}
+              </a>
+            ))}
+          </nav>
         </div>
 
         <div className="flex items-center justify-between py-6">
@@ -68,7 +55,7 @@ export default function LandingFooter() {
           }}
           aria-hidden
         >
-          Designer
+          Fashionista
         </h2>
       </div>
     </footer>

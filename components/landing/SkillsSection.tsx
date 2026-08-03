@@ -20,6 +20,15 @@ function FlowerDot({ size = 40, fill = "#f3f1ec" }: { size?: number; fill?: stri
   );
 }
 
+// Was a single lonely "60% Styling & Lookbuilding" stat with no other
+// content around it — expanded into the actual service breakdown so the
+// section has real substance instead of one number floating in space.
+const SKILLS = [
+  { percent: "60%", label: "Bespoke Tailoring", sub: "Made-to-measure" },
+  { percent: "25%", label: "Ready-to-Wear", sub: "Signature collections" },
+  { percent: "15%", label: "Bridal & Occasion", sub: "Wedding & event wear" },
+];
+
 export default function SkillsSection() {
   const ref = useScrollReveal<HTMLElement>(100);
   return (
@@ -41,24 +50,34 @@ export default function SkillsSection() {
           <div className="h-px flex-1 bg-paper/20" />
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-end gap-3 md:gap-8" data-reveal="stat">
-          <span
-            className="leading-none"
-            style={{ fontFamily: "var(--font-landing-display)", fontSize: "clamp(4rem, 14vw, 8rem)", color: "#e7b8c2" }}
-          >
-            60%
-          </span>
-          <div className="pb-2 md:pb-4">
-            <p
-              className="uppercase leading-[0.95]"
-              style={{ fontFamily: "var(--font-landing-display)", fontSize: "clamp(1.6rem, 4vw, 2.6rem)" }}
+        <div className="grid md:grid-cols-3 gap-10 md:gap-8">
+          {SKILLS.map((skill, i) => (
+            <div
+              key={skill.label}
+              data-reveal="stat"
+              className={`flex items-end gap-3 md:gap-4 ${i > 0 ? "pt-8 md:pt-0 border-t md:border-t-0 border-paper/10" : ""}`}
             >
-              Styling &amp;
-              <br />
-              Lookbuilding
-            </p>
-            <p className="eyebrow text-paper/50 mt-2">Runway Looks</p>
-          </div>
+              <span
+                className="leading-none shrink-0"
+                style={{
+                  fontFamily: "var(--font-landing-display)",
+                  fontSize: "clamp(2.8rem, 8vw, 4.2rem)",
+                  color: i === 0 ? "#e7b8c2" : "rgba(231,184,194,0.55)",
+                }}
+              >
+                {skill.percent}
+              </span>
+              <div className="pb-1">
+                <p
+                  className="uppercase leading-[0.95]"
+                  style={{ fontFamily: "var(--font-landing-display)", fontSize: "clamp(1.1rem, 2.6vw, 1.5rem)" }}
+                >
+                  {skill.label}
+                </p>
+                <p className="eyebrow text-paper/50 mt-1">{skill.sub}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
